@@ -1,0 +1,26 @@
+{
+  "status": "optimal",
+  "completed": true,
+  "optimal_in_double_precision": true,
+  "users": 8,
+  "resources": 3,
+  "block_duration_ms": 50,
+  "fixed_codebook_beams": 32,
+  "max_simultaneous_users": 8,
+  "groups_per_resource": [
+    256,
+    256,
+    256
+  ],
+  "visited_schedules": 16777216,
+  "total_schedules": 16777216,
+  "fairness": 0.5027611178528741,
+  "total_design_bits": 4530959.579630668,
+  "cache_seconds": 0.021966934204101562,
+  "enumeration_seconds": 2.6728110313415527,
+  "search_call_elapsed_seconds": 2.7154858112335205,
+  "runtime": "GNU Octave 9.4.0; MATLAB not run",
+  "seed": 20261104,
+  "comparison_rule": "Strict lexicographic comparison in double precision; no fairness tolerance.",
+  "scope": "Smaller 8-user/3-block instance; not a solution to the default 32-user/20-block instance."
+}

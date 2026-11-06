@@ -1,0 +1,47 @@
+function result = leo_run_benchmark_method(problem,proxy,provided,name,options)
+%LEO_RUN_BENCHMARK_METHOD 第 13.3 节实验分派；所有求解均只收到同一模型/初始化。
+% 输入：原问题、minimax 代理、提供日程、方法名、方法预算；输出方法的原始可行结果。
+switch name
+    case {'initial','original_greedy','original_exchange','original_tabu'}
+        kind = strrep(name,'original_','');
+        result = leo_solve_original_search(problem,kind,options,provided);
+    case 'proxy_milp'
+        result = leo_solve_proxy_milp(problem,proxy,options,provided);
+    case 'sb_reference_portfolio'
+        % 三个独立参考点搜索平分剩余总预算，结果按原始公平/吞吐择优。
+        timer = tic; modes = {'zero','minimax','current_schedule'}; result = [];
+        totalBudget = options.maxSeconds; minimumSetup = 0;
+        members = {}; portfolioHistory = [];
+        for j = 1:numel(modes)
+            remaining = totalBudget-toc(timer);
+            if remaining<=minimumSetup, break; end
+            local = options; local.innerSolver = 'sb'; local.referenceMode = modes{j}; local.refreshEvery = 0;
+            local.maxSeconds = remaining/(numel(modes)-j+1);
+            memberOffset = toc(timer);
+            candidate = leo_solve_schedule(problem,[],local,provided);
+            minimumSetup = max(minimumSetup,candidate.initializationSeconds);
+            if isempty(result) || leo_service_is_better(candidate.service,result.service,'fairness',0), result = candidate; end
+            member.name = modes{j}; member.offsetSeconds = memberOffset;
+            member.elapsedSeconds = toc(timer)-memberOffset;
+            member.stage1 = rmfield(candidate.stage1,'proxy');
+            member.stage2 = rmfield(candidate.stage2,'proxy');
+            members{end+1} = member; %#ok<AGROW>
+            portfolioHistory = leo_record_search_step(portfolioHistory,result.service,j,toc(timer),NaN);
+        end
+        if isempty(result), result = leo_solve_schedule(problem,[],options,provided); end
+        result.elapsedSeconds = toc(timer);
+        result.memberRuns = members; result.portfolioHistory = portfolioHistory;
+    otherwise
+        options.innerSolver = 'sb';
+        if strcmp(name,'price_local'), options.innerSolver = 'local'; end
+        if strcmp(name,'price_miqp'), options.innerSolver = 'miqp'; end
+        if strcmp(name,'sb_zero')
+            options.referenceMode = 'zero'; options.refreshEvery = 0; proxy = [];
+        elseif strcmp(name,'sb_current_fixed')
+            options.referenceMode = 'current_schedule'; options.refreshEvery = 0; proxy = [];
+        elseif strcmp(name,'sb_minimax_fixed')
+            options.refreshEvery = 0;
+        end
+        result = leo_solve_schedule(problem,proxy,options,provided);
+end
+end

@@ -1,0 +1,41 @@
+{
+  "small_instance": {
+    "users": 8,
+    "resources": 3,
+    "block_ms": 50,
+    "fixed_beams": 32,
+    "max_streams": 8
+  },
+  "minimax": {
+    "lower_total_bits": 4480411.92113963,
+    "original_total_bits": 4530959.579630668,
+    "upper_total_bits": 4537407.533016495,
+    "max_user_lower_gap_bits": 15262.04090400238
+  },
+  "touching": {
+    "lower_total_bits": 4530959.579630668,
+    "original_total_bits": 4530959.579630668,
+    "upper_total_bits": 4537407.533016495,
+    "max_user_lower_gap_bits": 1.1641532182693481e-10
+  },
+  "all_minimax_groups": {
+    "groupsChecked": 768.0,
+    "maxLowerViolationBits": 0.0,
+    "maxUpperViolationBits": 5.820766091346741e-11,
+    "maxErrorBudgetViolationBits": 5.275069270282984e-11,
+    "maxLowerGapBits": 5537.673382870213,
+    "maxUpperGapBits": 5537.500368005596
+  },
+  "all_touching_groups": {
+    "groupsChecked": 768.0,
+    "maxLowerViolationBits": 5.820766091346741e-11,
+    "maxUpperViolationBits": 5.820766091346741e-11,
+    "maxErrorBudgetViolationBits": 5.275069270282984e-11,
+    "maxLowerGapBits": 18951.103117061313,
+    "maxUpperGapBits": 5537.500368005596
+  },
+  "minimax_uniform_optimal_fairness_gap_bound": 0.016606884923162542,
+  "reference_touch_max_absolute_bits": 1.1641532182693481e-10,
+  "runtime": "GNU Octave 9.4.0; MATLAB not run",
+  "scope": "Per-resource all-group service-bound validation; no surrogate optimization, Lagrangian, QUBO or SB."
+}

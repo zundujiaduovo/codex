@@ -1,0 +1,4 @@
+results/
+*.asv
+octave-workspace
+__pycache__/

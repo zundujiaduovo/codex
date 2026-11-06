@@ -1,0 +1,71 @@
+K=12, T=8, M=2, Na=256, NB=405, L=8
+Available user-resource pairs: 24/24; codebook sampled holes: 0.00%
+Fixed block: 5 slots (50.0 ms); risk events=96; positive-fairness max-flow=12/12
+Example active SINR [min, median, max] = [0.56, 7.18, 11.21] dB
+Problem formed, unsolved: 24 binary variables + s; example design fairness=0.
+Stage-2 template fairness floor from feasibility witness: 0.499551 (not optimized).
+Tangent/chord built (minimax); uniform proxy-optimum fairness-gap bound <= 0.0389166.
+K=12, T=8, M=2, Na=256, NB=405, L=8
+Available user-resource pairs: 24/24; codebook sampled holes: 0.00%
+Fixed block: 5 slots (50.0 ms); risk events=96; positive-fairness max-flow=12/12
+Example active SINR [min, median, max] = [0.56, 7.18, 11.21] dB
+Problem formed, unsolved: 24 binary variables + s; example design fairness=0.
+Stage-2 template fairness floor from feasibility witness: 0.499551 (not optimized).
+Tangent/chord built (minimax); uniform proxy-optimum fairness-gap bound <= 0.0389166.
+K=12, T=7, M=3, Na=256, NB=405, L=8
+Available user-resource pairs: 36/36; codebook sampled holes: 0.00%
+Fixed block: 3 slots (30.0 ms); risk events=84; positive-fairness max-flow=12/12
+Example active SINR [min, median, max] = [-0.94, 6.80, 10.86] dB
+Problem formed, unsolved: 36 binary variables + s; example design fairness=0.
+Stage-2 template fairness floor from feasibility witness: 0.330674 (not optimized).
+Tangent/chord built (minimax); uniform proxy-optimum fairness-gap bound <= 0.0373526.
+K=12, T=8, M=2, Na=256, NB=405, L=8
+Available user-resource pairs: 0/24; codebook sampled holes: 0.00%
+Fixed block: 5 slots (50.0 ms); risk events=0; positive-fairness max-flow=0/12
+Precheck: baseline O2 optimal fairness is forced to zero by serviceability.
+Users with no positive-service resource: [1 2 3 4 5 6 7 8 9 10 11 12]
+No active data transmission: inspect geometry/coverage/overheads.
+Problem formed, unsolved: 24 binary variables + s; example design fairness=0.
+Stage-2 template fairness floor from feasibility witness: 0 (not optimized).
+Tangent/chord built (minimax); uniform proxy-optimum fairness-gap bound <= 0.
+K=12, T=8, M=2, Na=256, NB=405, L=8
+Available user-resource pairs: 0/24; codebook sampled holes: 0.00%
+Fixed block: 5 slots (50.0 ms); risk events=0; positive-fairness max-flow=0/12
+Precheck: baseline O2 optimal fairness is forced to zero by serviceability.
+Users with no positive-service resource: [1 2 3 4 5 6 7 8 9 10 11 12]
+No active data transmission: inspect geometry/coverage/overheads.
+Problem formed, unsolved: 24 binary variables + s; example design fairness=0.
+Stage-2 template fairness floor from feasibility witness: 0 (not optimized).
+Tangent/chord built (minimax); uniform proxy-optimum fairness-gap bound <= 0.
+K=1, T=1, M=1, Na=1, NB=1, L=1
+Available user-resource pairs: 1/1; codebook sampled holes: 0.00%
+Fixed block: 5 slots (50.0 ms); risk events=1; positive-fairness max-flow=1/1
+Example active SINR [min, median, max] = [-17.05, -17.05, -17.05] dB
+Problem formed, unsolved: 1 binary variables + s; example design fairness=0.00526411.
+Stage-2 template fairness floor from feasibility witness: 0.00526411 (not optimized).
+Tangent/chord built (minimax); uniform proxy-optimum fairness-gap bound <= 0.
+PASS: 14 numerical/physical test groups.
+K=32, T=100, M=20, Na=64, NB=32, L=8
+Available user-resource pairs: 640/640; codebook sampled holes: 0.48%
+Fixed block: 5 slots (50.0 ms); risk events=3200; positive-fairness max-flow=32/32
+Example active SINR [min, median, max] = [-6.37, -0.43, 6.56] dB
+Problem formed, unsolved: 640 binary variables + s; example design fairness=0.
+Stage-2 template fairness floor from feasibility witness: 0.0338015 (not optimized).
+Tangent/chord built (minimax); uniform proxy-optimum fairness-gap bound <= 0.00335274.
+PASS: 12 problem-formation test groups.
+K=32, T=100, M=20, Na=64, NB=32, L=8
+Available user-resource pairs: 640/640; codebook sampled holes: 0.48%
+Fixed block: 5 slots (50.0 ms); risk events=3200; positive-fairness max-flow=32/32
+Example active SINR [min, median, max] = [-6.37, -0.43, 6.56] dB
+Problem formed, unsolved: 640 binary variables + s; example design fairness=0.
+Stage-2 template fairness floor from feasibility witness: 0.0338015 (not optimized).
+Tangent/chord built (minimax); uniform proxy-optimum fairness-gap bound <= 0.00335274.
+PASS: 10 exhaustive-baseline test groups.
+K=8, T=15, M=3, Na=64, NB=32, L=8
+Available user-resource pairs: 24/24; codebook sampled holes: 0.48%
+Fixed block: 5 slots (50.0 ms); risk events=120; positive-fairness max-flow=8/8
+Example active SINR [min, median, max] = [-5.01, -1.66, 5.30] dB
+Problem formed, unsolved: 24 binary variables + s; example design fairness=0.502655.
+Stage-2 template fairness floor from feasibility witness: 0.16742 (not optimized).
+Tangent/chord built (minimax); uniform proxy-optimum fairness-gap bound <= 0.0166069.
+PASS: 12 tangent/chord test groups.

@@ -1,0 +1,96 @@
+K=8, T=15, M=3, Na=64, NB=32, L=8
+Available user-resource pairs: 24/24; codebook sampled holes: 0.48%
+Fixed block: 5 slots (50.0 ms); risk events=120; positive-fairness max-flow=8/8
+Example active SINR [min, median, max] = [-5.01, -1.66, 5.30] dB
+Problem formed, unsolved: 24 binary variables + s; example design fairness=0.502655.
+Stage-2 template fairness floor from feasibility witness: 0.16742 (not optimized).
+Tangent/chord built (minimax); uniform proxy-optimum fairness-gap bound <= 0.0166069.
+initial                 seed=20261105 completed    s=0.502655349 V=5.30827 Mbit wall=0.168 s
+original_greedy         seed=20261105 completed    s=0.502655349 V=5.30827 Mbit wall=0.272 s
+original_exchange       seed=20261105 completed    s=0.502761118 V=4.53096 Mbit wall=0.650 s
+original_tabu           seed=20261105 completed    s=0.502761118 V=4.53096 Mbit wall=6.008 s
+price_sb                seed=20261105 completed    s=0.502761118 V=4.53096 Mbit wall=5.666 s
+price_local             seed=20261105 completed    s=0.502761118 V=4.53096 Mbit wall=5.733 s
+price_miqp              seed=20261105 unavailable  s=NaN V=NaN Mbit wall=NaN s
+  Gurobi MATLAB interface is not installed.
+proxy_milp              seed=20261105 completed    s=0.502761118 V=4.53096 Mbit wall=0.337 s
+sb_zero                 seed=20261105 completed    s=0.502761118 V=4.53096 Mbit wall=5.588 s
+sb_minimax_fixed        seed=20261105 completed    s=0.502761118 V=4.53096 Mbit wall=5.591 s
+sb_current_fixed        seed=20261105 completed    s=0.502761118 V=4.53096 Mbit wall=5.551 s
+sb_reference_portfolio  seed=20261105 completed    s=0.502761118 V=4.53096 Mbit wall=6.010 s
+initial                 seed=20261106 completed    s=0.502655349 V=5.30827 Mbit wall=0.165 s
+original_greedy         seed=20261106 completed    s=0.502655349 V=5.30827 Mbit wall=0.267 s
+original_exchange       seed=20261106 completed    s=0.502761118 V=4.53096 Mbit wall=0.630 s
+original_tabu           seed=20261106 completed    s=0.502761118 V=4.53096 Mbit wall=6.008 s
+price_sb                seed=20261106 completed    s=0.502761118 V=4.53096 Mbit wall=5.655 s
+price_local             seed=20261106 completed    s=0.502761118 V=4.53096 Mbit wall=5.719 s
+price_miqp              seed=20261106 unavailable  s=NaN V=NaN Mbit wall=NaN s
+  Gurobi MATLAB interface is not installed.
+proxy_milp              seed=20261106 completed    s=0.502761118 V=4.53096 Mbit wall=0.334 s
+sb_zero                 seed=20261106 completed    s=0.502761118 V=4.53096 Mbit wall=5.557 s
+sb_minimax_fixed        seed=20261106 completed    s=0.502761118 V=4.53096 Mbit wall=5.578 s
+sb_current_fixed        seed=20261106 completed    s=0.502761118 V=4.53096 Mbit wall=5.587 s
+sb_reference_portfolio  seed=20261106 completed    s=0.502761118 V=4.53096 Mbit wall=6.017 s
+initial                 seed=20261107 completed    s=0.502655349 V=5.30827 Mbit wall=0.166 s
+original_greedy         seed=20261107 completed    s=0.502655349 V=5.30827 Mbit wall=0.269 s
+original_exchange       seed=20261107 completed    s=0.502761118 V=4.53096 Mbit wall=0.643 s
+original_tabu           seed=20261107 completed    s=0.502761118 V=4.53096 Mbit wall=6.008 s
+price_sb                seed=20261107 completed    s=0.502761118 V=4.53096 Mbit wall=5.638 s
+price_local             seed=20261107 completed    s=0.502761118 V=4.53096 Mbit wall=5.699 s
+price_miqp              seed=20261107 unavailable  s=NaN V=NaN Mbit wall=NaN s
+  Gurobi MATLAB interface is not installed.
+proxy_milp              seed=20261107 completed    s=0.502761118 V=4.53096 Mbit wall=0.333 s
+sb_zero                 seed=20261107 completed    s=0.502761118 V=4.53096 Mbit wall=5.533 s
+sb_minimax_fixed        seed=20261107 completed    s=0.502761118 V=4.53096 Mbit wall=5.572 s
+sb_current_fixed        seed=20261107 completed    s=0.502761118 V=4.53096 Mbit wall=5.533 s
+sb_reference_portfolio  seed=20261107 completed    s=0.502761118 V=4.53096 Mbit wall=6.016 s
+Exhaustive: 3 resources, 1.67772e+07 schedules (log10=7.2247).
+Exhaustive optimal: visited 16777216/16777216, time 2.033 s, fairness 0.502761118, total 4.53096e+06 bit.
+K=32, T=100, M=20, Na=64, NB=32, L=8
+Available user-resource pairs: 640/640; codebook sampled holes: 0.48%
+Fixed block: 5 slots (50.0 ms); risk events=3200; positive-fairness max-flow=32/32
+Example active SINR [min, median, max] = [-6.37, -0.43, 6.56] dB
+Problem formed, unsolved: 640 binary variables + s; example design fairness=0.
+Stage-2 template fairness floor from feasibility witness: 0.0338015 (not optimized).
+Tangent/chord built (minimax); uniform proxy-optimum fairness-gap bound <= 0.00335274.
+initial                 seed=20261105 completed    s=0.166080659 V=8.49348 Mbit wall=1.704 s
+original_greedy         seed=20261105 completed    s=0.166080659 V=8.49348 Mbit wall=4.600 s
+original_exchange       seed=20261105 completed    s=0.202509438 V=8.63906 Mbit wall=6.125 s
+original_tabu           seed=20261105 completed    s=0.202975469 V=8.74219 Mbit wall=6.179 s
+price_sb                seed=20261105 completed    s=0.166080659 V=8.49348 Mbit wall=6.774 s
+price_local             seed=20261105 completed    s=0.166080659 V=8.49348 Mbit wall=6.769 s
+price_miqp              seed=20261105 unavailable  s=NaN V=NaN Mbit wall=NaN s
+  Gurobi MATLAB interface is not installed.
+proxy_milp              seed=20261105 completed    s=0.166080659 V=8.49348 Mbit wall=12.221 s
+sb_zero                 seed=20261105 completed    s=0.166080659 V=8.49348 Mbit wall=6.296 s
+sb_minimax_fixed        seed=20261105 completed    s=0.166080659 V=8.49348 Mbit wall=6.771 s
+sb_current_fixed        seed=20261105 completed    s=0.166080659 V=8.49348 Mbit wall=6.383 s
+sb_reference_portfolio  seed=20261105 completed    s=0.166080659 V=8.49348 Mbit wall=9.372 s
+initial                 seed=20261106 completed    s=0.166080659 V=8.49348 Mbit wall=1.712 s
+original_greedy         seed=20261106 completed    s=0.166080659 V=8.49348 Mbit wall=4.513 s
+original_exchange       seed=20261106 completed    s=0.202509438 V=8.63505 Mbit wall=6.197 s
+original_tabu           seed=20261106 completed    s=0.202975469 V=8.74437 Mbit wall=6.220 s
+price_sb                seed=20261106 completed    s=0.166080659 V=8.49348 Mbit wall=6.794 s
+price_local             seed=20261106 completed    s=0.166080659 V=8.49348 Mbit wall=6.856 s
+price_miqp              seed=20261106 unavailable  s=NaN V=NaN Mbit wall=NaN s
+  Gurobi MATLAB interface is not installed.
+proxy_milp              seed=20261106 completed    s=0.166080659 V=8.49348 Mbit wall=12.288 s
+sb_zero                 seed=20261106 completed    s=0.166080659 V=8.49348 Mbit wall=6.367 s
+sb_minimax_fixed        seed=20261106 completed    s=0.166080659 V=8.49348 Mbit wall=6.850 s
+sb_current_fixed        seed=20261106 completed    s=0.166080659 V=8.49348 Mbit wall=6.294 s
+sb_reference_portfolio  seed=20261106 completed    s=0.166080659 V=8.49348 Mbit wall=9.096 s
+initial                 seed=20261107 completed    s=0.166080659 V=8.49348 Mbit wall=1.699 s
+original_greedy         seed=20261107 completed    s=0.166080659 V=8.49348 Mbit wall=4.563 s
+original_exchange       seed=20261107 completed    s=0.202509438 V=8.63989 Mbit wall=6.160 s
+original_tabu           seed=20261107 completed    s=0.202975469 V=8.74219 Mbit wall=6.146 s
+price_sb                seed=20261107 completed    s=0.166080659 V=8.49348 Mbit wall=6.814 s
+price_local             seed=20261107 completed    s=0.166080659 V=8.49348 Mbit wall=6.778 s
+price_miqp              seed=20261107 unavailable  s=NaN V=NaN Mbit wall=NaN s
+  Gurobi MATLAB interface is not installed.
+proxy_milp              seed=20261107 completed    s=0.166080659 V=8.49348 Mbit wall=12.199 s
+sb_zero                 seed=20261107 completed    s=0.166080659 V=8.49348 Mbit wall=6.285 s
+sb_minimax_fixed        seed=20261107 completed    s=0.166080659 V=8.49348 Mbit wall=6.763 s
+sb_current_fixed        seed=20261107 completed    s=0.166080659 V=8.49348 Mbit wall=6.283 s
+sb_reference_portfolio  seed=20261107 completed    s=0.166080659 V=8.49348 Mbit wall=9.117 s
+Exhaustive: 20 resources, 6.90521e+130 schedules (log10=130.8392).
+Complete search exceeds configured schedule, group, or memory limits; no search performed.

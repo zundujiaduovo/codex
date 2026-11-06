@@ -1,0 +1,70 @@
+function o = leo_method_options(overrides)
+%LEO_METHOD_OPTIONS 配置 A：全物理候选域、两阶段拉格朗日 + ballistic SB。
+% 接口标注：
+% 输入：overrides：可选算法参数覆盖结构。
+% 输出：o：校验后的价格、SB、修复、预算、内层求解器和切点设置。
+% 步长/SB 参数是可调实验起点，不代表收敛或最优保证。
+o.enabled = false;
+o.seed = 20261105;
+o.innerSolver = 'sb';              % sb / local / miqp，同一价格与验收机制
+o.referenceMode = 'minimax';        % 未传入 proxy 时使用；zero/current_schedule 用于消融
+o.localRestarts = 16;
+o.fairnessRounds = 24;
+o.throughputRounds = 12;
+o.maxSeconds = 60;                 % 求解总预算，含初始化；物理建模另计
+o.fairnessBudgetFraction = 0.7;
+o.fairnessStep = 0.25;
+o.throughputStep = 0.15;
+o.stepExponent = 0.6;
+o.refreshEvery = 6;                % 0: 阶段内固定切点；阶段 2 始终先相切
+o.gapTolerance = 1e-7;             % 公平或归一化吞吐的有效上下界差
+o.sbSteps = 250;
+o.sbTrajectories = 16;
+o.sbTimeStep = 0.15;
+o.sbCoupling = 1;
+o.sbCheckpoint = 10;
+o.penaltyFactor = 1.1;             % 严格 > 1，随当前权重重新计算
+o.removeRedundantCapacity = true;
+o.polishMoves = 6;                 % 修复后的资源二次收益局部改进
+o.randomInitialSchedules = 3;
+o.recoveryEvaluations = 160;       % 每轮每个起点的原始服务动作评价预算
+o.recoveryPasses = 4;
+o.crossResourceFraction = 0.25;
+o.verbose = true;
+if nargin>0
+    assert(isstruct(overrides) && isscalar(overrides));
+    names = fieldnames(overrides);
+    for j = 1:numel(names)
+        assert(isfield(o,names{j}),['未知方法参数: ',names{j}]);
+        o.(names{j}) = overrides.(names{j});
+    end
+end
+assert(ischar(o.innerSolver) && any(strcmp(o.innerSolver,{'sb','local','miqp'})));
+assert(ischar(o.referenceMode) && any(strcmp(o.referenceMode,{'minimax','zero','current_schedule'})));
+numericFields = setdiff(fieldnames(o),{'enabled','removeRedundantCapacity','verbose','innerSolver','referenceMode'});
+for j = 1:numel(numericFields)
+    v = o.(numericFields{j});
+    assert(isnumeric(v) && isreal(v) && isscalar(v) && isfinite(v), ...
+        ['方法参数须为有限实标量: ',numericFields{j}]);
+end
+flags = {'enabled','removeRedundantCapacity','verbose'};
+for j = 1:numel(flags)
+    v = o.(flags{j});
+    assert(isscalar(v) && (islogical(v) || isnumeric(v)) && isfinite(v) && (v==0 || v==1));
+    o.(flags{j}) = logical(v);
+end
+integers = [o.fairnessRounds,o.throughputRounds,o.refreshEvery,o.sbSteps, ...
+    o.sbTrajectories,o.sbCheckpoint,o.polishMoves,o.randomInitialSchedules, ...
+    o.recoveryEvaluations,o.recoveryPasses,o.seed,o.localRestarts];
+assert(all(isfinite(integers)) && all(integers>=0 & integers==fix(integers)));
+assert(o.sbSteps>=1 && o.sbTrajectories>=1 && o.sbCheckpoint>=1 && o.recoveryPasses>=1);
+assert(o.localRestarts>=1);
+assert(o.seed<=2^32-1);
+positive = [o.maxSeconds,o.fairnessStep,o.throughputStep,o.sbTimeStep,o.sbCoupling];
+assert(all(isfinite(positive)) && all(positive>0));
+assert(isfinite(o.penaltyFactor) && o.penaltyFactor>1);
+assert(isfinite(o.fairnessBudgetFraction) && o.fairnessBudgetFraction>0 && o.fairnessBudgetFraction<1);
+assert(isfinite(o.stepExponent) && o.stepExponent>0.5 && o.stepExponent<=1);
+assert(isfinite(o.gapTolerance) && o.gapTolerance>=0);
+assert(isfinite(o.crossResourceFraction) && o.crossResourceFraction>=0 && o.crossResourceFraction<=1);
+end

@@ -1,0 +1,86 @@
+function report = leo_benchmark_case(model,options)
+%LEO_BENCHMARK_CASE 第 13.3 节：同一物理样本上的多算法、多随机种子对比。
+% 输入：run_leo_sinr 的未求解模型、实验选项；输出逐次记录、日程、统计及穷举参考。
+% 共用预处理耗时按每个方法各记一次；穷举在所有启发式结束后运行，禁止先验泄漏。
+options = leo_benchmark_options(options);
+problem = model.problem;
+commonSeconds = model.timings.physicalProblemSeconds;
+template = struct('method','','seed',0,'status','','solverStatus','','message','','fairness',NaN, ...
+    'worstDemandRatio',NaN,'qosSatisfactionRate',NaN,'totalBits',NaN,'hardFeasible',false, ...
+    'initialFairness',NaN,'initialTotalBits',NaN,'fairnessFloor',NaN, ...
+    'fairnessUpperBound',NaN,'fairnessGap',NaN,'throughputUpperBoundBits',NaN, ...
+    'throughputGapBits',NaN,'exactFairnessGap',NaN,'exactThroughputGapBits',NaN, ...
+    'commonSeconds',commonSeconds,'proxyPreparationSeconds',0,'searchSeconds',NaN, ...
+    'endToEndSeconds',NaN,'budgetSeconds',options.budgetSeconds,'budgetOverrunSeconds',NaN);
+records = repmat(template,0,1); solutions = {};
+for seed = options.seeds(:).'
+    for j = 1:numel(options.methods)
+        name = options.methods{j}; row = template; row.method = name; row.seed = seed;
+        prebuiltProxy = any(strcmp(name,{'price_sb','price_local','price_miqp','proxy_milp','sb_minimax_fixed'}));
+        if prebuiltProxy, row.proxyPreparationSeconds = model.timings.proxySeconds; end
+        seconds = options.budgetSeconds-commonSeconds-row.proxyPreparationSeconds;
+        result = [];
+        if strcmp(name,'price_miqp') && exist('gurobi','file')==0
+            row.status = 'unavailable'; row.message = 'Gurobi MATLAB interface is not installed.';
+        elseif strcmp(name,'proxy_milp') && exist('intlinprog','file')==0 && exist('glpk','file')==0
+            row.status = 'unavailable'; row.message = 'Requires MATLAB intlinprog or Octave GLPK.';
+        elseif seconds<=0
+            row.status = 'budget_exhausted_before_search'; row.message = 'Common preprocessing already exhausts the requested budget.';
+        else
+            method = options.method; method.seed = seed; method.maxSeconds = seconds; method.verbose = false;
+            timer = tic;
+            try
+                result = leo_run_benchmark_method(problem,model.surrogate,model.xExample,name,method);
+                service = problem.evaluate(result.x); % 最后统一校验硬约束、原始服务
+                assert(all(service.demandRatio>=result.fairnessFloor));
+                row.status = 'completed'; row.hardFeasible = true;
+                if isfield(result.stage1,'solver')
+                    row.solverStatus = [result.stage1.solver.status,' / ',result.stage2.solver.status];
+                elseif isfield(result.stage1,'status')
+                    row.solverStatus = [result.stage1.status,' / ',result.stage2.status];
+                end
+                row.fairness = service.fairness; row.worstDemandRatio = min(service.demandRatio);
+                row.qosSatisfactionRate = mean(service.demandRatio>=1); row.totalBits = service.totalBits;
+                row.initialFairness = result.initial.service.fairness; row.initialTotalBits = result.initial.service.totalBits;
+                row.fairnessFloor = result.fairnessFloor; row.fairnessUpperBound = result.fairnessUpperBound;
+                row.fairnessGap = result.fairnessGap; row.throughputUpperBoundBits = result.throughputUpperBoundBits;
+                row.throughputGapBits = result.throughputGapBits;
+            catch err
+                row.status = 'failed'; row.message = err.message;
+                if strcmp(err.identifier,'leo:solverUnavailable'), row.status = 'unavailable'; end
+            end
+            row.searchSeconds = toc(timer);
+            row.endToEndSeconds = commonSeconds+row.proxyPreparationSeconds+row.searchSeconds;
+            row.budgetOverrunSeconds = max(0,row.endToEndSeconds-options.budgetSeconds);
+        end
+        records(end+1,1) = row; solutions{end+1,1} = result; %#ok<AGROW>
+        if options.verbose
+            fprintf('%-23s seed=%d %-12s s=%.9g V=%.6g Mbit wall=%.3f s\n', ...
+                name,seed,row.status,row.fairness,row.totalBits/1e6,row.endToEndSeconds);
+            if ~isempty(row.message), fprintf('  %s\n',row.message); end
+        end
+    end
+end
+% 精确基准有独立预算；它是证书，不参与各方法的输入或初始化。
+reference = [];
+if options.exhaustive
+    exhaustive = leo_exhaustive_options(struct('verbose',options.verbose));
+    reference = leo_exhaustive_search(problem,exhaustive);
+    if reference.optimal
+        for j = 1:numel(records)
+            if ~strcmp(records(j).status,'completed'), continue; end
+            gap = reference.fairness-records(j).fairness;
+            assert(gap>=-1e-10,'原始穷举最优值与方法结果不一致。');
+            records(j).exactFairnessGap = max(0,gap);
+            % 吞吐最优仅能在同一公平门槛下比较；不同门槛保留 NaN。
+            if abs(gap)<=1e-12 && all(solutions{j}.service.demandRatio>=reference.fairness)
+                records(j).exactThroughputGapBits = max(0,reference.totalBits-records(j).totalBits);
+            end
+        end
+    end
+end
+report.parameters = model.parameters; report.options = options;
+report.problemData = problem.data; report.records = records; report.solutions = solutions;
+report.exhaustive = reference; report.summary = leo_summarize_benchmark(records,options.methods);
+report.scope = 'Baseline O2/O4, fixed blocks, all physical candidates; optional extensions listed separately in IMPLEMENTATION_STATUS.md.';
+end
