@@ -1,0 +1,64 @@
+function [fig,values] = leo_plot_method_comparison(report,directory,render)
+%LEO_PLOT_METHOD_COMPARISON 各方法同指标对比；成功运行中位数与 min/max。
+% render=false 仅提取数值；缺失结果保持 NaN，不伪装成零。
+if nargin<2, directory = fullfile('results','comparison'); end
+if nargin<3, render = true; end
+methods = report.options.methods; count = numel(methods); labels = methods;
+known = {'initial','original_greedy','original_tabu','price_sb','price_local'};
+names = {'Initial','Greedy','Tabu','Price+SB','Price+Local'};
+for j = 1:count
+    match = find(strcmp(methods{j},known),1);
+    if ~isempty(match), labels{j} = names{match}; end
+end
+period = report.parameters.time.nSlots*report.parameters.time.slotDurationS;
+fields = {'fairness','qosSatisfactionRate','totalBits','nominalTotalBits','endToEndSeconds'};
+sampled = isfield(report.records,'sampleMeanTotalBits');
+if sampled, fields{4} = 'sampleMeanTotalBits'; end
+scales = [1,100,1/(1e6*period),1/(1e6*period),1];
+values.median = NaN(count,5); values.low = values.median; values.high = values.median;
+values.methods = methods; values.labels = labels;
+values.userRatio = NaN(report.problemData.shape(1),count);
+for j = 1:count
+    ids = find(strcmp({report.records.method},methods{j}) & strcmp({report.records.status},'completed'));
+    for k = 1:5
+        samples = arrayfun(@(r) r.(fields{k}),report.records(ids))*scales(k);
+        samples = samples(isfinite(samples));
+        if isempty(samples), continue; end
+        values.median(j,k) = median(samples); values.low(j,k) = min(samples); values.high(j,k) = max(samples);
+    end
+    first = ids([report.records(ids).seed]==report.options.seeds(1));
+    if ~isempty(first), values.userRatio(:,j) = report.solutions{first(1)}.service.demandRatio; end
+end
+fig = [];
+if ~render, return; end
+fig = figure('Visible','on','Color','w','Name','LEO method comparison','Position',[40,40,1450,820]);
+annotation(fig,'textbox',[0,.965,1,.035],'String',sprintf( ...
+    '%d users | %.2f Mbit/user | %.0f s budget/method | %d seed(s); error bars=min/max', ...
+    report.problemData.shape(1),report.problemData.qosTargetBits(1)/1e6, ...
+    report.options.budgetSeconds,numel(report.options.seeds)), ...
+    'EdgeColor','none','HorizontalAlignment','center','Interpreter','none');
+colors = lines(count);
+titles = {'Minimum certified QoS ratio','Users meeting certified full QoS', ...
+    'Certified sum rate','Sum rate at Z=1 (reference)','Accounted end-to-end runtime'};
+if sampled, titles{4} = 'Mean sum rate (1000 fresh fading periods)'; end
+ylabels = {'Ratio','Percent','Mbps','Mbps','Seconds'};
+for k = 1:5
+    subplot(2,3,k);
+    bars = bar(values.median(:,k),'FaceColor','flat'); set(bars,'CData',colors);
+    hold on;
+    errorbar(1:count,values.median(:,k),values.median(:,k)-values.low(:,k), ...
+        values.high(:,k)-values.median(:,k),'k.','LineWidth',1);
+    set(gca,'XTick',1:count,'XTickLabel',labels,'XTickLabelRotation',25);
+    title(titles{k}); ylabel(ylabels{k}); grid on;
+    if k==1, ylim([0,1.05]); elseif k==2, ylim([0,105]); end
+end
+subplot(2,3,6); hold on;
+for j = 1:count
+    plot(1:size(values.userRatio,1),values.userRatio(:,j),'LineWidth',1.1,'Color',colors(j,:));
+end
+legend(labels,'Location','best'); xlabel('User'); ylabel('Certified service / demand');
+title('Per-user QoS ratio (first requested seed)'); grid on;
+if ~exist(directory,'dir'), mkdir(directory); end
+print(fig,fullfile(directory,'method_comparison.png'),'-dpng','-r160');
+if exist('savefig','file')~=0, savefig(fig,fullfile(directory,'method_comparison.fig')); end
+end

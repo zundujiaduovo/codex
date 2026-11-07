@@ -18,15 +18,23 @@
 
 ## 运行
 
-MATLAB 直接出图（默认 32 用户）：
+MATLAB 多方法对比：解压后打开根目录的 `RUN_COMPARISON.m`，点击“运行”（F5）。
+它会在同一 32 用户场景中比较初始化、贪心、禁忌、价格+SB、价格+局部搜索，每方法 60 秒软预算、同一个预设种子；预计运行几分钟。
+计算后直接弹出六项对比图：保证公平、保证 QoS 达标率、保证总速率、1000 个独立衰落周期的平均总速率、端到端耗时和逐用户 QoS 比例。
+图保存为 `results/comparison/method_comparison.png` 和可编辑 `.fig`；完整记录保存在同目录的 CSV/MAT 中。
+
+也可在命令窗口运行：
 
 ```matlab
 cd('D:\code\leo_periodic_qos')
-addpath('matlab')
-[model,fig] = run_leo_quickstart();
+addpath('D:\code\leo_periodic_qos\matlab')
+[report,fig] = run_leo_comparison();
 ```
 
-图会显示在 MATLAB，并保存为 `results/quickstart/quickstart.png`。
+`run_leo_quickstart()` 现在也调用多方法对比，返回 report。
+默认需求仍为每用户 1 Mbit，公平与 QoS 可能全部封顶；此时总速率和耗时仍有区分度。
+多负载性能比较请运行 `run_leo_periodic_sweep`。
+
 默认 32 用户位置由 `leo_reference_users_32` 冻结为已经验证过的场景；这样 MATLAB 与 Octave 的不同随机序列不会改变覆盖机会。
 改变用户区域或用户数量时自动使用随机球面帽采样；也可以设 `p.users.layout='random_cap'` 显式生成新随机场景，新场景须单独检查可服务人数。
 
