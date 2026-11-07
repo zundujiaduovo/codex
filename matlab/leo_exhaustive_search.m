@@ -75,6 +75,8 @@ for first = 0:options.batchSize:N-1
         quotient = floor(quotient/G(m));
         D = D+services{m}(:,choices(m,:));
     end
+    [~,margin] = leo_service_adjustment(data);
+    D = max(0,bsxfun(@minus,D,margin));
     fairness = min(1,min(bsxfun(@rdivide,D,data.qosTargetBits),[],1));
     total = sum(D,1);
     batchBest = max(fairness);

@@ -3,7 +3,8 @@ function test_leo_problem()
 % 接口标注：
 % 输入：无；构造独立数值基准及边界算例。
 % 输出：无返回值；失败时抛出断言，成功时打印检查组数。
-model = run_leo_sinr();
+legacy = leo_default_parameters(); legacy.statistics.serviceModel = 'slot_union';
+model = run_leo_sinr(legacy);
 p = model.parameters; problem = model.problem;
 checks = 0;
 
@@ -102,7 +103,7 @@ assert(check.witnessService.fairness>0); checks = checks+1;
 
 % 9. K<=LM 仍可能同码字冲突导致零公平；所有用户都有机会也不充分。
 conflict = toy; conflict.beamIndex(:) = 1;
-q = leo_default_parameters();q.system.K=3;q.system.maxStreams=2;
+q = leo_default_parameters(); q.statistics.serviceModel = 'slot_union';q.system.K=3;q.system.maxStreams=2;
 rr.nResources = 2; bb.available = true(3,2);bb.index=ones(3,2);
 conflict.hard = leo_build_hard_constraints(q,rr,bb);
 check = leo_precheck_positive_fairness(conflict);
@@ -137,7 +138,7 @@ end
 
 function data = make_toy_data()
 % 两资源/每资源两槽，用非恒定系数避免均值信道替代逐槽速率而漏测。
-p = leo_default_parameters(); p.system.K=3;p.system.maxStreams=2;
+p = leo_default_parameters(); p.statistics.serviceModel = 'slot_union'; p.system.K=3;p.system.maxStreams=2;
 r.nResources = 2;
 b.available = true(3,2); b.index = [1,1;1,1;2,2];
 data.shape = [3,2];data.hard = leo_build_hard_constraints(p,r,b);

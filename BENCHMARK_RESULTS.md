@@ -1,5 +1,7 @@
 # 实测对比结果
 
+> 版本说明：本文原有数值是 `slot_union` 逐槽保守模型的历史结果。2026-11-07 的默认周期模型、公式与新验证见 [PERIODIC_QOS.md](PERIODIC_QOS.md)；不能把旧结果当作新版默认结果。
+
 本页保留上一轮结果。新增迭代记录后的重跑和 18 类完整图组见 [PLOTS.md](PLOTS.md)，两轮计时不混合统计。
 
 运行与复核日期：2026-11-05 至 2026-11-06（Asia/Shanghai）。GNU Octave 9.4.0，Linux x86_64，OpenBLAS 单线程；MATLAB 本体未运行。

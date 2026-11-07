@@ -7,6 +7,7 @@ problem = model.problem;
 commonSeconds = model.timings.physicalProblemSeconds;
 template = struct('method','','seed',0,'status','','solverStatus','','message','','fairness',NaN, ...
     'worstDemandRatio',NaN,'qosSatisfactionRate',NaN,'totalBits',NaN,'hardFeasible',false, ...
+    'nominalTotalBits',NaN,'averageCompletion',NaN,'qosJointSuccessLower',NaN, ...
     'initialFairness',NaN,'initialTotalBits',NaN,'fairnessFloor',NaN, ...
     'fairnessUpperBound',NaN,'fairnessGap',NaN,'throughputUpperBoundBits',NaN, ...
     'throughputGapBits',NaN,'exactFairnessGap',NaN,'exactThroughputGapBits',NaN, ...
@@ -41,6 +42,7 @@ for seed = options.seeds(:).'
                 end
                 row.fairness = service.fairness; row.worstDemandRatio = min(service.demandRatio);
                 row.qosSatisfactionRate = mean(service.demandRatio>=1); row.totalBits = service.totalBits;
+                row.averageCompletion = mean(min(1,service.demandRatio));
                 row.initialFairness = result.initial.service.fairness; row.initialTotalBits = result.initial.service.totalBits;
                 row.fairnessFloor = result.fairnessFloor; row.fairnessUpperBound = result.fairnessUpperBound;
                 row.fairnessGap = result.fairnessGap; row.throughputUpperBoundBits = result.throughputUpperBoundBits;
@@ -52,6 +54,17 @@ for seed = options.seeds(:).'
             row.searchSeconds = toc(timer);
             row.endToEndSeconds = commonSeconds+row.proxyPreparationSeconds+row.searchSeconds;
             row.budgetOverrunSeconds = max(0,row.endToEndSeconds-options.budgetSeconds);
+            % 独立报告验证：不计入搜索时间，不用这些样本/指标选择日程。
+            if strcmp(row.status,'completed') && isfield(problem.data.design,'nominalSignalW')
+                nominal = leo_evaluate_nominal_service(problem.data,result.x);
+                row.nominalTotalBits = nominal.totalBits;
+                result.nominalService = nominal;
+                if strcmp(problem.data.design.serviceModel,'periodic_chernoff')
+                    cert = leo_certify_period_qos(problem.data,result.x);
+                    row.qosJointSuccessLower = cert.jointSuccessLower;
+                    result.qosCertificate = cert;
+                end
+            end
         end
         records(end+1,1) = row; solutions{end+1,1} = result; %#ok<AGROW>
         if options.verbose

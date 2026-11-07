@@ -126,7 +126,7 @@ fprintf('PASS: %d plotting data and iteration logging test groups (no graphics b
 end
 
 function problem = fixture()
-p = leo_default_parameters(); p.system.K = 4; p.system.maxStreams = 2;
+p = leo_default_parameters(); p.statistics.serviceModel = 'slot_union'; p.system.K = 4; p.system.maxStreams = 2;
 p.system.bandwidthHz = 10; p.system.qosTargetBits = 100; p.problem.referenceBits = 777;
 p.time.nSlots = 4; p.time.blockSlots = 2; p.time.slotDurationS = .5;
 p.time.baseOverheadS = 0; p.time.configOverheadS = 0;

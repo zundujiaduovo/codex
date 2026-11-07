@@ -3,7 +3,7 @@ function bits = leo_resource_group_services(data,m,groups)
 % 接口标注：
 % 输入：data：原始设计模型；m：块号；groups：K×G 合法组。
 % 输出：bits：K×G 原始块服务 bit，支持批量穷举评价。
-% 原始低分位设计系数，逐基本槽累计；缓存只消除重复运算，不近似速率。
+% 阈值/低分位系数乘服务斜率，逐槽累计 A_im；周期余量由汇总器扣一次。
 K = data.shape(1);
 assert(size(groups,1)==K && all(groups(:)==0 | groups(:)==1));
 assert(~any(any(bsxfun(@and,groups,~data.available(:,m)))));
@@ -13,6 +13,7 @@ codes = unique(data.beamIndex(ids,m));
 for code = codes.'
     assert(all(sum(groups(data.beamIndex(:,m)==code,:),1)<=1));
 end
+[scale,~] = leo_service_adjustment(data);
 X = double(groups);
 bits = zeros(K,size(groups,2));
 slots = find(data.slotToResource==m & data.dataDurationS>0);
@@ -23,6 +24,6 @@ for t = slots
     interference = C*X;
     sinr = bsxfun(@rdivide,data.design.signalW(:,t), ...
         bsxfun(@plus,data.design.noiseW(:,t),interference));
-    bits = bits+data.dataDurationS(t)*data.bandwidthHz/log(2)*(X.*log1p(sinr));
+    bits = bits+data.dataDurationS(t)*data.bandwidthHz/log(2)*bsxfun(@times,scale,X.*log1p(sinr));
 end
 end

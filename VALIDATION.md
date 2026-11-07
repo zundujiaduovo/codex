@@ -1,5 +1,7 @@
 # 本次数值验证
 
+> 版本说明：本文原有数值是 `slot_union` 逐槽保守模型的历史结果。2026-11-07 的默认周期模型、公式与新验证见 [PERIODIC_QOS.md](PERIODIC_QOS.md)；不能把旧结果当作新版默认结果。
+
 运行器：GNU Octave 9.4.0，Linux x86_64。MATLAB 本体在当前环境中不可用。
 物理模型 **14 组**、问题形成 **12 组**、穷举对照 **10 组**、切线/弦线 **12 组**、
 拉格朗日/SB **17 组**、统一对比 **7 组**、绘图数据与日志 **9 组**检查通过，共 **81 组**。
@@ -104,3 +106,10 @@ GNU Octave CLI 可使用 `octave-cli --no-gui --no-history --quiet` 运行；
 本次 PNG/PDF 由 `tools/render_plot_specs.py` 渲染；MATLAB 原生图形后端及 FIG 导出尚未在此云环境执行。
 日志：`results/plot_validation.log`、`results/plot_regression.log`、`results/plot_benchmark_rerun.log`。
 图表、计数定义与本轮实测结果见 [PLOTS.md](PLOTS.md)。
+
+## 2026-11-07 周期模型回归
+
+旧 81 组检查显式固定 `slot_union`，全部通过；新增 `test_leo_periodic` 穷举 49 个合法完整日程、
+每用户 256 种好/坏槽组合，独立检查概率尾界、弦下界、风险余量只扣一次、增量服务、
+完整穷举、零/正公平门槛上界、MILP 右端、空日程和相关衰落拒绝。
+新负载扫描及独立验证见 `results/periodic_qos_20261107/`。

@@ -12,7 +12,8 @@ if ~isempty(provided)
     schedules{end+1} = logical(provided); names{end+1} = 'provided';
 end
 % 按累计需求满足率从低到高轮转；每个块保持同一用户组。
-x = false(data.shape); cumulative = zeros(K,1);
+[~,margin] = leo_service_adjustment(data);
+x = false(data.shape); cumulative = -margin;
 for m = 1:M
     [~,order] = sort(cumulative./data.qosTargetBits,'ascend');
     usedBeams = [];

@@ -1,5 +1,8 @@
 # 两阶段拉格朗日与 SB 实现
 
+默认可靠性口径为 [周期累计证书](PERIODIC_QOS.md)。下文 D_i 表示保证服务 G_i；
+旧 `slot_union` 模式退化为原逐槽服务。总服务目标是保证总服务，不应当作真实平均吞吐。
+
 ## 运行入口
 
 ```matlab
@@ -24,8 +27,8 @@ result.throughputGapBits                % 固定 s0 下有效吞吐差距，bit
 
 | 环节 | 数学含义 | 函数 |
 |---|---|---|
-| 原始服务 R5–R6 | 逐基本槽 Shannon 设计服务累加 | `leo_evaluate_service` |
-| 下界 T5–T6 | Dlow_i=Σm[a_im x_im−Σj b_ijm x_im x_jm] | `leo_build_service_surrogates` |
+| 原始服务 R5–R6 | 阈值 Shannon 服务乘 ρ_i，周期累计扣 m_i 后截零 | `leo_evaluate_service` |
+| 下界 T5–T6 | Dlow_i=Σm[a_im x_im−Σj b_ijm x_im x_jm]−m_i | `leo_build_service_surrogates` |
 | 价格 L3–L6 | w_i=λ_i/q_i；λ←[λ+η(sAux−Dlow_i/q_i)]_+ | `leo_price_weights`, `leo_update_prices` |
 | 阶段 2 V3–V4 | w_i=1/Dref+λ_i/q_i；sAux=s0 | 同上 |
 | 资源收益 L4 | Aᵀx−Σi<j B_ij x_i x_j，B_ij=w_i b_ij+w_j b_ji | `leo_build_resource_qubo` |
@@ -34,6 +37,9 @@ result.throughputGapBits                % 固定 s0 下有效吞吐差距，bit
 | SB | 辛 Euler、线性泵浦、多轨迹、非弹性边界 | `leo_ballistic_sb` |
 | 修复与恢复 | 资源硬约束修复；完整周期原始服务增删/交换 | `leo_repair_group`, `leo_recover_schedule` |
 | 原始上界 E4/E6、UB1 | 按组大小使用最小可能干扰，再按波束取加权上界 | `leo_prepare_upper_bounds`, `leo_original_upper_bound` |
+
+新模式 a/b 系数和误差预算均乘 ρ_i；m_i 只扣一次。代理价格使用有符号 Dlow，最终评分使用 G=[A−m]_+。
+余量常数不进入资源 QUBO，但进入价格反馈、MILP 右端和有效上界，具体式见 [PERIODIC_QOS.md 第 4 节](PERIODIC_QOS.md)。
 
 `leo_solve_schedule` 构造共同初始化、上界缓存并调用两次 `leo_run_price_phase`。
 第一阶段按“原始公平优先、原始总服务次优”保存日程。第二阶段固定第一阶段实际公平 `s0`，

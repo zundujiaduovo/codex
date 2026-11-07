@@ -3,6 +3,8 @@ function data = leo_collect_plot_data(report)
 % 输入：leo_benchmark_case/run_leo_benchmarks 的报告（兼容旧版无日志报告）。
 % 输出：记录、分口径计数、全过程、代表种子日程及固定代理诊断数值。
 data.schemaVersion = 1; data.caseName = 'custom';
+data.serviceModel = 'slot_union';
+if isfield(report.problemData.design,'serviceModel'), data.serviceModel = report.problemData.design.serviceModel; end
 if isfield(report,'caseName'), data.caseName = report.caseName; end
 data.methods = report.options.methods; data.seeds = report.options.seeds;
 data.representativeSeed = data.seeds(1); data.budgetSeconds = report.options.budgetSeconds;
@@ -82,6 +84,9 @@ for r = 1:numel(data.representatives)
     high = leo_evaluate_quadratic_service(problem.data,proxy.upper,rep.x);
     bound.method = rep.method; bound.lowerBits = low.userBits;
     bound.originalBits = rep.service.userBits; bound.upperBits = high.userBits;
+    if strcmp(data.serviceModel,'periodic_chernoff')
+        bound.lowerBits = max(0,bound.lowerBits); bound.upperBits = max(0,bound.upperBits);
+    end
     bound.lowerErrorBoundBits = proxy.error.lowerUserBits;
     data.serviceBounds(end+1,1) = bound; %#ok<AGROW>
 end
@@ -91,6 +96,9 @@ data.notes = {'Counter NaN means not applicable or not reported, never zero iter
     'SB energy is the best-so-far discrete energy of one fixed Ising call before repair.', ...
     'Service/SINR figures use the statistical-CSI design coefficients, not instantaneous fading.', ...
     'Postprocessing and plotting time is excluded from measured algorithm time.'};
+if strcmp(data.serviceModel,'periodic_chernoff')
+    data.notes{end+1} = 'Totals and QoS use period guaranteed service G; resource bars use additive A before the one-time risk margin. Nominal throughput is separate.';
+end
 end
 
 function c = empty_count(row)

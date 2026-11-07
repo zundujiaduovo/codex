@@ -15,6 +15,7 @@ data.dataDurationS = r.dataDurationS;
 data.bandwidthHz = p.system.bandwidthHz;
 data.qosTargetBits = p.system.qosTargetBits;
 data.referenceBits = p.problem.referenceBits;
+data.periodSeconds = p.time.nSlots*p.time.slotDurationS;
 data.design = design;
 n = prod(data.shape);
 stage.name = 'P_F: maximize capped minimum normalized design service';

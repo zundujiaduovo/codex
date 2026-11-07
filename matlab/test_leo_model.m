@@ -3,7 +3,7 @@ function test_leo_model()
 % 接口标注：
 % 输入：无；构造独立数值基准及边界算例。
 % 输出：无返回值；失败时抛出断言，成功时打印检查组数。
-p = leo_default_parameters();
+p = leo_default_parameters(); p.statistics.serviceModel = 'slot_union';
 p.time.nSlots = 8;
 p.system.K = 12;
 % 回归测试使用完整候选码本，专门验证物理链路；32 波束默认在问题测试覆盖。
@@ -146,7 +146,7 @@ assert(~any(idle.beams.available(:)) && ~any(idle.sinr.active(:)));
 checks = checks+1;
 
 % 14. K=T=Na=NB=L=1 时不得因 squeeze/维度塌缩产生错误。
-one = leo_default_parameters();
+one = leo_default_parameters(); one.statistics.serviceModel = 'slot_union';
 one.system.K = 1; one.system.nRF = 1; one.system.maxStreams = 1;
 one.time.nSlots = 1; one.array.nX = 1; one.array.nY = 1; one.array.nBeams = 1;
 scalar = run_leo_sinr(one);

@@ -20,10 +20,16 @@ for m = 1:M
         bound.resource(m) = max(bound.resource(m),sum(beamValues(1:n)));
     end
 end
+[~,margin] = leo_service_adjustment(data);
+penalty = sum(lambda(:).*margin./data.qosTargetBits);
 if strcmp(phase,'fairness')
-    bound.value = min(1,max(0,1-sum(lambda))+sum(bound.resource));
+    % 正公平必有 A_i>=margin_i+s*q_i；若正公平不可行，最优值为零。
+    bound.value = max(0,min(1,max(0,1-sum(lambda))+sum(bound.resource)-penalty));
+elseif s0>0 || ~any(margin>0)
+    bound.value = sum(bound.resource)-s0*sum(lambda)-penalty-sum(margin)/data.referenceBits;
 else
-    bound.value = sum(bound.resource)-s0*sum(lambda);
+    % 零门槛允许 A_i<margin_i，不能错误地从截断服务总和扣全体 margin。
+    bound.value = sum(bound.resource);
 end
 bound.kind = cache.kind;
 bound.lambda = lambda;

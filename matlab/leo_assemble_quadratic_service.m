@@ -8,6 +8,9 @@ K = data.shape(1); M = data.shape(2);
 assert(isequal(size(alphaBps),size(data.design.signalW)));
 assert(isequal(size(omegaBpsPerW),size(data.design.signalW)));
 assert(all(isfinite(alphaBps(:))) && all(isfinite(omegaBpsPerW(:))) && all(omegaBpsPerW(:)>=0));
+[scale,~] = leo_service_adjustment(data);
+alphaBps = bsxfun(@times,scale,alphaBps);
+omegaBpsPerW = bsxfun(@times,scale,omegaBpsPerW);
 q.aBits = zeros(K,M); q.bBits = zeros(K,K,M);
 for t = 1:numel(data.slotToResource)
     if data.dataDurationS(t)<=0, continue; end
