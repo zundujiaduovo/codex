@@ -122,6 +122,30 @@ assert(exist(fullfile(directory,'iterations.csv'),'file')~=0);
 loaded = load(fullfile(directory,'plot_data.mat')); assert(isequaln(loaded.plotData,exported));
 parsed = jsondecode(fileread(fullfile(directory,'plot_specs.json'))); assert(numel(parsed)==18);
 checks = checks+1;
+
+% 完整基准导出必须经过用户/日程表构造，不能只验证绘图数据导出。
+leo_export_benchmark(report,directory);
+loaded = load(fullfile(directory,'benchmark.mat'));
+assert(isequaln(loaded.report,report));
+completed = sum(strcmp({report.records.status},'completed'));
+userLines = regexp(strtrim(fileread(fullfile(directory,'user_service.csv'))),'\r?\n','split');
+scheduleLines = regexp(strtrim(fileread(fullfile(directory,'schedules.csv'))),'\r?\n','split');
+assert(numel(userLines)==1+completed*report.problemData.shape(1));
+assert(numel(scheduleLines)==1+completed*prod(report.problemData.shape));
+assert(~isempty(strfind(userLines{1},'demandRatio'))); %#ok<STREMP>
+assert(~isempty(strfind(scheduleLines{1},'selected'))); %#ok<STREMP>
+checks = checks+1;
+
+% 全部不可用时仍能导出；两张明细表为空，状态记录不能变成成功。
+emptyDirectory = fullfile(directory,'unavailable');
+leo_export_benchmark(missing,emptyDirectory);
+loaded = load(fullfile(emptyDirectory,'benchmark.mat'));
+assert(strcmp(loaded.report.records.status,'unavailable'));
+assert(isempty(strtrim(fileread(fullfile(emptyDirectory,'user_service.csv')))));
+assert(isempty(strtrim(fileread(fullfile(emptyDirectory,'schedules.csv')))));
+parsed = jsondecode(fileread(fullfile(emptyDirectory,'plot_specs.json')));
+assert(numel(parsed)==18);
+checks = checks+1;
 fprintf('PASS: %d plotting data and iteration logging test groups (no graphics backend required).\n',checks);
 end
 

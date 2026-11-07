@@ -14,6 +14,17 @@
 
 ## 运行
 
+如果 MATLAB 报“在不同结构体之间进行下标赋值”，请使用本次修复后的源码。
+本次修复覆盖汇总、用户/日程 CSV 导出、迭代日志和图表规格中的空结构体追加。
+已有其他版本的项目可先备份，再使用随包的修复脚本，仅替换相关赋值语句：
+
+```matlab
+addpath(fullfile(pwd,'tools'));
+repair_leo_struct_arrays(pwd);        % 自动备份修改的文件；可重复执行
+```
+
+脚本要求当前目录是含 `matlab` 子目录的项目根目录。具体验证范围见 [VALIDATION.md](VALIDATION.md)。
+
 在仓库根目录的 MATLAB 命令窗口执行（推荐 R2018b 或更新版本，仅基础 MATLAB）：
 
 ```matlab

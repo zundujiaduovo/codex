@@ -234,7 +234,7 @@ end
 function p = series(p,name,x,y,low,high)
 if nargin<5, low = []; high = []; end
 s = struct('name',name,'x',x(:).','y',y(:).','low',low(:).','high',high(:).');
-p.series(end+1,1) = s;
+p.series = leo_append_struct(p.series,s);
 end
 
 function p = metric(rows,methods,fields,scale,titleText,unit)
@@ -256,7 +256,7 @@ end
 
 function figures = add_figure(figures,name,titleText,nrows,ncols,panels)
 fig = struct('name',name,'title',titleText,'rows',nrows,'cols',ncols,'panels',panels);
-figures(end+1,1) = fig;
+figures = leo_append_struct(figures,fig);
 end
 
 function p = history_curves(data,phase,field,scale,titleText,unit)

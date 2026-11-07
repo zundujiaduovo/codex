@@ -22,6 +22,6 @@ for j = 1:numel(methods)
         exact = [good.exactFairnessGap]; exact = exact(isfinite(exact));
         if ~isempty(exact), s.medianExactFairnessGap = median(exact); end
     end
-    summary(j,1) = s; %#ok<AGROW>
+    summary = leo_append_struct(summary,s);
 end
 end
