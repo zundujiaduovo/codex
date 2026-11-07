@@ -86,9 +86,7 @@ result.x = x; result.service = service;
         for c = 1:numel(columns)
             resourceBits(:,columns(c)) = leo_resource_service(data,columns(c),groups(:,c));
         end
-        trial.userBits = sum(resourceBits,2);
-        trial.demandRatio = trial.userBits./data.qosTargetBits;
-        trial.fairness = min(1,min(trial.demandRatio)); trial.totalBits = sum(trial.userBits);
+        trial = leo_service_totals(data,resourceBits);
         if ~leo_service_is_better(trial,bestService,phase,s0), return; end
         trialX = x; trialX(:,columns) = groups;
         trial = problem.evaluate(trialX);

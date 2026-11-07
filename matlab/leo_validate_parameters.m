@@ -24,6 +24,8 @@ assert(p.time.baseOverheadS>=0 && p.time.configOverheadS>=0 && ...
     p.time.baseOverheadS+p.time.configOverheadS<=p.time.slotDurationS, ...
     '净数据时间不能为负。');
 assert(p.users.radiusM>=0 && p.users.radiusM<pi*p.earth.aM);
+if ~isfield(p.users,'layout'), p.users.layout = 'random_cap'; end
+assert(any(strcmp(p.users.layout,{'reference32','random_cap'})));
 assert(abs(p.users.centerLatDeg)<=90 && p.users.altitudeM>=0);
 assert(p.channel.extraLossDb>=0 && isfinite(p.channel.extraLossDb));
 assert(all(isfinite([p.channel.elementGainDbi,p.channel.receiveGainDbi, ...
@@ -48,6 +50,16 @@ if isscalar(q), q = repmat(q,p.system.K,1); end
 p.system.qosTargetBits = q(:);
 assert(isscalar(p.statistics.totalRisk) && isfinite(p.statistics.totalRisk) && ...
     p.statistics.totalRisk>0 && p.statistics.totalRisk<1);
+% 未携带新字段的历史参数继续使用旧模型，避免静默改变旧实验口径。
+if ~isfield(p.statistics,'serviceModel'), p.statistics.serviceModel = 'slot_union'; end
+assert(any(strcmp(p.statistics.serviceModel,{'slot_union','periodic_chernoff'})));
+if strcmp(p.statistics.serviceModel,'periodic_chernoff')
+    assert(isfield(p.statistics,'independentSlots') && ...
+        isequal(p.statistics.independentSlots,true), ...
+        '周期 Chernoff 证书要求用户内基本槽独立；相关衰落请使用 slot_union。');
+    v = [p.statistics.goodFadeThreshold,p.statistics.chernoffTilt];
+    assert(numel(v)==2 && all(isfinite(v)) && all(v>0));
+end
 if isempty(p.problem.referenceBits)
     p.problem.referenceBits = sum(q);
 end

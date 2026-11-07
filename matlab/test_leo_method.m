@@ -16,7 +16,7 @@ for bad = {struct('penaltyFactor',1),struct('sbSteps',0),struct('stepExponent',.
     failed = false; try, leo_method_options(bad{1}); catch, failed = true; end
     assert(failed);
 end
-p = leo_default_parameters(); p = rmfield(p,'method'); p = leo_validate_parameters(p);
+p = leo_default_parameters(); p.statistics.serviceModel = 'slot_union'; p = rmfield(p,'method'); p = leo_validate_parameters(p);
 assert(~p.method.enabled); checks = checks+1;
 
 % 2. 枚举全部用户/松弛位，独立展开罚项；对称/上三角 QUBO 能量一致。
@@ -223,7 +223,7 @@ end
 end
 
 function problem = toy_problem(empty)
-p = leo_default_parameters(); p.system.K = 4; p.system.maxStreams = 2;
+p = leo_default_parameters(); p.statistics.serviceModel = 'slot_union'; p.system.K = 4; p.system.maxStreams = 2;
 p.system.bandwidthHz = 10; p.system.qosTargetBits = 100;
 p.time.nSlots = 4; p.time.blockSlots = 2; p.time.slotDurationS = .5;
 p.time.baseOverheadS = 0; p.time.configOverheadS = 0;

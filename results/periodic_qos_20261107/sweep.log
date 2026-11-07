@@ -1,0 +1,60 @@
+K=32, T=100, M=20, Na=64, NB=32, L=8
+Available user-resource pairs: 640/640; codebook sampled holes: 0.48%
+Fixed block: 5 slots (50.0 ms); risk events=3200; positive-fairness max-flow=32/32
+Service model: periodic_chernoff. Period accumulated service; independent slots within each user; fixed schedule before fading.
+Example active SINR [min, median, max] = [-6.37, -0.43, 6.56] dB
+Problem formed, unsolved: 640 binary variables + s; example design fairness=0.
+Stage-2 template fairness floor from feasibility witness: 0 (not optimized).
+Tangent/chord built (minimax); uniform proxy-optimum fairness-gap bound <= 1.
+initial                 seed=20261105 completed    s=1 V=62.4488 Mbit wall=2.683 s
+original_tabu           seed=20261105 completed    s=1 V=72.3976 Mbit wall=12.286 s
+price_sb                seed=20261105 completed    s=1 V=62.7706 Mbit wall=12.190 s
+price_local             seed=20261105 completed    s=1 V=62.7706 Mbit wall=12.275 s
+initial                 seed=20261106 completed    s=1 V=62.4488 Mbit wall=2.699 s
+original_tabu           seed=20261106 completed    s=1 V=71.4726 Mbit wall=12.283 s
+price_sb                seed=20261106 completed    s=1 V=62.7706 Mbit wall=12.236 s
+price_local             seed=20261106 completed    s=1 V=62.7706 Mbit wall=12.190 s
+initial                 seed=20261107 completed    s=1 V=62.4488 Mbit wall=2.679 s
+original_tabu           seed=20261107 completed    s=1 V=72.2626 Mbit wall=12.281 s
+price_sb                seed=20261107 completed    s=1 V=62.4488 Mbit wall=12.159 s
+price_local             seed=20261107 completed    s=1 V=62.7104 Mbit wall=12.213 s
+K=32, T=100, M=20, Na=64, NB=32, L=8
+Available user-resource pairs: 640/640; codebook sampled holes: 0.48%
+Fixed block: 5 slots (50.0 ms); risk events=3200; positive-fairness max-flow=32/32
+Service model: periodic_chernoff. Period accumulated service; independent slots within each user; fixed schedule before fading.
+Example active SINR [min, median, max] = [-6.37, -0.43, 6.56] dB
+Problem formed, unsolved: 640 binary variables + s; example design fairness=0.
+Stage-2 template fairness floor from feasibility witness: 0 (not optimized).
+Tangent/chord built (minimax); uniform proxy-optimum fairness-gap bound <= 0.861872.
+initial                 seed=20261105 completed    s=0.666572123 V=62.4488 Mbit wall=2.691 s
+original_tabu           seed=20261105 completed    s=0.865711305 V=67.6936 Mbit wall=12.197 s
+price_sb                seed=20261105 completed    s=0.707281882 V=62.7104 Mbit wall=12.257 s
+price_local             seed=20261105 completed    s=0.707281882 V=62.4084 Mbit wall=12.167 s
+initial                 seed=20261106 completed    s=0.666572123 V=62.4488 Mbit wall=2.651 s
+original_tabu           seed=20261106 completed    s=0.863774481 V=68.0556 Mbit wall=12.213 s
+price_sb                seed=20261106 completed    s=0.707281882 V=62.7104 Mbit wall=12.222 s
+price_local             seed=20261106 completed    s=0.707281882 V=62.4084 Mbit wall=12.439 s
+initial                 seed=20261107 completed    s=0.666572123 V=62.4488 Mbit wall=2.635 s
+original_tabu           seed=20261107 completed    s=0.863241149 V=68.0431 Mbit wall=12.165 s
+price_sb                seed=20261107 completed    s=0.707281882 V=62.5485 Mbit wall=12.324 s
+price_local             seed=20261107 completed    s=0.707281882 V=62.5485 Mbit wall=12.318 s
+K=32, T=100, M=20, Na=64, NB=32, L=8
+Available user-resource pairs: 640/640; codebook sampled holes: 0.48%
+Fixed block: 5 slots (50.0 ms); risk events=3200; positive-fairness max-flow=32/32
+Service model: periodic_chernoff. Period accumulated service; independent slots within each user; fixed schedule before fading.
+Example active SINR [min, median, max] = [-6.37, -0.43, 6.56] dB
+Problem formed, unsolved: 640 binary variables + s; example design fairness=0.
+Stage-2 template fairness floor from feasibility witness: 0 (not optimized).
+Tangent/chord built (minimax); uniform proxy-optimum fairness-gap bound <= 0.430936.
+initial                 seed=20261105 completed    s=0.333286061 V=62.4488 Mbit wall=2.629 s
+original_tabu           seed=20261105 completed    s=0.432855653 V=67.6936 Mbit wall=12.313 s
+price_sb                seed=20261105 completed    s=0.353640941 V=62.7104 Mbit wall=12.191 s
+price_local             seed=20261105 completed    s=0.353640941 V=62.5485 Mbit wall=12.163 s
+initial                 seed=20261106 completed    s=0.333286061 V=62.4488 Mbit wall=2.605 s
+original_tabu           seed=20261106 completed    s=0.432855653 V=67.6936 Mbit wall=12.316 s
+price_sb                seed=20261106 completed    s=0.353640941 V=62.7104 Mbit wall=12.340 s
+price_local             seed=20261106 completed    s=0.353640941 V=62.4084 Mbit wall=12.311 s
+initial                 seed=20261107 completed    s=0.333286061 V=62.4488 Mbit wall=2.619 s
+original_tabu           seed=20261107 completed    s=0.43188724 V=68.0556 Mbit wall=12.312 s
+price_sb                seed=20261107 completed    s=0.353640941 V=62.7104 Mbit wall=12.341 s
+price_local             seed=20261107 completed    s=0.353640941 V=62.5485 Mbit wall=12.316 s

@@ -49,9 +49,7 @@ end
         end
         bits = service.resourceBits;
         for c = 1:numel(columns), bits(:,columns(c)) = leo_resource_service(data,columns(c),groups(:,c)); end
-        trial.resourceBits = bits; trial.userBits = sum(bits,2); trial.totalBits = sum(trial.userBits);
-        trial.demandRatio = trial.userBits./data.qosTargetBits;
-        trial.fairness = min(1,min(trial.demandRatio)); trial.normalizedThroughput = trial.totalBits/data.referenceBits;
+        trial = leo_service_totals(data,bits);
         next = x; next(:,columns) = groups;
         neighbors(end+1) = struct('x',next,'service',trial,'changed',find(next~=x));
     end

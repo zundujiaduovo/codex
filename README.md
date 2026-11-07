@@ -2,7 +2,11 @@
 
 实现用户提供方案的基础模型、两阶段拉格朗日/SB 求解、原始有效界及第 13.3 节的基础模型对比。
 默认 **32 个固定码本波束、最多并发 8 人、8 条射频链**，每个调度资源为 **50 ms（5 个 10 ms 基本槽）**。
-输出物理模型、瞬时 SINR、统计 CSI 的低分位设计服务，以及两阶段原始混合整数非线性问题。
+输出物理模型、瞬时 SINR、统计 CSI 的周期累计保证服务，以及两阶段原始混合整数非线性问题。
+**2026-11-07 更新：默认 `periodic_chernoff`，按用户分配 5% 联合风险，利用独立基本槽的累计服务证书；
+旧 `slot_union` 保留为保守对照。完整公式、假设、上界及代码字段见 [PERIODIC_QOS.md](PERIODIC_QOS.md)。**
+本次三负载/三种子及独立衰落验证见 [实验报告](results/periodic_qos_20261107/REPORT.md)。
+[下载新版完整源码包](leo_periodic_qos_source_20261107.zip)；仓库仍保留原始 `leo_satellite_simulation_code.zip`。
 已接通切线/弦线、价格协调、QUBO/Ising、SB、约束修复、完整日程恢复与严格公平门槛下的吞吐阶段。
 完整状态及未实施的可选扩展见 [IMPLEMENTATION_STATUS.md](IMPLEMENTATION_STATUS.md)。
 算法参数与结果接口见 [METHOD.md](METHOD.md)，统一实验见 [BENCHMARKS.md](BENCHMARKS.md)，
@@ -14,6 +18,27 @@
 
 ## 运行
 
+MATLAB 多方法对比：解压后打开根目录的 `RUN_COMPARISON.m`，点击“运行”（F5）。
+它会在同一 32 用户场景中比较初始化、贪心、禁忌、价格+SB、价格+局部搜索，每方法 60 秒软预算、同一个预设种子；预计运行几分钟。
+计算后直接弹出六项对比图：保证公平、保证 QoS 达标率、保证总速率、1000 个独立衰落周期的平均总速率、端到端耗时和逐用户 QoS 比例。
+图保存为 `results/comparison/method_comparison.png` 和可编辑 `.fig`；完整记录保存在同目录的 CSV/MAT 中。
+
+也可在命令窗口运行：
+
+```matlab
+cd('D:\code\leo_periodic_qos')
+addpath('D:\code\leo_periodic_qos\matlab')
+[report,fig] = run_leo_comparison();
+```
+
+`run_leo_quickstart()` 现在也调用多方法对比，返回 report。
+默认需求仍为每用户 1 Mbit，公平与 QoS 可能全部封顶；此时总速率和耗时仍有区分度。
+多负载性能比较请运行 `run_leo_periodic_sweep`。
+
+默认 32 用户位置由 `leo_reference_users_32` 冻结为已经验证过的场景；这样 MATLAB 与 Octave 的不同随机序列不会改变覆盖机会。
+改变用户区域或用户数量时自动使用随机球面帽采样；也可以设 `p.users.layout='random_cap'` 显式生成新随机场景，新场景须单独检查可服务人数。
+
+
 在仓库根目录的 MATLAB 命令窗口执行（推荐 R2018b 或更新版本，仅基础 MATLAB）：
 
 ```matlab
@@ -23,6 +48,7 @@ p.method.enabled = true;
 model = run_leo_sinr(p);                   % 默认 32 用户/20 块的完整方法
 small = run_leo_benchmarks('small');       % 基础算法/切点消融/小规模穷举
 large = run_leo_benchmarks('default');     % 32 用户统一预算比较
+reports = run_leo_periodic_sweep();       % 固定物理参数，1/2/4 Mbit 需求扫描
 run_leo_plot_results('results/plots_default/plot_data.mat','results/redraw_default'); % 重画本包已有结果
 help leo_solve_schedule                   % 查看函数输入输出与说明
 ```
@@ -61,6 +87,7 @@ test_leo_surrogate();                 % 切线/弦线、二次服务和误差预
 test_leo_method();                    % QUBO/Ising、SB、价格、原始上界和两阶段验收
 test_leo_benchmark();                 % 原始增量基线、MILP 等价与对比公平性
 test_leo_plots();                     % 迭代计数、收敛时间、图表数据及缺失值
+test_leo_periodic();                  % 新周期证书、独立概率枚举、上下界与增量评分
 ```
 
 修改参数和保存结果：
@@ -125,7 +152,7 @@ GNU Octave 实际运行及检查结果见 [VALIDATION.md](VALIDATION.md)；尚�
 | 调度块 | 5 槽=50 ms；20 块/周期 | 用户要求小时间块；50 ms 是可调整实验设置 |
 | 基础/配置开销 | 1 ms/0.2 ms | 块首槽净 8.8 ms，其余净 9 ms；每完整块净 44.8 ms |
 | 周期需求 q_i | 1 Mbit/人 | 用于累计 QoS；正公平预检不等于所有需求达标 |
-| 周期总风险 ε_tot | 0.05 | 自选；R1–R7 对全部候选用户—基本槽联合计风险 |
+| 周期总风险 ε_tot | 0.05 | 新模式：周期累计服务的联合风险；旧模式：全部候选槽联合风险 |
 | 吞吐归一化 D_ref | sum(q_i)=32 Mbit | 默认与决策无关，也可指定正数 |
 
 ## 函数与公式对应
@@ -150,7 +177,10 @@ GNU Octave 实际运行及检查结果见 [VALIDATION.md](VALIDATION.md)；尚�
 | `leo_example_selection` | 演示合法激活组，非 QoS 优化算法 |
 | `leo_compute_sinr` | P1、P3、P6：有效预编码、平均功率和瞬时 SINR |
 | `leo_rician_power_cdf` / `leo_rician_power_quantile` | R2：Rician 功率 CDF / 低分位，无统计工具箱 |
-| `leo_prepare_design_service` | R1–R7：风险预算、低分位增益、固定设计系数 |
+| `leo_prepare_design_service` | 周期 Chernoff 或旧逐槽风险模型，固定阈值系数、斜率与余量 |
+| `leo_service_totals` | 跨块累加后只扣一次风险余量；原式截零，代理保留负下界 |
+| `leo_certify_period_qos` | 固定日程逐槽 log-MGF 的直接概率证书 |
+| `leo_evaluate_nominal_service` / `leo_sample_period_service` | 单独报告 Z=1 参考与独立衰落验证，不用于设计系数 |
 | `leo_evaluate_service` | R5–R6：原始设计速率、资源及周期服务、实际设计公平 |
 | `leo_build_hard_constraints` | O1：二元变量上下界、人数/同码字限制 |
 | `leo_precheck_positive_fairness` | 第 6.4 节：最大流检查正公平可服务性 |
@@ -201,7 +231,8 @@ gamma(i,t)     = Z(i,t)*S_tilde(i,t) /
 | `sinr.active` | K×T | 是否真实激活且存在数据时间 |
 | `sinr.referenceZ1` | K×T | Z=1 的确定性参考，**不是平均 SINR** |
 | `sinr.desiredPowerW` / `sinr.interferencePowerW` | K×T | 含 Z 的瞬时信号/干扰功率 |
-| `design.risk` / `design.zeta` | K×T | 候选基本槽风险与确定性低分位增益 |
+| `design.risk` / `design.zeta` | K×T | 旧模式为逐槽风险/分位；新模式 risk=0、zeta=z0，风险在 userRisk |
+| `design.userRisk` / `serviceScale` / `serviceMarginBits` | K×1 | 新模式 ε_i / ρ_i / m_i，周期余量只扣一次 |
 | `design.signalW` / `design.beamPowerW` | K×T / K×NB×T | R4 的设计有用/干扰系数，含 zeta |
 | `problem.hard.index` | K×M | x(:) 中的变量位置；块内保持相同 x |
 | `problem.stage1` | 结构体 | 640 个二元变量 + 连续公平比例 s（默认） |
@@ -224,7 +255,7 @@ result = leo_compute_sinr(model.parameters,model.resources,model.beams, ...
 ```
 
 未选中或没有数据时间的位置导出 `gamma=0`、`gammaDb=-Inf`，须配合 `active` 掩码统计。
-SINR 根据接收信号功率分解计算；本版由低分位 SINR 生成 Shannon 设计速率与服务，未生成调制波形。
+SINR 根据接收信号功率分解计算；本版由阈值 SINR 生成 Shannon 服务，再计算周期可靠性证书；旧模式仍可使用低分位设计，未生成调制波形。
 
 ## 模型边界
 

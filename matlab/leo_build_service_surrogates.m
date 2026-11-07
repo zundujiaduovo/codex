@@ -55,14 +55,15 @@ proxy.rateError.lowerMaxBps = max(0,max(gapZero,gapEnd));
 proxy.rateError.lowerMaxBps(~proxy.limits.eventMask) = 0;
 proxy.lower = leo_assemble_quadratic_service(data,proxy.tangent.alphaBps,proxy.tangent.omegaBpsPerW);
 proxy.upper = leo_assemble_quadratic_service(data,proxy.chord.alphaBps,proxy.chord.omegaBpsPerW);
+[scale,~] = leo_service_adjustment(data);
 proxy.error.lowerResourceBits = zeros(data.shape);
 proxy.error.upperResourceBits = zeros(data.shape);
 for t = 1:T
     m = data.slotToResource(t);
     proxy.error.lowerResourceBits(:,m) = proxy.error.lowerResourceBits(:,m)+ ...
-        data.dataDurationS(t)*proxy.rateError.lowerMaxBps(:,t);
+        data.dataDurationS(t)*scale.*proxy.rateError.lowerMaxBps(:,t);
     proxy.error.upperResourceBits(:,m) = proxy.error.upperResourceBits(:,m)+ ...
-        data.dataDurationS(t)*proxy.rateError.upperMaxBps(:,t);
+        data.dataDurationS(t)*scale.*proxy.rateError.upperMaxBps(:,t);
 end
 proxy.error.lowerUserBits = sum(proxy.error.lowerResourceBits,2);
 proxy.error.upperUserBits = sum(proxy.error.upperResourceBits,2);
@@ -72,7 +73,7 @@ proxy.referenceTouchMaxAbsBits = NaN;
 if strcmp(mode,'current_schedule')
     original = problem.evaluate(x0);
     lower = leo_evaluate_quadratic_service(data,proxy.lower,x0);
-    proxy.referenceTouchMaxAbsBits = max(abs(original.userBits-lower.userBits));
-    assert(all(abs(original.userBits-lower.userBits)<=1e-10*max(1,abs(original.userBits))));
+    proxy.referenceTouchMaxAbsBits = max(abs(original.signedUserBits-lower.userBits));
+    assert(all(abs(original.signedUserBits-lower.userBits)<=1e-10*max(1,abs(original.signedUserBits))));
 end
 end

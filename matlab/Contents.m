@@ -1,5 +1,17 @@
 % LEO 固定块 QoS：建模、两阶段拉格朗日 SB、原始穷举与统一实验。
-% 完整公式/输入输出/调用关系见仓库 FUNCTION_GUIDE.md。
+% 完整公式/输入输出/调用关系见仓库 FUNCTION_GUIDE.md 和 PERIODIC_QOS.md。
+%
+%   leo_service_totals                 - 跨块累计后扣一次周期风险余量。
+%   leo_service_adjustment             - 逐用户可靠性斜率/余量；兼容历史数据。
+%   leo_certify_period_qos             - 固定日程直接 Chernoff 概率证书。
+%   leo_evaluate_nominal_service       - Z=1 参考吞吐，与保证服务单列。
+%   leo_sample_period_service          - 独立衰落样本的吞吐与 QoS 验证。
+%   run_leo_quickstart                 - 五种方法同场景对比并显示/保存结果图。
+%   run_leo_comparison                 - 五方法统一预算对比，附独立衰落吞吐验证。
+%   leo_plot_method_comparison         - 多方法六项指标对比图。
+%   leo_reference_users_32             - 跨运行器一致的默认用户坐标。
+%   run_leo_periodic_sweep              - 固定物理参数、1/2/4 Mbit 多算法负载扫描。
+%   test_leo_periodic                  - 周期证书的独立概率枚举与求解验证。
 %
 %   leo_array_response                 - [C1] 每列单位范数，p 索引优先变化，与码本一致。
 %   leo_assemble_quadratic_service     - T5-T6：a_i*x_i - sum_{j~=i}b_ij*x_i*x_j。

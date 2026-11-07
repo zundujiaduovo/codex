@@ -2,6 +2,7 @@ function model = leo_form_proxy_milp(data,lower,phase,s0)
 %LEO_FORM_PROXY_MILP 第 13.3 节：直接线性化二次下界的完整周期 MILP。
 % 输入：data、lower、fairness/throughput、固定 s0；输出稀疏 f/A/b/lb/ub/intcon。
 % y_ijm=x_im*x_jm 用三个 McCormick 不等式；x 二元时 y 可保持连续。
+% 周期模式服务矩阵保存 A_lower，serviceOffsetBits=-margin，QoS 右端已平移。
 if nargin<4, s0 = 0; end
 assert(any(strcmp(phase,{'fairness','throughput'})));
 K = data.shape(1); M = data.shape(2); nx = K*M; pairs = zeros(0,3);
@@ -29,6 +30,12 @@ rhs = zeros(3*np,1); rhs(3:3:end) = 1;
 qos = -spdiags(1./data.qosTargetBits,0,K,K)*D;
 if isFair, qos(:,n) = 1; qosRhs = zeros(K,1);
 else, qosRhs = -s0*ones(K,1); end
+[~,margin] = leo_service_adjustment(data);
+qosRhs = qosRhs-margin./data.qosTargetBits;
+% 代理要求 A_lower >= margin+s*q，是 G 约束的充分条件；s=0 时可更严格。
+model.serviceOffsetBits = -margin;
+model.objectiveConstant = 0;
+if ~isFair, model.objectiveConstant = sum(margin)/data.referenceBits; end
 model.A = [data.hard.A,sparse(size(data.hard.A,1),n-nx);mc;qos];
 model.b = [data.hard.rhs;rhs;qosRhs];
 model.lb = zeros(n,1); model.ub = [data.hard.upper;ones(n-nx,1)];

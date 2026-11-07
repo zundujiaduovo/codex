@@ -73,11 +73,18 @@ check.userCount = K;
 check.simpleCapacityNecessary = K<=data.maxStreams*M;
 check.neverServiceableUsers = find(~any(eligible,2));
 check.unmatchedUsersInWitness = find(~any(check.witness,2));
+check.allUsersHaveOpportunity = flow==K;
 check.canHavePositiveFairness = flow==K;
 check.forcedZeroFairness = flow<K;
 check.witnessService = leo_evaluate_service(data,check.witness);
-if check.canHavePositiveFairness
-    assert(check.witnessService.fairness>0,'理论正服务在数值计算中下溢。');
+[~,margin] = leo_service_adjustment(data);
+if any(margin>0)
+    check.canHavePositiveFairness = check.witnessService.fairness>0;
+    check.scope = 'Flow failure proves zero fairness; success proves opportunity only, not positive periodic certificate.';
+else
+    if check.canHavePositiveFairness
+        assert(check.witnessService.fairness>0,'理论正服务在数值计算中下溢。');
+    end
+    check.scope = 'Baseline O2 only: positive fairness, not all demand targets satisfied.';
 end
-check.scope = 'Baseline O2 only: positive fairness, not all demand targets satisfied.';
 end

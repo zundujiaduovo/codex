@@ -1,8 +1,8 @@
 function service = leo_evaluate_service(data,x,requireFeasibleBinary)
-%LEO_EVALUATE_SERVICE R5-R6、O3-O4：原始设计速率及跨块累计服务（bit）。
+%LEO_EVALUATE_SERVICE 原始阈值速率、跨块有效服务 A 和周期保证 G（bit）。
 % 接口标注：
 % 输入：data：固定设计模型；x：K×M 日程；可选 requireFeasibleBinary。
-% 输出：service：逐槽/逐块/逐用户 bit、最差需求比、公平和净总服务。
+% 输出：slotBits/resourceBits 在周期扣余量之前；userBits/totalBits 为保证 G。
 % 默认校验合法二元日程。false 仅供问题回调在 [0,1] 盒内计算连续延拓。
 if nargin<3, requireFeasibleBinary = true; end
 assert(isequal(size(x),data.shape) && all(isfinite(x(:))));
@@ -13,8 +13,9 @@ if requireFeasibleBinary
     assert(all(data.hard.A*double(x(:))<=data.hard.rhs),'人数/同码字约束不满足。');
 end
 K = data.shape(1); M = data.shape(2); T = numel(data.slotToResource);
+[scale,~] = leo_service_adjustment(data);
 service.gamma = zeros(K,T);
-service.rateBps = zeros(K,T);         % 含 x_i，仅对选中用户计服务
+service.rateBps = zeros(K,T);         % 阈值/分位速率，含 x_i；slotBits 另乘 rho_i
 service.slotBits = zeros(K,T);
 service.resourceBits = zeros(K,M);
 for t = 1:T
@@ -28,13 +29,11 @@ for t = 1:T
         service.gamma(i,t) = x(i,m)*sinr;
         service.rateBps(i,t) = x(i,m)*data.bandwidthHz*log1p(sinr)/log(2);
     end
-    service.slotBits(:,t) = data.dataDurationS(t)*service.rateBps(:,t);
+    service.slotBits(:,t) = data.dataDurationS(t)*scale.*service.rateBps(:,t);
     service.resourceBits(:,m) = service.resourceBits(:,m)+service.slotBits(:,t);
 end
-service.userBits = sum(service.resourceBits,2);
-service.totalBits = sum(service.userBits);
-service.demandRatio = service.userBits./data.qosTargetBits;
-service.fairness = min(1,min(service.demandRatio));
-service.normalizedThroughput = service.totalBits/data.referenceBits;
+totals = leo_service_totals(data,service.resourceBits);
+names = fieldnames(totals);
+for j = 1:numel(names), service.(names{j}) = totals.(names{j}); end
 % q_i 是 QoS 目标，不把 service.userBits 裁剪到 q_i。
 end

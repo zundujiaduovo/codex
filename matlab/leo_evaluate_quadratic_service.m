@@ -15,10 +15,6 @@ for m = 1:data.shape(2)
     xm = double(x(:,m));
     result.resourceBits(:,m) = xm.*(q.aBits(:,m)-q.bBits(:,:,m)*xm);
 end
-result.userBits = sum(result.resourceBits,2);
-result.totalBits = sum(result.userBits);
-result.demandRatio = result.userBits./data.qosTargetBits;
-result.fairness = min(1,min(result.demandRatio)); % 可能为负：该日程没有非负的代理 s
+result = leo_service_totals(data,result.resourceBits,false);
 result.nonnegativeQoSFeasible = all(result.userBits>=0);
-result.normalizedThroughput = result.totalBits/data.referenceBits;
 end

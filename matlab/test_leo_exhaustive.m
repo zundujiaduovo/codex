@@ -82,7 +82,8 @@ assert(strcmp(r.status,'time_limit') && ~r.completed && ~r.optimal && r.visitedS
 assert(~r.stage1Complete && ~r.stage2Complete);checks=checks+1;
 
 % 10. 默认大问题只计算规模：保留原 32 用户/20 块，不执行指数搜索。
-model=run_leo_sinr();
+legacy = leo_default_parameters(); legacy.statistics.serviceModel = 'slot_union';
+model=run_leo_sinr(legacy);
 r=leo_exhaustive_search(model.problem,o);
 assert(r.estimate.resources==20 && r.estimate.log10Schedules>100);
 assert(strcmp(r.status,'size_limit') && ~r.optimal && ~r.hasIncumbent);
@@ -93,7 +94,7 @@ end
 function problem=toy_problem(bits,q,L,beamIndex,available)
 % 直接指定可独立核对的原始设计功率，避免与生产枚举实现共用预计算。
 K=size(bits,1);M=size(bits,2);
-p=leo_default_parameters();p.system.K=K;p.system.maxStreams=L;
+p=leo_default_parameters(); p.statistics.serviceModel = 'slot_union';p.system.K=K;p.system.maxStreams=L;
 p.system.qosTargetBits=q;p.system.bandwidthHz=100;
 p.time.nSlots=M;p.time.blockSlots=1;p.time.slotDurationS=1;
 p.time.baseOverheadS=0;p.time.configOverheadS=0;

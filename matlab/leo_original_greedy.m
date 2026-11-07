@@ -12,8 +12,7 @@ while ~leo_budget_expired(budget)
             group = x(:,m); group(i) = true; ids = find(group);
             if numel(ids)>data.maxStreams || numel(unique(data.beamIndex(ids,m)))<numel(ids), continue; end
             bits = service.resourceBits; bits(:,m) = leo_resource_service(data,m,group);
-            trial.userBits = sum(bits,2); trial.totalBits = sum(trial.userBits);
-            trial.demandRatio = trial.userBits./data.qosTargetBits; trial.fairness = min(1,min(trial.demandRatio));
+            trial = leo_service_totals(data,bits);
             evaluations = evaluations+1;
             if leo_service_is_better(trial,candidate,phase,s0)
                 candidate = trial; candidateX = x; candidateX(:,m) = group; candidateFound = true;

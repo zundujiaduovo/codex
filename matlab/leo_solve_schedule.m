@@ -30,7 +30,8 @@ if options.verbose
 end
 fairBudget = budget; fairBudget.seconds = options.maxSeconds*options.fairnessBudgetFraction;
 stage1 = leo_run_price_phase(problem,proxy,cache,'fairness',initial,options,fairBudget);
-% 第二阶段在第一阶段保留日程处相切，确保该日程也是新下界代理的可行起点。
+% 第二阶段在阶段 1 保留日程处相切；正公平时它也是代理可行点。
+% 周期模式 s0=0 时有符号代理可能更严格，仍保留原式可行日程验收。
 stage2Proxy = [];
 if ~leo_budget_expired(budget)
     stage2Proxy = leo_build_service_surrogates(problem,'current_schedule',stage1.x);

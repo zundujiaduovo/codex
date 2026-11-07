@@ -1,5 +1,7 @@
 # 基础方案的统一对比实验
 
+2026-11-07：默认采用 [周期累计 QoS 证书](PERIODIC_QOS.md)，旧 `slot_union` 可显式选择。服务总量/公平/QoS 均按当前证书口径；标称和衰落仿真吞吐单列，不混作保证。历史结果文件保持原样。
+
 本入口对应方案第 13.3 节，在用户指定的固定时间块模型下比较。代码完整性边界见
 [IMPLEMENTATION_STATUS.md](IMPLEMENTATION_STATUS.md)，实测数值见 [BENCHMARK_RESULTS.md](BENCHMARK_RESULTS.md)。
 

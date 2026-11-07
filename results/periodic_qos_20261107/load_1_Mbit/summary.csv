@@ -1,0 +1,5 @@
+method,runs,completed,unavailable,failed,medianFairness,bestFairness,bestRunTotalBits,medianTotalBits,medianQosSatisfactionRate,hardFeasibleRate,medianEndToEndSeconds,maxBudgetOverrunSeconds,medianFairnessGap,medianExactFairnessGap
+"initial",3,3,0,0,1,1,62448812.908594169,62448812.908594169,1,1,2.683182954788208,0,0,NaN
+"original_tabu",3,3,0,0,1,1,72397623.899674907,72262634.21906589,1,1,12.283255815505981,0.28610777854919434,0,NaN
+"price_sb",3,3,0,0,1,1,62770620.332105465,62770620.332105465,1,1,12.189597845077515,0.23610281944274902,0,NaN
+"price_local",3,3,0,0,1,1,62770620.332105465,62770620.332105465,1,1,12.213479995727539,0.27475476264953613,0,NaN

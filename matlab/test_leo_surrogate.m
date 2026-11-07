@@ -144,7 +144,7 @@ try,leo_evaluate_service_bounds(problem,proxy,.5*ones(4,2));catch,failed=true;en
 assert(failed);checks=checks+1;
 
 % 12. 真实 8 用户/3 块算例逐资源遍历全部 768 个组；加性覆盖所有完整日程。
-p=leo_default_parameters();p.system.K=8;p.time.nSlots=15;
+p=leo_default_parameters(); p.statistics.serviceModel = 'slot_union';p.system.K=8;p.time.nSlots=15;
 model=run_leo_sinr(p);
 report=leo_check_surrogate_groups(model.problem,model.surrogate);
 assert(report.allGroupsPassed && report.groupsChecked==768);
@@ -154,7 +154,7 @@ fprintf('PASS: %d tangent/chord test groups.\n',checks);
 end
 
 function problem=toy_problem(K,L,sharedBeam)
-p=leo_default_parameters();p.system.K=K;p.system.maxStreams=L;
+p=leo_default_parameters(); p.statistics.serviceModel = 'slot_union';p.system.K=K;p.system.maxStreams=L;
 p.system.bandwidthHz=100;p.system.qosTargetBits=10;
 p.time.nSlots=4;p.time.blockSlots=2;p.time.slotDurationS=.5;
 p.time.baseOverheadS=0;p.time.configOverheadS=0;

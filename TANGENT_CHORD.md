@@ -1,8 +1,8 @@
 # 切线下界、弦线上界与二次服务
 
 实现方案第 7.1–7.5 节和第 11.1–11.2 节的误差量。
-保留原始模型、风险预算、32 波束/8 并发和 50 ms 固定块。
-本轮仅构造和验证代理，不求解代理问题，不加入拉格朗日、QUBO、SB 或可选多层切线编码。
+默认采用 [周期累计可靠性模型](PERIODIC_QOS.md)，保留 5% 联合风险、32 波束/8 并发和 50 ms 固定块。
+以下标量切线/弦线仍适用；周期汇总须乘 ρ_i 并扣一次 m_i。
 
 ## 运行与入口
 
@@ -48,7 +48,7 @@ check.lowerGapBits                  % 每用户的 D_i - lower_D_i，应为数�
 
 ## 标量速率、切线和弦线 T1、T4、T7
 
-以下 S、c 均为第 5 节低分位设计系数，不是瞬时 Z 缩放的样本系数：
+以下 S、c 在新模式为 z0 阈值系数，旧模式为第 5 节低分位设计系数，不是瞬时 Z 缩放的样本系数：
 
 \[
 r(I)=B\log_2\left(1+\frac S{N+I}\right),\qquad
@@ -112,25 +112,27 @@ r(a)-r(b)=\frac B{\ln2}\log\left(1+\frac{sh}{1+s+h}\right)
 用户组及码字块内固定，但每槽系数和切点分别计算：
 
 \[
-a_{im}=\sum_{t\in\mathcal I_m}d_t\alpha_{it},\quad
-b_{ijm}=\sum_{t\in\mathcal I_m}d_t\omega_{it}c_{ij,t},\quad b_{iim}=0.
+a_{im}=\rho_i\sum_{t\in\mathcal I_m}d_t\alpha_{it},\quad
+b_{ijm}=\rho_i\sum_{t\in\mathcal I_m}d_t\omega_{it}c_{ij,t},\quad b_{iim}=0.
 \]
 
 \[
 \underline D_{im}=a_{im}x_{im}-\sum_{j\ne i}b_{ijm}x_{im}x_{jm}.
 \]
 
+周期有符号下界为 Σ_m Dlow_im−m_i；旧模式 ρ_i=1、m_i=0。
 弦线上界使用同样的汇总方式，得到上界 a、b。
 b_ij 表示用户 j 对受干扰用户 i 的损失，通常不对称；它不是直接供 SB 使用的对称 Ising 矩阵。
 两个代理都只有已有 x 的二次项，没有新增用户对变量。
 
 `leo_evaluate_quadratic_service` 返回资源/周期服务、总量和需求比例。
 若下界的固定日程公平分数为负，表示该日程在代理约束中没有满足 s≥0 的公平比例，
-不能将这个分数默默截成零后标为代理可行。空日程仍提供代理问题的零公平可行点。
+不能将这个分数默默截成零后标为代理可行。旧模式空日程是代理零公平可行点；新模式 m_i>0 时空日程不满足代理约束，尽管原始 G 问题仍允许空日程。
 
 ## 当前日程相切
 
-被选用户取 Ibar=I(x0)，因此每用户周期下界在 x0 处与原式相等。
+被选用户取 Ibar=I(x0)，因此周期下界在 x0 处与有符号原式 A_i−m_i 相等。
+将下界和弦上界各自截到零可夹住 G_i，但截断后的表达式不能直接当作单个二次代理。
 构造函数实际核对该相等关系；未选用户对应 x_i=0，参考点使用 minimax 不影响相等关系。
 弦线上界沿用完整合法区间，不随参考日程缩小。
 
@@ -139,18 +141,20 @@ b_ij 表示用户 j 对受干扰用户 i 的损失，通常不对称；它不是
 
 ## 服务误差 E1–E3
 
+本节误差比较有符号原式 A_i−m_i 与有符号代理；风险余量相消。对 G 的截断是 1-Lipschitz，不增加夹逼误差。
 任意切点下，r−ell 为凸函数，最大误差在区间端点达到。代码直接用两个端点求 delta_L。
 弦线上界的最大误差 delta_U 在 minimax 点达到。
 默认 minimax 模式中两者相同至浮点误差；当前日程模式需重新计算下界误差。
 
 \[
 0\le D_i-\underline D_i\le\epsilon_i,\qquad
-\epsilon_i=\sum_{m:v_{im}=1}\sum_{t\in\mathcal I_m}d_t\delta_{L,it}.
+\epsilon_i=\rho_i\sum_{m:v_{im}=1}\sum_{t\in\mathcal I_m}d_t\delta_{L,it}.
 \]
 
 `proxy.error.lowerUserBits` 是覆盖所有合法日程的用户误差预算；上界有对应 `upperUserBits`。
 给定日程的检查器会进一步只累计选中资源的预算。
 `optimalFairnessGapBound=min(1,max(epsilon_i/q_i))` 对应基准 O2 与固定二次代理**各自最优值**的理论差距界。
+新模式仅在固定代理存在非负公平可行解时使用其最优值差界；代理不可行不证明原问题不可行。
 它不是某个任意日程的最优性证书，也不证明 SB 达到了代理最优；未扩展到第 20 节吞吐底线问题。
 
 ## 输出字段与函数

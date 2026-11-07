@@ -29,6 +29,7 @@ end
 if ~isempty(z) && all(isfinite(z)) && all(abs(z(model.intcon)-round(z(model.intcon)))<1e-6) && ...
         all(z>=model.lb-1e-7 & z<=model.ub+1e-7) && all(model.A*z<=model.b+1e-7)
     result.z = z; result.objective = f;
+    if isfield(model,'objectiveConstant'), result.objective = f+model.objectiveConstant; end
 else
     result.optimal = false;
 end

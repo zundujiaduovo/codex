@@ -12,6 +12,10 @@ end
 stamp = sprintf('%s | K=%d, M=%d, L=%d | median and min-max across %d seeds', ...
     data.caseName,data.shape(1),data.shape(2),data.maxStreams,numel(data.seeds));
 repStamp = sprintf('%s | first requested seed %d',data.caseName,data.representativeSeed);
+if isfield(data,'serviceModel') && strcmp(data.serviceModel,'periodic_chernoff')
+    stamp = [stamp,' | certified period service'];
+    repStamp = [repStamp,' | certified period service'];
+end
 
 p = metric(records,good,'fairness',1,'Capped minimum QoS ratio','Fairness');
 p(2) = metric(records,good,'totalBits',1e-6,'Original net service','Mbit');
@@ -118,7 +122,7 @@ figures = add_figure(figures,'11_schedules',[repStamp,' | 1=selected, 0=idle; on
 
 p = panel('line','Concurrent users per fixed block','Block','Users');
 p.reference = data.maxStreams; p.referenceLabel = 'Concurrent-user limit'; p.ylim = [0,data.maxStreams+1];
-p(2) = panel('line','Net service per fixed block','Block','Mbit');
+p(2) = panel('line','Additive service before period risk margin','Block','Mbit');
 p(3) = panel('heatmap','Price+SB use of the fixed beam codebook','Block','Beam');
 p(3).clim = [0,1];
 p(4) = panel('line','Design SINR CDF for active data samples','Design SINR (dB)','Fraction of active samples');

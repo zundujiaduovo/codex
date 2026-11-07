@@ -32,6 +32,7 @@ p.users.centerLatDeg = 0;
 p.users.centerLonDeg = 0;
 p.users.radiusM = 200e3;              % 区域半径，自选仿真假设
 p.users.altitudeM = 0;
+p.users.layout = 'reference32';        % 固定已验证的默认 32 用户场景，跨 MATLAB/Octave 一致
 p.orbit.altitudeM = 600e3;            % LEO 场景；圆轨道半径 aE+h
 p.orbit.inclinationDeg = 53;
 p.orbit.raanDeg = 0;
@@ -55,7 +56,11 @@ p.channel.extraLossDb = 2;           % 固定附加损耗；非完整天气模�
 p.channel.ricianKDb = 10;            % 待标定的实验起点，线性 kappa=10
 p.channel.systemTemperatureK = 500;  % 已含接收机噪声，不再叠加 NF
 
-p.statistics.totalRisk = 0.05;       % R1-R7：整个周期所有候选位置的联合风险
+p.statistics.totalRisk = 0.05;       % 周期服务向量的联合失效概率上限
+p.statistics.serviceModel = 'periodic_chernoff'; % 'slot_union' 保留旧逐槽模型
+p.statistics.independentSlots = true; % 与 leo_generate_fading 的基本槽独立假设一致
+p.statistics.goodFadeThreshold = 0.25; % 预先固定，不用未来衰落调参
+p.statistics.chernoffTilt = 2.5;     % theta_i * 最大单槽服务，正的无量纲常数
 p.problem.referenceBits = [];        % [] -> sum(q_i)，与决策无关
 p.problem.feasibilityTolerance = 1e-9; % 归一化约束容差，不改变数学约束
 p.exhaustive = leo_exhaustive_options(); % 默认不启动；run_leo_exhaustive_demo 开启
