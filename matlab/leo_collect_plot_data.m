@@ -21,7 +21,7 @@ data.energy = struct([]); data.progress = struct([]); data.representatives = str
 for r = 1:numel(report.records)
     row = report.records(r); count = empty_count(row);
     if ~strcmp(row.status,'completed')
-        data.counts(end+1,1) = count; continue; %#ok<AGROW>
+        data.counts = leo_append_struct(data.counts,count); continue; %#ok<AGROW>
     end
     result = report.solutions{r}; offset = row.commonSeconds+row.proxyPreparationSeconds;
     initialTime = known_initial_time(result);
@@ -51,14 +51,14 @@ for r = 1:numel(report.records)
             report.options.method.sbTrajectories,true);
     end
     if isfield(result,'evaluations'), count.originalEvaluations = result.evaluations; end
-    data.counts(end+1,1) = count; %#ok<AGROW>
+    data.counts = leo_append_struct(data.counts,count);
     data.progress = progress_point(data.progress,row,row.endToEndSeconds,result.service,'final');
     if row.seed==data.representativeSeed
         rep.method = row.method; rep.seed = row.seed; rep.x = result.x;
         rep.service = leo_evaluate_service(report.problemData,result.x);
         rep.initial = result.initial.service; rep.stage1 = result.stage1.service;
         rep.fairnessFloor = result.fairnessFloor;
-        data.representatives(end+1,1) = rep; %#ok<AGROW>
+        data.representatives = leo_append_struct(data.representatives,rep);
     end
 end
 % 诊断图一律在计时实验结束后计算；使用同一个固定 minimax 代理。
@@ -88,7 +88,7 @@ for r = 1:numel(data.representatives)
         bound.lowerBits = max(0,bound.lowerBits); bound.upperBits = max(0,bound.upperBits);
     end
     bound.lowerErrorBoundBits = proxy.error.lowerUserBits;
-    data.serviceBounds(end+1,1) = bound; %#ok<AGROW>
+    data.serviceBounds = leo_append_struct(data.serviceBounds,bound);
 end
 data.notes = {'Counter NaN means not applicable or not reported, never zero iterations.', ...
     'Iteration units differ by algorithm; price rounds, native search steps and SB integration steps are separate.', ...
@@ -149,7 +149,7 @@ for phase = 1:2
             if phase==2, e.upperBound = e.upperBound*data.referenceBits; end
             e.priceFairness = NaN; e.priceTotalBits = NaN;
             e.completePriceRound = NaN; e.proxyEpoch = NaN;
-            data.events(end+1,1) = e; %#ok<AGROW>
+            data.events = leo_append_struct(data.events,e);
             if addProgress
                 data.progress = progress_point(data.progress,row,e.elapsedSeconds,stage.initialService, ...
                     sprintf('phase%d_initial',phase));
@@ -168,7 +168,7 @@ for phase = 1:2
                 e.priceFairness = h.priceFairness(k); e.priceTotalBits = h.priceTotalBits(k);
                 e.completePriceRound = double(h.completePriceRound(k)); e.proxyEpoch = h.proxyEpoch(k);
             end
-            data.events(end+1,1) = e; %#ok<AGROW>
+            data.events = leo_append_struct(data.events,e);
             if addProgress
                 service.fairness = e.fairness; service.totalBits = e.totalBits;
                 data.progress = progress_point(data.progress,row,e.elapsedSeconds,service,sprintf('phase%d',phase));
@@ -180,7 +180,7 @@ for phase = 1:2
                     p.lambda = h.lambda(i,k); p.lambdaNext = h.lambdaNext(i,k);
                     p.lowerDemandRatio = h.lowerUserBits(i,k)/data.targetBits(i);
                     p.targetRatio = h.sAux(k); p.step = h.step(k);
-                    data.prices(end+1,1) = p; %#ok<AGROW>
+                    data.prices = leo_append_struct(data.prices,p);
                 end
             end
         end
@@ -193,7 +193,7 @@ for phase = 1:2
             energy.step = h.step(k); energy.minimum = h.minimum(k);
             energy.median = h.median(k); energy.maximum = h.maximum(k);
             energy.trajectories = trace.trajectories; energy.energyScale = trace.energyScale;
-            data.energy(end+1,1) = energy; %#ok<AGROW>
+            data.energy = leo_append_struct(data.energy,energy);
         end
     end
     if addProgress && isfield(stage,'elapsedAtEndSeconds')
@@ -212,7 +212,7 @@ end
 function rows = progress_point(rows,row,time,service,kind)
 p.method = row.method; p.seed = row.seed; p.seconds = time;
 p.fairness = service.fairness; p.totalBits = service.totalBits; p.kind = kind;
-rows(end+1,1) = p;
+rows = leo_append_struct(rows,p);
 end
 
 function seconds = known_initial_time(result)

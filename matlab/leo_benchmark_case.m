@@ -94,6 +94,12 @@ if options.exhaustive
 end
 report.parameters = model.parameters; report.options = options;
 report.problemData = problem.data; report.records = records; report.solutions = solutions;
-report.exhaustive = reference; report.summary = leo_summarize_benchmark(records,options.methods);
+report.exhaustive = reference; report.summary = struct([]);
+% 算法结果先落盘；汇总或绘图失败时仍可恢复，不必重新求解所有方法。
+if ~isempty(options.outputDirectory)
+    if ~exist(options.outputDirectory,'dir'), mkdir(options.outputDirectory); end
+    save(fullfile(options.outputDirectory,'raw_benchmark.mat'),'report','-v7');
+end
+report.summary = leo_summarize_benchmark(records,options.methods);
 report.scope = 'Baseline O2/O4, fixed blocks, all physical candidates; optional extensions listed separately in IMPLEMENTATION_STATUS.md.';
 end
