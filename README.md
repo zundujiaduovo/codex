@@ -6,7 +6,7 @@
 **2026-11-07 更新：默认 `periodic_chernoff`，按用户分配 5% 联合风险，利用独立基本槽的累计服务证书；
 旧 `slot_union` 保留为保守对照。完整公式、假设、上界及代码字段见 [PERIODIC_QOS.md](PERIODIC_QOS.md)。**
 本次三负载/三种子及独立衰落验证见 [实验报告](results/periodic_qos_20261107/REPORT.md)。
-[下载完整方法对比源码包](leo_full_comparison_20261107.zip)；仓库仍保留原始 `leo_satellite_simulation_code.zip`。
+[下载 V2 完整运行源码包](LEO_QoS_Comparison_v2.zip)。本分支只保留此版本包；旧版仍在 `main` 和 `periodic-qos-20261107` 分支。
 已接通切线/弦线、价格协调、QUBO/Ising、SB、约束修复、完整日程恢复与严格公平门槛下的吞吐阶段。
 完整状态及未实施的可选扩展见 [IMPLEMENTATION_STATUS.md](IMPLEMENTATION_STATUS.md)。
 算法参数与结果接口见 [METHOD.md](METHOD.md)，统一实验见 [BENCHMARKS.md](BENCHMARKS.md)，
@@ -27,8 +27,8 @@ MATLAB 多方法对比：解压后打开根目录的 `RUN_COMPARISON.m`，点击
 也可在命令窗口运行：
 
 ```matlab
-cd('D:\code\leo_periodic_qos')
-addpath('D:\code\leo_periodic_qos\matlab')
+cd('D:\code\LEO_QoS_Comparison_v2')
+addpath('D:\code\LEO_QoS_Comparison_v2\matlab')
 [report,fig] = run_leo_comparison();
 ```
 
