@@ -6,8 +6,8 @@
 %   leo_certify_period_qos             - 固定日程直接 Chernoff 概率证书。
 %   leo_evaluate_nominal_service       - Z=1 参考吞吐，与保证服务单列。
 %   leo_sample_period_service          - 独立衰落样本的吞吐与 QoS 验证。
-%   run_leo_quickstart                 - 五种方法同场景对比并显示/保存结果图。
-%   run_leo_comparison                 - 五方法统一预算对比，附独立衰落吞吐验证。
+%   run_leo_quickstart                 - 全部方法同场景对比并显示/保存结果图。
+%   run_leo_comparison                 - 全部方法统一预算对比，附独立衰落吞吐验证。
 %   leo_plot_method_comparison         - 多方法六项指标对比图。
 %   leo_reference_users_32             - 跨运行器一致的默认用户坐标。
 %   run_leo_periodic_sweep              - 固定物理参数、1/2/4 Mbit 多算法负载扫描。

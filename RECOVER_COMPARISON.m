@@ -8,12 +8,17 @@ report = comparisonSaved.report;
 comparisonGood = strcmp({report.records.status},'completed');
 comparisonRows = report.records(comparisonGood);
 assert(~isempty(comparisonRows),'备份中没有成功的算法结果。');
-assert(numel(unique([comparisonRows.seed]))==1, ...
-    '此恢复入口针对单种子快速对比；多种子报告请使用 run_leo_comparison。');
-comparisonLabels = {comparisonRows.method};
+comparisonLabels = report.options.methods;
 comparisonPeriod = report.parameters.time.nSlots*report.parameters.time.slotDurationS;
-comparisonValues = [[comparisonRows.fairness];100*[comparisonRows.qosSatisfactionRate]; ...
-    [comparisonRows.totalBits]/(1e6*comparisonPeriod);[comparisonRows.endToEndSeconds]];
+comparisonValues = NaN(4,numel(comparisonLabels));
+for comparisonMethod = 1:numel(comparisonLabels)
+    comparisonSubset = comparisonRows(strcmp({comparisonRows.method},comparisonLabels{comparisonMethod}));
+    if isempty(comparisonSubset), continue; end
+    comparisonValues(:,comparisonMethod) = [median([comparisonSubset.fairness]); ...
+        100*median([comparisonSubset.qosSatisfactionRate]); ...
+        median([comparisonSubset.totalBits])/(1e6*comparisonPeriod); ...
+        median([comparisonSubset.endToEndSeconds])];
+end
 comparisonTitles = {'Certified minimum QoS ratio','Users meeting certified full QoS', ...
     'Certified sum rate','Accounted end-to-end runtime'};
 comparisonUnits = {'Ratio','Percent','Mbps','Seconds'};
@@ -23,10 +28,10 @@ if ~exist('comparisonRender','var') || comparisonRender
     for comparisonPanel = 1:4
         subplot(2,2,comparisonPanel);
         bar(comparisonValues(comparisonPanel,:));
-        set(gca,'XTick',1:numel(comparisonRows),'XTickLabel',comparisonLabels, ...
+        set(gca,'XTick',1:numel(comparisonLabels),'XTickLabel',comparisonLabels, ...
             'XTickLabelRotation',20,'TickLabelInterpreter','none');
         title(comparisonTitles{comparisonPanel}); ylabel(comparisonUnits{comparisonPanel}); grid on;
     end
     print(fig,fullfile(comparisonDirectory,'comparison_recovered.png'),'-dpng','-r160');
 end
-fprintf('Recovered %d methods from raw_benchmark.mat; no algorithms re-run.\n',numel(comparisonRows));
+fprintf('Recovered %d completed runs from raw_benchmark.mat; no algorithms re-run.\n',numel(comparisonRows));

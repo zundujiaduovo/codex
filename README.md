@@ -6,7 +6,7 @@
 **2026-11-07 更新：默认 `periodic_chernoff`，按用户分配 5% 联合风险，利用独立基本槽的累计服务证书；
 旧 `slot_union` 保留为保守对照。完整公式、假设、上界及代码字段见 [PERIODIC_QOS.md](PERIODIC_QOS.md)。**
 本次三负载/三种子及独立衰落验证见 [实验报告](results/periodic_qos_20261107/REPORT.md)。
-[下载新版完整源码包](leo_periodic_qos_source_20261107.zip)；仓库仍保留原始 `leo_satellite_simulation_code.zip`。
+[下载完整方法对比源码包](leo_full_comparison_20261107.zip)；仓库仍保留原始 `leo_satellite_simulation_code.zip`。
 已接通切线/弦线、价格协调、QUBO/Ising、SB、约束修复、完整日程恢复与严格公平门槛下的吞吐阶段。
 完整状态及未实施的可选扩展见 [IMPLEMENTATION_STATUS.md](IMPLEMENTATION_STATUS.md)。
 算法参数与结果接口见 [METHOD.md](METHOD.md)，统一实验见 [BENCHMARKS.md](BENCHMARKS.md)，
@@ -19,10 +19,10 @@
 ## 运行
 
 MATLAB 多方法对比：解压后打开根目录的 `RUN_COMPARISON.m`，点击“运行”（F5）。
-它会在同一 32 用户场景中比较初始化、贪心、禁忌、价格+SB、价格+局部搜索，每方法 60 秒软预算、同一个预设种子；预计运行几分钟。
-计算后直接弹出六项对比图：保证公平、保证 QoS 达标率、保证总速率、1000 个独立衰落周期的平均总速率、端到端耗时和逐用户 QoS 比例。
+它会在同一 32 用户场景中比较 12 项方法和切点消融，每方法 12 秒软预算、三个算法种子；预计运行数分钟。MIQP 和 MILP 所需求解器不可用时标记 N/A。完整定义及新增指标见 [METHODS_AND_METRICS.md](METHODS_AND_METRICS.md)。
+计算后弹出综合对比及额外 QoS 指标图，并保存原有 18 类详细图。新增 Jain 公平、平均需求完成比例、独立衰落平均用户 QoS 达标率及全用户联合达标频率。
 图保存为 `results/comparison/method_comparison.png` 和可编辑 `.fig`；完整记录保存在同目录的 CSV/MAT 中。
-算法运行完会先保存 `results/comparison/raw_benchmark.mat`。若汇总或绘图被中断，打开根目录的 `RECOVER_COMPARISON.m` 运行，可直接恢复单种子报告的四项方法对比图，不重新求解，也不需要加载任何 `leo_*` 辅助函数。恢复图保存在 `results/comparison/comparison_recovered.png`。
+算法运行完会先保存 `results/comparison/raw_benchmark.mat`。若汇总或绘图被中断，打开根目录的 `RECOVER_COMPARISON.m` 运行，可直接恢复多种子报告的四项方法中位数对比图，不重新求解，也不需要加载任何 `leo_*` 辅助函数。恢复图保存在 `results/comparison/comparison_recovered.png`。
 
 也可在命令窗口运行：
 
@@ -34,9 +34,10 @@ addpath('D:\code\leo_periodic_qos\matlab')
 
 `run_leo_quickstart()` 现在也调用多方法对比，返回 report。
 默认需求仍为每用户 1 Mbit，公平与 QoS 可能全部封顶；此时总速率和耗时仍有区分度。
-多负载性能比较请运行 `run_leo_periodic_sweep`。
+需要观察较高负载时，可另运行 `run_leo_comparison(fullfile('results','comparison_2M'),struct('qosTargetBits',2e6))`；这明确将每用户需求设为 2 Mbit/周期，输出到单独目录。
+多负载性能比较也可运行 `run_leo_periodic_sweep`。
 
-默认 32 用户位置由 `leo_reference_users_32` 冻结为已经验证过的场景；这样 MATLAB 与 Octave 的不同随机序列不会改变覆盖机会。
+默认 32 用户位置由 `leo_reference_users_32` 冻结为已经验证过的场景；用户坐标跨运行器一致，但码本数值并列和浮点差异仍可能导致覆盖和结果差异，应检查最大流。
 改变用户区域或用户数量时自动使用随机球面帽采样；也可以设 `p.users.layout='random_cap'` 显式生成新随机场景，新场景须单独检查可服务人数。
 
 

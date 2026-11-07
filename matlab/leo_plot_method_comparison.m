@@ -4,8 +4,10 @@ function [fig,values] = leo_plot_method_comparison(report,directory,render)
 if nargin<2, directory = fullfile('results','comparison'); end
 if nargin<3, render = true; end
 methods = report.options.methods; count = numel(methods); labels = methods;
-known = {'initial','original_greedy','original_tabu','price_sb','price_local'};
-names = {'Initial','Greedy','Tabu','Price+SB','Price+Local'};
+known = {'initial','original_greedy','original_exchange','original_tabu','price_sb','price_local', ...
+    'price_miqp','proxy_milp','sb_zero','sb_minimax_fixed','sb_current_fixed','sb_reference_portfolio'};
+names = {'Initial','Greedy','Exchange','Tabu','Price+SB','Price+Local', ...
+    'Price+MIQP','Proxy MILP','SB zero','SB minimax','SB current','SB portfolio'};
 for j = 1:count
     match = find(strcmp(methods{j},known),1);
     if ~isempty(match), labels{j} = names{match}; end
@@ -48,15 +50,19 @@ for k = 1:5
     hold on;
     errorbar(1:count,values.median(:,k),values.median(:,k)-values.low(:,k), ...
         values.high(:,k)-values.median(:,k),'k.','LineWidth',1);
-    set(gca,'XTick',1:count,'XTickLabel',labels,'XTickLabelRotation',25);
+    set(gca,'XTick',1:count,'XTickLabel',labels,'XTickLabelRotation',35,'TickLabelInterpreter','none');
     title(titles{k}); ylabel(ylabels{k}); grid on;
     if k==1, ylim([0,1.05]); elseif k==2, ylim([0,105]); end
+    limits = ylim;
+    for j = find(~isfinite(values.median(:,k))).'
+        text(j,limits(1)+.03*diff(limits),'N/A','Rotation',90,'HorizontalAlignment','left');
+    end
 end
 subplot(2,3,6); hold on;
 for j = 1:count
     plot(1:size(values.userRatio,1),values.userRatio(:,j),'LineWidth',1.1,'Color',colors(j,:));
 end
-legend(labels,'Location','best'); xlabel('User'); ylabel('Certified service / demand');
+legend(labels,'Location','best','Interpreter','none'); xlabel('User'); ylabel('Certified service / demand');
 title('Per-user QoS ratio (first requested seed)'); grid on;
 if ~exist(directory,'dir'), mkdir(directory); end
 print(fig,fullfile(directory,'method_comparison.png'),'-dpng','-r160');
