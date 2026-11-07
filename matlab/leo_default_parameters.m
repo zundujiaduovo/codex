@@ -32,6 +32,7 @@ p.users.centerLatDeg = 0;
 p.users.centerLonDeg = 0;
 p.users.radiusM = 200e3;              % 区域半径，自选仿真假设
 p.users.altitudeM = 0;
+p.users.layout = 'reference32';        % 固定已验证的默认 32 用户场景，跨 MATLAB/Octave 一致
 p.orbit.altitudeM = 600e3;            % LEO 场景；圆轨道半径 aE+h
 p.orbit.inclinationDeg = 53;
 p.orbit.raanDeg = 0;

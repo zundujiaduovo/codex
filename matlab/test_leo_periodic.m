@@ -1,5 +1,12 @@
 function test_leo_periodic()
 %TEST_LEO_PERIODIC 概率证书、完整日程穷举、代理/增量/上界及边界条件。
+reference = run_leo_sinr();
+assert(reference.problem.precheck.maxFlow==32 && all(any(reference.beams.available,2)));
+savedRng = rng;
+rng(1,'twister'); usersA = leo_generate_users(reference.parameters);
+rng(2,'twister'); usersB = leo_generate_users(reference.parameters);
+rng(savedRng);
+assert(isequal(usersA.latDeg,usersB.latDeg) && isequal(usersA.lonDeg,usersB.lonDeg));
 p = leo_default_parameters(); p.system.K = 3; p.time.nSlots = 8;
 p.time.blockSlots = 4; p.system.maxStreams = 2; p.system.bandwidthHz = 100;
 p.system.qosTargetBits = [.3;.4;.5]; p = leo_validate_parameters(p);

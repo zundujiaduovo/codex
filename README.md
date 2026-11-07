@@ -18,6 +18,19 @@
 
 ## 运行
 
+MATLAB 直接出图（默认 32 用户）：
+
+```matlab
+cd('D:\code\leo_periodic_qos')
+addpath('matlab')
+[model,fig] = run_leo_quickstart();
+```
+
+图会显示在 MATLAB，并保存为 `results/quickstart/quickstart.png`。
+默认 32 用户位置由 `leo_reference_users_32` 冻结为已经验证过的场景；这样 MATLAB 与 Octave 的不同随机序列不会改变覆盖机会。
+改变用户区域或用户数量时自动使用随机球面帽采样；也可以设 `p.users.layout='random_cap'` 显式生成新随机场景，新场景须单独检查可服务人数。
+
+
 在仓库根目录的 MATLAB 命令窗口执行（推荐 R2018b 或更新版本，仅基础 MATLAB）：
 
 ```matlab

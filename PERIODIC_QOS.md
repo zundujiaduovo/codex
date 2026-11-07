@@ -177,3 +177,5 @@ o.methods = {'original_tabu','price_sb','price_local'};
 o.outputDirectory = 'results/periodic_qos/load_2_Mbit_60s';
 report = run_leo_benchmarks(p,o);
 ```
+
+默认 32 用户使用 `leo_reference_users_32` 冻结坐标，以保证 MATLAB/Octave 的覆盖几何一致。需要随机新位置时设置 `p.users.layout='random_cap'`，并检查 `model.problem.precheck.maxFlow`。快速生成一张可见结果图可运行 `run_leo_quickstart()`。
