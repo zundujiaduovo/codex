@@ -22,6 +22,6 @@ for j = 1:numel(methods)
         exact = [good.exactFairnessGap]; exact = exact(isfinite(exact));
         if ~isempty(exact), s.medianExactFairnessGap = median(exact); end
     end
-    summary = leo_append_struct(summary,s);
+    if isempty(summary), summary = s; else, summary(end+1,1) = orderfields(s,summary); end
 end
 end

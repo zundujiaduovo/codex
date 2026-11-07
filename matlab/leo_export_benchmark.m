@@ -12,11 +12,11 @@ for r = 1:numel(report.records)
         u = struct('method',row.method,'seed',row.seed,'user',i, ...
             'targetBits',report.problemData.qosTargetBits(i),'serviceBits',result.service.userBits(i), ...
             'demandRatio',result.service.demandRatio(i));
-        users = leo_append_struct(users,u);
+        if isempty(users), users = u; else, users(end+1,1) = orderfields(u,users); end
         for m = 1:report.problemData.shape(2)
             g = struct('method',row.method,'seed',row.seed,'user',i,'resource',m, ...
                 'selected',logical(result.x(i,m)),'beam',report.problemData.beamIndex(i,m));
-            schedule = leo_append_struct(schedule,g);
+            if isempty(schedule), schedule = g; else, schedule(end+1,1) = orderfields(g,schedule); end
         end
     end
 end

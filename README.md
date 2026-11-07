@@ -22,6 +22,7 @@ MATLAB 多方法对比：解压后打开根目录的 `RUN_COMPARISON.m`，点击
 它会在同一 32 用户场景中比较初始化、贪心、禁忌、价格+SB、价格+局部搜索，每方法 60 秒软预算、同一个预设种子；预计运行几分钟。
 计算后直接弹出六项对比图：保证公平、保证 QoS 达标率、保证总速率、1000 个独立衰落周期的平均总速率、端到端耗时和逐用户 QoS 比例。
 图保存为 `results/comparison/method_comparison.png` 和可编辑 `.fig`；完整记录保存在同目录的 CSV/MAT 中。
+算法运行完会先保存 `results/comparison/raw_benchmark.mat`。若汇总或绘图被中断，打开根目录的 `RECOVER_COMPARISON.m` 运行，可直接恢复单种子报告的四项方法对比图，不重新求解，也不需要加载任何 `leo_*` 辅助函数。恢复图保存在 `results/comparison/comparison_recovered.png`。
 
 也可在命令窗口运行：
 
