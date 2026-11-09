@@ -17,7 +17,7 @@ records = repmat(template,0,1); solutions = {};
 for seed = options.seeds(:).'
     for j = 1:numel(options.methods)
         name = options.methods{j}; row = template; row.method = name; row.seed = seed;
-        prebuiltProxy = any(strcmp(name,{'price_sb','price_local','price_miqp','proxy_milp','sb_minimax_fixed'}));
+        prebuiltProxy = any(strcmp(name,{'price_sb','price_sb_blockwise','price_sb_adaptive','price_sb_light','price_local','price_local_adaptive','price_miqp','proxy_milp','sb_minimax_fixed'}));
         if prebuiltProxy, row.proxyPreparationSeconds = model.timings.proxySeconds; end
         seconds = options.budgetSeconds-commonSeconds-row.proxyPreparationSeconds;
         result = [];

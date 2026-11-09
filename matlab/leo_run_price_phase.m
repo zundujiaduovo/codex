@@ -25,7 +25,8 @@ history.lowerUserBits = zeros(K,rounds);
 history.priceX = false(K,M,rounds);
 fields = {'sAux','step','priceFairness','priceTotalBits','savedFairness','savedTotalBits', ...
     'upperBound','proxyEpoch','innerImprovement','resourcesSolved','sbSteps', ...
-    'repairedCandidates','recoveryEvaluations','crossEvaluations','acceptedMoves','elapsedSeconds'};
+    'repairedCandidates','recoveryEvaluations','crossEvaluations','acceptedMoves','elapsedSeconds', ...
+    'blockwiseEvaluations','blockwiseAccepted'};
 for j = 1:numel(fields), history.(fields{j}) = zeros(1,rounds); end
 history.completePriceRound = false(1,rounds);
 epoch = 1; errors = NaN; touchErrors = NaN;
@@ -41,6 +42,7 @@ for k = 1:rounds
     [weights,sAux] = leo_price_weights(data,lambda,phase,s0);
     history.lambda(:,k) = lambda;
     improvement = 0; solved = 0; steps = 0; repairs = 0;
+    blockwiseEvaluations = 0; blockwiseAccepted = 0;
     order = mod((0:M-1)+k-1,M)+1;
     for m = order
         if leo_budget_expired(budget), break; end
@@ -49,6 +51,22 @@ for k = 1:rounds
             firstSbTrace.history = inner.energyHistory;
             firstSbTrace.resource = m; firstSbTrace.priceIteration = k;
             firstSbTrace.trajectories = inner.trajectories; firstSbTrace.energyScale = inner.energyScale;
+        end
+        if options.blockwiseOriginalAccept && (isFairness || s0>0)
+            % 单块 SB 候选也拼到最佳日程上按原目标评分；第二阶段严格保留 QoS 门槛。
+            % 价格日程仍保留原有整轮候选，两个路径都参与最终验收。
+            if ~isequal(inner.x,bestX(:,m))
+                bits = bestService.resourceBits;
+                bits(:,m) = leo_resource_service(data,m,inner.x);
+                trial = leo_service_totals(data,bits); blockwiseEvaluations = blockwiseEvaluations+1;
+                if leo_service_is_better(trial,bestService,phase,s0)
+                    trialX = bestX; trialX(:,m) = inner.x;
+                    exact = problem.evaluate(trialX);
+                    if leo_service_is_better(exact,bestService,phase,s0)
+                        bestX = trialX; bestService = exact; blockwiseAccepted = blockwiseAccepted+1;
+                    end
+                end
+            end
         end
         priceX(:,m) = inner.x;
         improvement = improvement+inner.score-inner.oldScore;
@@ -90,6 +108,7 @@ for k = 1:rounds
     history.sbSteps(k) = steps; history.repairedCandidates(k) = repairs;
     history.recoveryEvaluations(k) = evaluations; history.crossEvaluations(k) = crossEvaluations;
     history.acceptedMoves(k) = acceptedMoves; history.elapsedSeconds(k) = toc(budget.timer);
+    history.blockwiseEvaluations(k) = blockwiseEvaluations; history.blockwiseAccepted(k) = blockwiseAccepted;
     history.completePriceRound(k) = solved==M;
     completed = k; lambda = lambdaNext;
     if options.verbose && (k==1 || mod(k,5)==0 || k==rounds)

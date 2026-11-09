@@ -1,6 +1,6 @@
 function [report,fig] = run_leo_comparison(outputDirectory,overrides,render)
-%RUN_LEO_COMPARISON 同场景比较全部 12 项方法/消融，输出完整图组。
-% 默认每方法 12 秒软预算、三个算法种子；可覆盖 leo_benchmark_options。
+%RUN_LEO_COMPARISON 同场景比较全部 16 项方法/消融，输出完整图组。
+% 默认固定参考用户位置，采用论文部分参数；生成一个随机基础种子供所有方法共享。
 if nargin<1, outputDirectory = fullfile('results','comparison'); end
 if nargin<2, overrides = struct(); end
 if nargin<3, render = true; end
@@ -13,17 +13,62 @@ if isfield(overrides,'theoryOptions')
     theoryOptions = overrides.theoryOptions;
     overrides = rmfield(overrides,'theoryOptions');
 end
-p = leo_default_parameters();
+isolateRun = true;
+if isfield(overrides,'isolateRun')
+    isolateRun = overrides.isolateRun;
+    assert(isscalar(isolateRun) && (isolateRun==0 || isolateRun==1));
+    overrides = rmfield(overrides,'isolateRun');
+end
+validationSamples = 100;
+if isfield(overrides,'validationSamples')
+    validationSamples = overrides.validationSamples;
+    overrides = rmfield(overrides,'validationSamples');
+end
+assert(isnumeric(validationSamples) && isscalar(validationSamples) && isfinite(validationSamples) && ...
+    validationSamples>=1 && validationSamples==fix(validationSamples));
+p = leo_paper_parameters();
+if isfield(overrides,'seeds')
+    runSeed = overrides.seeds;
+    assert(isnumeric(runSeed) && isscalar(runSeed) && isfinite(runSeed) && ...
+        runSeed>=0 && runSeed<=2^32-1 && runSeed==fix(runSeed),'比较入口只接受一个有效随机种子。');
+else
+    runSeed = leo_random_seed();
+end
+p.seed = runSeed;
+if isfield(overrides,'usersLayout')
+    p.users.layout = overrides.usersLayout;
+    overrides = rmfield(overrides,'usersLayout');
+end
+if isolateRun
+    base = fullfile(outputDirectory,sprintf('seed_%.0f',runSeed));
+    outputDirectory = base; suffix = 2;
+    while exist(outputDirectory,'dir')
+        outputDirectory = sprintf('%s_run_%d',base,suffix); suffix = suffix+1;
+    end
+end
+if ~exist(outputDirectory,'dir'), mkdir(outputDirectory); end
 if isfield(overrides,'qosTargetBits')
     p.system.qosTargetBits = overrides.qosTargetBits;
     overrides = rmfield(overrides,'qosTargetBits');
 end
-defaults = leo_benchmark_options();
+defaults = leo_benchmark_options(struct('seeds',runSeed));
 names = fieldnames(overrides);
 for j = 1:numel(names), defaults.(names{j}) = overrides.(names{j}); end
 defaults.outputDirectory = outputDirectory;
 defaults.exhaustive = false; defaults.makePlots = false;
+validationSeed = mod(double(runSeed)+104729,2^32);
+fprintf('User layout: %s; base seed: %.0f; validation seed: %.0f\n',p.users.layout,runSeed,validationSeed);
+fprintf('Output directory: %s\n',outputDirectory);
+runInfo = struct('runSeed',runSeed,'validationSeed',validationSeed,'userLayout',p.users.layout, ...
+    'validationSamples',validationSamples);
+leo_write_struct_csv(fullfile(outputDirectory,'run_seed.csv'),runInfo);
 report = run_leo_benchmarks(p,defaults);
+report.runSeed = runSeed;
+report.validationSeed = validationSeed;
+report.validationSamples = validationSamples;
+if ~all(any(report.problemData.available,2))
+    warning('leo:scenarioCoverage','Scenario contains users with no available resources; fairness may be zero.');
+end
 % 日程固定后，用同一批新衰落比较实际平均吞吐；不以验证样本选择日程。
 for j = 1:numel(report.records)
     report.records(j).sampleMeanTotalBits = NaN;
@@ -38,7 +83,7 @@ for j = 1:numel(report.records)
     fprintf('Independent fading validation: %s, seed %d\n',report.records(j).method,report.records(j).seed);
     try
         mc = leo_sample_period_service(report.problemData,report.solutions{j}.x, ...
-            report.parameters.channel.ricianK,1000,20261108);
+            report.parameters.channel.ricianK,validationSamples,report.validationSeed);
         report.records(j).sampleMeanTotalBits = mc.meanTotalBits;
         report.records(j).sampleMeanUserQosRate = mc.meanUserQosRate;
         report.records(j).sampleJointSuccessRate = mc.jointSuccessRate;

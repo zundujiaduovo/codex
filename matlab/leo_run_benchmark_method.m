@@ -33,8 +33,17 @@ switch name
         result.memberRuns = members; result.portfolioHistory = portfolioHistory;
     otherwise
         options.innerSolver = 'sb';
-        if strcmp(name,'price_local'), options.innerSolver = 'local'; end
+        if any(strcmp(name,{'price_local','price_local_adaptive'})), options.innerSolver = 'local'; end
         if strcmp(name,'price_miqp'), options.innerSolver = 'miqp'; end
+        if any(strcmp(name,{'price_sb_blockwise','price_sb_adaptive','price_sb_light','price_local_adaptive'}))
+            options.blockwiseOriginalAccept = true;
+        end
+        if any(strcmp(name,{'price_sb_adaptive','price_sb_light','price_local_adaptive'}))
+            options.refreshEvery = 1;
+        end
+        if strcmp(name,'price_sb_light')
+            options.sbSteps = 100; options.sbTrajectories = 8;
+        end
         if strcmp(name,'sb_zero')
             options.referenceMode = 'zero'; options.refreshEvery = 0; proxy = [];
         elseif strcmp(name,'sb_current_fixed')

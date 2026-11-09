@@ -7,6 +7,8 @@
 %   run_leo_theory_from_saved          - 用已有实验重算上界，不重跑算法。
 %   test_leo_theory_bound              - 完整小规模枚举验证上界。
 %
+%   leo_paper_parameters               - 采用论文部分参数的下行对照设置。
+%   leo_random_seed                    - 单个系统随机种子，可记录重现。
 %   leo_service_totals                 - 跨块累计后扣一次周期风险余量。
 %   leo_service_adjustment             - 逐用户可靠性斜率/余量；兼容历史数据。
 %   leo_certify_period_qos             - 固定日程直接 Chernoff 概率证书。

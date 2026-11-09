@@ -30,6 +30,7 @@ o.randomInitialSchedules = 3;
 o.recoveryEvaluations = 160;       % 每轮每个起点的原始服务动作评价预算
 o.recoveryPasses = 4;
 o.crossResourceFraction = 0.25;
+o.blockwiseOriginalAccept = false;  % 按原周期目标逐块验收，阶段 2 保留 QoS 门槛
 o.verbose = true;
 if nargin>0
     assert(isstruct(overrides) && isscalar(overrides));
@@ -41,13 +42,13 @@ if nargin>0
 end
 assert(ischar(o.innerSolver) && any(strcmp(o.innerSolver,{'sb','local','miqp'})));
 assert(ischar(o.referenceMode) && any(strcmp(o.referenceMode,{'minimax','zero','current_schedule'})));
-numericFields = setdiff(fieldnames(o),{'enabled','removeRedundantCapacity','verbose','innerSolver','referenceMode'});
+numericFields = setdiff(fieldnames(o),{'enabled','removeRedundantCapacity','verbose','innerSolver','referenceMode','blockwiseOriginalAccept'});
 for j = 1:numel(numericFields)
     v = o.(numericFields{j});
     assert(isnumeric(v) && isreal(v) && isscalar(v) && isfinite(v), ...
         ['方法参数须为有限实标量: ',numericFields{j}]);
 end
-flags = {'enabled','removeRedundantCapacity','verbose'};
+flags = {'enabled','removeRedundantCapacity','verbose','blockwiseOriginalAccept'};
 for j = 1:numel(flags)
     v = o.(flags{j});
     assert(isscalar(v) && (islogical(v) || isnumeric(v)) && isfinite(v) && (v==0 || v==1));

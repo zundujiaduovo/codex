@@ -12,9 +12,9 @@ addpath('matlab');
 small = run_leo_benchmarks('small');       % 8 用户、3 块；后置完整穷举
 large = run_leo_benchmarks('default');     % 32 用户、20 块；穷举报告规模超限
 
-% 用同一更长预算和更多随机种子运行所有方法：
+% 用同一更长预算和记录的种子运行所有方法：
 opts.budgetSeconds = 60;
-opts.seeds = 20261105:20261114;
+opts.seeds = 429756090;   % 示例：替换为 run_seed.csv 中的实际基础种子
 report = run_leo_benchmarks('default',opts);
 
 % 自定义模型始终按给定规模运行：
@@ -23,9 +23,9 @@ p.system.K = 16;
 report = run_leo_benchmarks(p,struct('budgetSeconds',30));
 ```
 
-默认实验预算为每方法 **12 s**，算法随机种子为 20261105、20261106、20261107。
+默认实验预算为每方法 **12 s**，默认生成一个系统随机算法种子。
 这是可快速复查的演示配置；正式统计实验需要更多物理样本、种子及预算档位。
-同一 case 的物理样本由 `p.seed` 决定，各算法种子只改变初始化/搜索。三次结果不是三个不同信道样本。
+同一 case 的物理样本由 `p.seed` 决定，各算法种子只改变初始化/搜索。一次随机种子结果不代表多种用户/信道环境的统计表现。
 
 ## 方法定义
 
@@ -36,7 +36,11 @@ report = run_leo_benchmarks(p,struct('budgetSeconds',30));
 | original_exchange | 原始服务上的可行增删、替换、跨块交换 | 基础 MATLAB |
 | original_tabu | 原目标邻域搜索，禁忌期限 5，优于保存结果时赦免 | 基础 MATLAB |
 | price_sb | 基础两阶段价格+SB，每 6 轮当前点相切 | 基础 MATLAB |
+| price_sb_blockwise | 原 SB 加逐块原目标验收 | 基础 MATLAB |
+| price_sb_adaptive | 逐块验收，切点每轮刷新 | 基础 MATLAB |
+| price_sb_light | adaptive 的轻量 SB：100 步、8 轨迹 | 基础 MATLAB |
 | price_local | 同样代理、价格、修复与验收，内层换多起点局部搜索 | 基础 MATLAB |
+| price_local_adaptive | 与 adaptive 相同验收和刷新，内层换局部搜索 | 基础 MATLAB |
 | price_miqp | 同样价格，资源二元二次问题交给 Gurobi | Gurobi MATLAB 接口及有效许可 |
 | proxy_milp | 完整周期代理直接线性化，两个阶段用 MILP 求解 | MATLAB intlinprog 或 Octave GLPK |
 | sb_zero | 第一阶段固定零干扰切点 | 基础 MATLAB |

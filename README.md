@@ -5,8 +5,8 @@
 输出物理模型、瞬时 SINR、统计 CSI 的周期累计保证服务，以及两阶段原始混合整数非线性问题。
 **2026-11-07 更新：默认 `periodic_chernoff`，按用户分配 5% 联合风险，利用独立基本槽的累计服务证书；
 旧 `slot_union` 保留为保守对照。完整公式、假设、上界及代码字段见 [PERIODIC_QOS.md](PERIODIC_QOS.md)。**
-本次三负载/三种子及独立衰落验证见 [实验报告](results/periodic_qos_20261107/REPORT.md)。
-[下载 V3 完整运行源码包](LEO_QoS_Comparison_v3.zip)。本分支只保留此版本包；旧版仍在 `main`、`periodic-qos-20261107` 和 `leo-qos-v2-full-comparison` 分支。
+此前 V3 的三负载结果见 [历史实验报告](results/periodic_qos_20261107/REPORT.md)；V4 论文参考参数与最新验证另见 [PAPER_REFERENCE.md](PAPER_REFERENCE.md) 和 [V4 评估报告](results/v4_evaluation/REPORT.md)。
+[下载 V4 完整运行源码包](LEO_QoS_Comparison_v4.zip)。本分支只保留 V4 包，旧版保留在各自分支。
 已接通切线/弦线、价格协调、QUBO/Ising、SB、约束修复、完整日程恢复与严格公平门槛下的吞吐阶段。
 完整状态及未实施的可选扩展见 [IMPLEMENTATION_STATUS.md](IMPLEMENTATION_STATUS.md)。
 算法参数与结果接口见 [METHOD.md](METHOD.md)，统一实验见 [BENCHMARKS.md](BENCHMARKS.md)，
@@ -19,17 +19,18 @@
 ## 运行
 
 MATLAB 多方法对比：解压后打开根目录的 `RUN_COMPARISON.m`，点击“运行”（F5）。
-它会在同一 32 用户场景中比较 12 项方法和切点消融，每方法 12 秒软预算、三个算法种子；预计运行数分钟。MIQP 和 MILP 所需求解器不可用时标记 N/A。完整定义及新增指标见 [METHODS_AND_METRICS.md](METHODS_AND_METRICS.md)。
+它会在同一 32 用户场景中比较 16 项方法和切点消融，每方法 12 秒软预算、一个系统随机生成且全方法共享的基础种子；预计运行数分钟。MIQP 和 MILP 所需求解器不可用时标记 N/A。完整定义及新增指标见 [METHODS_AND_METRICS.md](METHODS_AND_METRICS.md)。
 计算后弹出综合对比及额外 QoS 指标图，并保存原有 18 类详细图。新增 Jain 公平、平均需求完成比例、独立衰落平均用户 QoS 达标率及全用户联合达标频率。
-图保存为 `results/comparison/method_comparison.png` 和可编辑 `.fig`；完整记录保存在同目录的 CSV/MAT 中。
+图保存为该种子目录下的 `method_comparison.png` 和可编辑 `.fig`；完整记录保存在同目录的 CSV/MAT 中。
 同一次运行自动计算全用户 QoS 达标条件下的保证总服务上界，显示 `theoretical_bound.png`，并将上下界与各方法差距范围写入 `theoretical_bound_summary.csv` 和 `theoretical_bound_by_run.csv`。已有实验不用重跑：`run_leo_theory_from_saved()`。计算范围和限制见 [THEORETICAL_BOUND.md](THEORETICAL_BOUND.md)。
-算法运行完会先保存 `results/comparison/raw_benchmark.mat`。若汇总或绘图被中断，打开根目录的 `RECOVER_COMPARISON.m` 运行，可直接恢复多种子报告的四项方法中位数对比图，不重新求解，也不需要加载任何 `leo_*` 辅助函数。恢复图保存在 `results/comparison/comparison_recovered.png`。
+每次运行保存在 `results/comparison/seed_<随机种子>` 独立目录，种子记录在 `run_seed.csv`；相同种子再次运行也不会覆盖已有目录。算法运行完会先保存该目录的 `raw_benchmark.mat`。若汇总或绘图被中断，打开根目录的 `RECOVER_COMPARISON.m` 运行，可直接恢复已有报告的四项方法对比图，不重新求解，也不需要加载任何 `leo_*` 辅助函数。恢复图保存在所选种子目录的 `comparison_recovered.png`。
 
 也可在命令窗口运行：
 
 ```matlab
-cd('D:\code\LEO_QoS_Comparison_v3')
-addpath('D:\code\LEO_QoS_Comparison_v3\matlab')
+cd('D:\code\LEO_QoS_Comparison_v4')
+addpath(fullfile(pwd,'matlab'),'-begin');
+rehash
 [report,fig] = run_leo_comparison();
 ```
 
@@ -38,7 +39,7 @@ addpath('D:\code\LEO_QoS_Comparison_v3\matlab')
 需要观察较高负载时，可另运行 `run_leo_comparison(fullfile('results','comparison_2M'),struct('qosTargetBits',2e6))`；这明确将每用户需求设为 2 Mbit/周期，输出到单独目录。
 多负载性能比较也可运行 `run_leo_periodic_sweep`。
 
-默认 32 用户位置由 `leo_reference_users_32` 冻结为已经验证过的场景；用户坐标跨运行器一致，但码本数值并列和浮点差异仍可能导致覆盖和结果差异，应检查最大流。
+默认使用固定 32 用户位置；主对比参考论文使用 4 GHz、Rician 12 dB、天线增益 6/1 dB 和 0 dB 附加损耗，其余下行参数保留本模型假设。论文未明确用户坐标分布，这不是论文场景复现。参见 [PAPER_REFERENCE.md](PAPER_REFERENCE.md)。用户坐标跨运行器一致，但码本数值并列和浮点差异仍可能导致覆盖和结果差异，应检查最大流。
 改变用户区域或用户数量时自动使用随机球面帽采样；也可以设 `p.users.layout='random_cap'` 显式生成新随机场景，新场景须单独检查可服务人数。
 
 
@@ -110,7 +111,7 @@ save('results/leo_model.mat','snapshot','-v7');
 随机种子固定，入口退出时恢复调用方随机数状态。无后台服务、外部数据或 MATLAB 附加工具箱依赖。
 GNU Octave 实际运行及检查结果见 [VALIDATION.md](VALIDATION.md)；尚未在 MATLAB 本体中运行。
 
-## 本轮默认物理参数的配套调整
+## 基础物理参数的配套调整（主对比的论文参数覆盖见 PAPER_REFERENCE.md）
 
 上一版是 16×16 阵列、45° 扫描半角、405 个码字。直接将这个宽扫描域的码本减到 32 个，
 默认用户中只有 6 人存在可服务资源，会令全用户公平问题的最优值为 0。
@@ -126,8 +127,8 @@ GNU Octave 实际运行及检查结果见 [VALIDATION.md](VALIDATION.md)；尚�
 
 ## 参数依据与待标定假设
 
-文献模型依据与数值假设分开列出。参考链接来自方案及公开标准；本次联网获取论文全文返回 403，
-因此**没有逐表核验论文的仿真参数，也不将下面的自选数值标为论文原值**。
+下表描述 `leo_default_parameters()` 的历史基础参数；主对比入口使用 `leo_paper_parameters()` 覆盖部分值。
+用户提供的论文 Table I 已核验，实际采用的参数、未说明之处及模型区别见 [PAPER_REFERENCE.md](PAPER_REFERENCE.md)。
 这些参数用于跑通模型、检查数量级；正式论文实验应按目标终端、星载硬件和测量条件标定。
 
 | 参数 | 默认值 | 依据/用途 |

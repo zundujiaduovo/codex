@@ -2,7 +2,22 @@
 if ~exist('comparisonRoot','var') || isempty(comparisonRoot)
     comparisonRoot = fileparts(mfilename('fullpath'));
 end
-comparisonDirectory = fullfile(comparisonRoot,'results','comparison');
+comparisonBase = fullfile(comparisonRoot,'results','comparison');
+if exist('recoveryDirectory','var') && ~isempty(recoveryDirectory)
+    comparisonDirectory = recoveryDirectory;
+else
+    comparisonCandidates = dir(fullfile(comparisonBase,'seed_*','raw_benchmark.mat'));
+    if numel(comparisonCandidates)==1
+        comparisonDirectory = comparisonCandidates(1).folder;
+    elseif numel(comparisonCandidates)>1
+        [comparisonFile,comparisonDirectory] = uigetfile(fullfile(comparisonBase,'*.mat'), ...
+            '选择要恢复的种子目录中的 raw_benchmark.mat');
+        if isequal(comparisonFile,0), error('leo:cancelled','未选择备份文件。'); end
+        assert(strcmp(comparisonFile,'raw_benchmark.mat'),'请选择 raw_benchmark.mat。');
+    else
+        comparisonDirectory = comparisonBase; % 兼容 V3 旧目录
+    end
+end
 comparisonSaved = load(fullfile(comparisonDirectory,'raw_benchmark.mat'));
 report = comparisonSaved.report;
 comparisonGood = strcmp({report.records.status},'completed');

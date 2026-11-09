@@ -16,7 +16,7 @@ for j = 1:numel(loads)
         row = report.records(k);
         if ~strcmp(row.status,'completed') || row.seed~=options.seeds(1), continue; end
         mc = leo_sample_period_service(report.problemData,report.solutions{k}.x, ...
-            10^(p.channel.ricianKDb/10),2000,20261108);
+            10^(p.channel.ricianKDb/10),2000,mod(double(options.seeds(1))+104729,2^32));
         v.method = row.method; v.loadMbit = loads(j); v.seed = row.seed;
         v.certifiedFairness = row.fairness; v.certifiedTotalMbit = row.totalBits/1e6;
         v.certifiedUserQosRate = row.qosSatisfactionRate;

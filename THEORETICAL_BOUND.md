@@ -23,10 +23,10 @@ U(lambda) = sum_m max_{x_m in X_m} sum_i (1+lambda_i)*A_im(x_m)
 
 ## 读取已有 MATLAB 实验，不重跑算法
 
-把 V3 的 `matlab` 目录加入路径，然后：
+把 V4 的 `matlab` 目录加入路径，然后：
 
 ```matlab
-addpath('D:\code\LEO_QoS_Comparison_v3\matlab','-begin')
+addpath('D:\code\LEO_QoS_Comparison_v4\matlab','-begin')
 rehash
 [theory,fig] = run_leo_theory_from_saved();
 ```
