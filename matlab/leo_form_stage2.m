@@ -6,6 +6,7 @@ function stage = leo_form_stage2(data,x0)
 % 不把输入日程当成第一阶段最优解，不进行优化求解。
 reference = leo_evaluate_service(data,x0);
 s0 = reference.fairness;
+if leo_requires_full_qos(data), s0=1; end
 stage.name = 'P_V(s0): maximize normalized design throughput';
 stage.objective = @(z) leo_problem_objective(z,data,2);
 stage.nonlcon = @(z) leo_problem_nonlcon(z,data,2,s0);
@@ -16,6 +17,8 @@ stage.intcon = data.hard.integerIndices;
 stage.x0 = double(x0(:));
 stage.s0 = s0;
 stage.fairnessFloorSource = 'Actual design fairness of supplied feasible schedule; not a proven optimum.';
+stage.initialMeetsFloor=all(reference.demandRatio>=s0);
+if leo_requires_full_qos(data), stage.fairnessFloorSource='Required common full-user QoS floor 1; initial point may be infeasible.'; end
 stage.sense = 'minimize';
 stage.solved = false;
 end

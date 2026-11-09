@@ -10,6 +10,11 @@ for j = 1:numel(methods)
     s.medianFairness = NaN; s.bestFairness = NaN; s.bestRunTotalBits = NaN;
     s.medianTotalBits = NaN; s.medianQosSatisfactionRate = NaN; s.hardFeasibleRate = NaN;
     s.medianEndToEndSeconds = NaN; s.maxBudgetOverrunSeconds = NaN;
+    s.fullQosMet=0; s.medianFeasibleTotalBits=NaN;
+    if isfield(good,'fullQosFeasible') && ~isempty(good)
+        feasible=good([good.fullQosFeasible]); s.fullQosMet=numel(feasible);
+        if ~isempty(feasible), s.medianFeasibleTotalBits=median([feasible.totalBits]); end
+    end
     s.medianFairnessGap = NaN; s.medianExactFairnessGap = NaN;
     if ~isempty(good)
         s.medianFairness = median([good.fairness]); s.bestFairness = max([good.fairness]);

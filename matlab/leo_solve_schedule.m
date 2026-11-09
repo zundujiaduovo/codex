@@ -14,7 +14,10 @@ rng(options.seed,'twister');
 budget.timer = tic; budget.seconds = options.maxSeconds;
 initial = leo_initial_schedules(problem,initialSchedule,options,budget);
 cache = leo_prepare_upper_bounds(problem.data);
-if isempty(proxy) && ~leo_budget_expired(budget)
+strict = leo_requires_full_qos(problem.data);
+needsFairnessSearch=~strict || initial.service.fairness<1;
+if ~needsFairnessSearch, proxy=[]; end
+if needsFairnessSearch && isempty(proxy) && ~leo_budget_expired(budget)
     if strcmp(options.referenceMode,'current_schedule')
         proxy = leo_build_service_surrogates(problem,'current_schedule',initial.x);
     else
@@ -29,21 +32,31 @@ if options.verbose
         initial.bestName,initial.service.fairness,initial.service.totalBits/1e6);
 end
 fairBudget = budget; fairBudget.seconds = options.maxSeconds*options.fairnessBudgetFraction;
+if strict, fairBudget.seconds = options.maxSeconds; end
 stage1 = leo_run_price_phase(problem,proxy,cache,'fairness',initial,options,fairBudget);
 % 第二阶段在阶段 1 保留日程处相切；正公平时它也是代理可行点。
 % 周期模式 s0=0 时有符号代理可能更严格，仍保留原式可行日程验收。
 stage2Proxy = [];
-if ~leo_budget_expired(budget)
+if (~strict || stage1.service.fairness==1) && ~leo_budget_expired(budget)
     stage2Proxy = leo_build_service_surrogates(problem,'current_schedule',stage1.x);
 end
-stage2 = leo_run_price_phase(problem,stage2Proxy,cache,'throughput',stage1,options,budget);
-assert(all(stage2.service.demandRatio>=stage1.service.fairness));
+if strict && stage1.service.fairness<1
+    stopped=budget; stopped.seconds=0;
+    stage2=leo_run_price_phase(problem,[],cache,'fairness',stage1,options,stopped);
+    stage2.status='not_started_full_qos_not_found'; stage2.fairnessFloor=1;
+    stage2.upperBound=leo_original_upper_bound(problem.data,cache,zeros(problem.data.shape(1),1),'throughput',1);
+    stage2.absoluteGap=NaN; stage2.certifiedWithinTolerance=false;
+else
+    stage2 = leo_run_price_phase(problem,stage2Proxy,cache,'throughput',stage1,options,budget);
+    assert(all(stage2.service.demandRatio>=stage1.service.fairness));
+end
 assert(stage2.service.totalBits>=stage1.service.totalBits);
 result.kind = ['Configuration A: two-stage Lagrangian + ',options.innerSolver,' + original-service recovery'];
 result.options = options; result.initial = initial;
 result.stage1 = stage1; result.stage2 = stage2;
 result.x = stage2.x; result.service = stage2.service;
 result.fairnessFloor = stage1.service.fairness;
+if strict, result.fairnessFloor=1; end
 result.fairnessUpperBound = stage1.upperBound.value;
 result.fairnessGap = max(0,result.fairnessUpperBound-result.service.fairness);
 result.throughputUpperBoundBits = stage2.upperBound.value*problem.data.referenceBits;

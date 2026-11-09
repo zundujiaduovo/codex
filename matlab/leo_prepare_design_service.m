@@ -4,6 +4,9 @@ function d = leo_prepare_design_service(p,r,b,c,link)
 % 输入：p/r/b/c/link：联合风险、资源、候选及固定链路系数。
 % 输出：d：固定阈值/分位功率 W、逐用户服务斜率及周期风险余量。
 % 旧模型风险按候选基本槽计数；新模型风险按用户分配并要求槽间独立。
+if strcmp(p.statistics.serviceModel,'periodic_multilevel')
+    d = leo_prepare_multilevel_design(p,r,b,c,link); return;
+end
 K = p.system.K; T = p.time.nSlots;
 d.eventMask = false(K,T);
 for t = 1:T

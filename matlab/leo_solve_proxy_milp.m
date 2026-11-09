@@ -6,11 +6,14 @@ if nargin<4, provided = []; end
 options = leo_method_options(options); previous = rng; cleanup = onCleanup(@() rng(previous)); %#ok<NASGU>
 rng(options.seed,'twister'); budget.timer = tic; budget.seconds = options.maxSeconds;
 initial = leo_initial_schedules(problem,provided,options,budget);
-best = initial; data = problem.data;
+best = initial; data = problem.data; strict = leo_requires_full_qos(data);
 cache = leo_prepare_upper_bounds(data);
 upperF = leo_original_upper_bound(data,cache,ones(data.shape(1),1)/data.shape(1),'fairness');
 model = leo_form_proxy_milp(data,proxy.lower,'fairness',0);
-phase1 = leo_call_milp(model,options.maxSeconds*options.fairnessBudgetFraction-toc(budget.timer));
+phase1Seconds=options.maxSeconds*options.fairnessBudgetFraction;
+if strict, phase1Seconds=options.maxSeconds; end
+if strict && best.service.fairness==1, phase1Seconds=0; end
+phase1 = leo_call_milp(model,phase1Seconds-toc(budget.timer));
 if strcmp(phase1.status,'unavailable'), error('leo:solverUnavailable','Neither intlinprog nor GLPK is available.'); end
 if ~isempty(phase1.z)
     x = reshape(round(phase1.z(1:prod(data.shape))),data.shape); service = problem.evaluate(x);
@@ -24,15 +27,17 @@ result.stage1.initialService = initial.service;
 result.stage1.elapsedAtEndSeconds = toc(budget.timer);
 result.stage1.iterationKind = 'branch_and_bound_nodes'; result.stage1.iterations = phase1.nodes;
 s0 = best.service.fairness;
+if strict, s0=1; end
 phase2 = struct('z',[],'objective',NaN,'optimal',false,'status','time_limit','backend','', ...
     'called',false,'nodes',NaN);
-if ~leo_budget_expired(budget)
+if (~strict || best.service.fairness==1) && ~leo_budget_expired(budget)
     touch = leo_build_service_surrogates(problem,'current_schedule',best.x);
     if ~leo_budget_expired(budget)
         model = leo_form_proxy_milp(data,touch.lower,'throughput',s0);
         phase2 = leo_call_milp(model,budget.seconds-toc(budget.timer));
     end
 end
+if strict && best.service.fairness<1, phase2.status='not_started_full_qos_not_found'; end
 if ~isempty(phase2.z)
     x = reshape(round(phase2.z(1:prod(data.shape))),data.shape); service = problem.evaluate(x);
     if leo_service_is_better(service,best.service,'throughput',s0), best.x = logical(x); best.service = service; end
@@ -47,6 +52,7 @@ result.fairnessFloor = s0; result.fairnessUpperBound = upperF.value;
 result.fairnessGap = max(0,upperF.value-best.service.fairness);
 result.throughputUpperBoundBits = upperV.value*data.referenceBits;
 result.throughputGapBits = max(0,result.throughputUpperBoundBits-best.service.totalBits);
+if strict && best.service.fairness<1, result.throughputGapBits=NaN; end
 result.elapsedSeconds = toc(budget.timer); result.optimal = false;
 result.usesExhaustiveSolution = false; result.hardFeasible = true;
 end

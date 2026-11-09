@@ -4,6 +4,12 @@ function report = leo_benchmark_case(model,options)
 % 共用预处理耗时按每个方法各记一次；穷举在所有启发式结束后运行，禁止先验泄漏。
 options = leo_benchmark_options(options);
 problem = model.problem;
+providedSchedule=model.xExample; commonFullStart=false;
+if leo_requires_full_qos(problem.data) && isfield(problem.data.design,'calibrationX')
+    % 公共确定性校准日程属于已计时预处理，所有方法同样可用。
+    providedSchedule=problem.data.design.calibrationX;
+    commonFullStart=all(problem.data.design.calibrationBits>=problem.data.qosTargetBits);
+end
 commonSeconds = model.timings.physicalProblemSeconds;
 template = struct('method','','seed',0,'status','','solverStatus','','message','','fairness',NaN, ...
     'worstDemandRatio',NaN,'qosSatisfactionRate',NaN,'totalBits',NaN,'hardFeasible',false, ...
@@ -11,6 +17,7 @@ template = struct('method','','seed',0,'status','','solverStatus','','message','
     'initialFairness',NaN,'initialTotalBits',NaN,'fairnessFloor',NaN, ...
     'fairnessUpperBound',NaN,'fairnessGap',NaN,'throughputUpperBoundBits',NaN, ...
     'throughputGapBits',NaN,'exactFairnessGap',NaN,'exactThroughputGapBits',NaN, ...
+    'goalStatus','','fullQosFeasible',false,'feasibleTotalBits',NaN,'requiredFairnessFloor',NaN, ...
     'commonSeconds',commonSeconds,'proxyPreparationSeconds',0,'searchSeconds',NaN, ...
     'endToEndSeconds',NaN,'budgetSeconds',options.budgetSeconds,'budgetOverrunSeconds',NaN);
 records = repmat(template,0,1); solutions = {};
@@ -18,6 +25,7 @@ for seed = options.seeds(:).'
     for j = 1:numel(options.methods)
         name = options.methods{j}; row = template; row.method = name; row.seed = seed;
         prebuiltProxy = any(strcmp(name,{'price_sb','price_sb_blockwise','price_sb_adaptive','price_sb_light','price_local','price_local_adaptive','price_miqp','proxy_milp','sb_minimax_fixed'}));
+        if commonFullStart && ~strcmp(name,'proxy_milp'), prebuiltProxy=false; end
         if prebuiltProxy, row.proxyPreparationSeconds = model.timings.proxySeconds; end
         seconds = options.budgetSeconds-commonSeconds-row.proxyPreparationSeconds;
         result = [];
@@ -31,9 +39,20 @@ for seed = options.seeds(:).'
             method = options.method; method.seed = seed; method.maxSeconds = seconds; method.verbose = false;
             timer = tic;
             try
-                result = leo_run_benchmark_method(problem,model.surrogate,model.xExample,name,method);
+                result = leo_run_benchmark_method(problem,model.surrogate,providedSchedule,name,method);
                 service = problem.evaluate(result.x); % 最后统一校验硬约束、原始服务
-                assert(all(service.demandRatio>=result.fairnessFloor));
+                row.fullQosFeasible=all(service.userBits>=problem.data.qosTargetBits);
+                row.requiredFairnessFloor=result.fairnessFloor;
+                if row.fullQosFeasible
+                    row.goalStatus='full_qos_met'; row.feasibleTotalBits=service.totalBits;
+                else
+                    row.goalStatus='full_qos_not_found';
+                end
+                if ~leo_requires_full_qos(problem.data) || row.fullQosFeasible
+                    assert(all(service.demandRatio>=result.fairnessFloor));
+                else
+                    assert(isequal(result.stage2.x,result.stage1.x),'未达标时禁止启动吞吐阶段。');
+                end
                 row.status = 'completed'; row.hardFeasible = true;
                 if isfield(result.stage1,'solver')
                     row.solverStatus = [result.stage1.solver.status,' / ',result.stage2.solver.status];
@@ -49,6 +68,7 @@ for seed = options.seeds(:).'
                 row.throughputGapBits = result.throughputGapBits;
             catch err
                 row.status = 'failed'; row.message = err.message;
+                row.fullQosFeasible=false; row.feasibleTotalBits=NaN; row.goalStatus='not_evaluated';
                 if strcmp(err.identifier,'leo:solverUnavailable'), row.status = 'unavailable'; end
             end
             row.searchSeconds = toc(timer);
@@ -59,7 +79,7 @@ for seed = options.seeds(:).'
                 nominal = leo_evaluate_nominal_service(problem.data,result.x);
                 row.nominalTotalBits = nominal.totalBits;
                 result.nominalService = nominal;
-                if strcmp(problem.data.design.serviceModel,'periodic_chernoff')
+                if any(strcmp(problem.data.design.serviceModel,{'periodic_chernoff','periodic_multilevel'}))
                     cert = leo_certify_period_qos(problem.data,result.x);
                     row.qosJointSuccessLower = cert.jointSuccessLower;
                     result.qosCertificate = cert;
@@ -70,6 +90,7 @@ for seed = options.seeds(:).'
         if options.verbose
             fprintf('%-23s seed=%d %-12s s=%.9g V=%.6g Mbit wall=%.3f s\n', ...
                 name,seed,row.status,row.fairness,row.totalBits/1e6,row.endToEndSeconds);
+            if ~isempty(row.goalStatus), fprintf('  Goal: %s (full-user QoS floor 1).\n',row.goalStatus); end
             if ~isempty(row.message), fprintf('  %s\n',row.message); end
         end
     end

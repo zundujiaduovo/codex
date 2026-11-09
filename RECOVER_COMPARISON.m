@@ -26,16 +26,23 @@ assert(~isempty(comparisonRows),'备份中没有成功的算法结果。');
 comparisonLabels = report.options.methods;
 comparisonPeriod = report.parameters.time.nSlots*report.parameters.time.slotDurationS;
 comparisonValues = NaN(4,numel(comparisonLabels));
+comparisonStrict=isfield(report.problemData,'requireFullQos') && report.problemData.requireFullQos;
 for comparisonMethod = 1:numel(comparisonLabels)
     comparisonSubset = comparisonRows(strcmp({comparisonRows.method},comparisonLabels{comparisonMethod}));
     if isempty(comparisonSubset), continue; end
+    comparisonTotal=median([comparisonSubset.totalBits]);
+    if comparisonStrict
+        comparisonFeasible=comparisonSubset([comparisonSubset.fullQosFeasible]);
+        comparisonTotal=NaN;
+        if ~isempty(comparisonFeasible), comparisonTotal=median([comparisonFeasible.totalBits]); end
+    end
     comparisonValues(:,comparisonMethod) = [median([comparisonSubset.fairness]); ...
         100*median([comparisonSubset.qosSatisfactionRate]); ...
-        median([comparisonSubset.totalBits])/(1e6*comparisonPeriod); ...
+        comparisonTotal/(1e6*comparisonPeriod); ...
         median([comparisonSubset.endToEndSeconds])];
 end
 comparisonTitles = {'Certified minimum QoS ratio','Users meeting certified full QoS', ...
-    'Certified sum rate','Accounted end-to-end runtime'};
+    'Certified sum rate (V5: full QoS only)','Accounted end-to-end runtime'};
 comparisonUnits = {'Ratio','Percent','Mbps','Seconds'};
 fig = [];
 if ~exist('comparisonRender','var') || comparisonRender

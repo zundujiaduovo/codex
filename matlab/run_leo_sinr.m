@@ -64,8 +64,11 @@ else
 end
 fprintf('Problem formed, unsolved: %d binary variables + s; example design fairness=%.6g.\n', ...
     numel(model.xExample),model.exampleService.fairness);
-fprintf('Stage-2 template fairness floor from feasibility witness: %.6g (not optimized).\n', ...
-    model.problem.stage2Example.s0);
+if leo_requires_full_qos(model.problem.data)
+    fprintf('Required full-QoS floor: 1; feasibility witness meets it: %d.\n',model.problem.stage2Example.initialMeetsFloor);
+else
+    fprintf('Stage-2 template fairness floor from feasibility witness: %.6g (not optimized).\n',model.problem.stage2Example.s0);
+end
 fprintf('Tangent/chord built (%s); uniform proxy-optimum fairness-gap bound <= %.6g.\n', ...
     model.surrogate.referenceMode,model.surrogate.error.optimalFairnessGapBound);
 if p.method.enabled

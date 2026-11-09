@@ -9,5 +9,11 @@ p.channel.elementGainDbi = 6;         % 论文卫星天线增益；本模型用�
 p.channel.receiveGainDbi = 1;         % 论文终端天线增益
 p.channel.extraLossDb = 0;            % 论文链路预算公式未含固定附加损耗项
 p.users.layout = 'reference32';
+p.system.maxStreams = 7;              % 用户要求每块严格小于 8 人
+p.problem.requireFullQos = true;
+p.statistics.serviceModel = 'periodic_multilevel';
+p.statistics.fadingLevels = 64;
+p.statistics.referenceFadeGrid = [.25,.5,.75,1,1.5,2];
+p.statistics.tiltGrid = [1,2.5,5,10,20,40];
 % 600 km、8x8、半波长已经与论文相同；带宽、功率和 QoS 沿用本模型。
 end

@@ -52,14 +52,23 @@ assert(isscalar(p.statistics.totalRisk) && isfinite(p.statistics.totalRisk) && .
     p.statistics.totalRisk>0 && p.statistics.totalRisk<1);
 % 未携带新字段的历史参数继续使用旧模型，避免静默改变旧实验口径。
 if ~isfield(p.statistics,'serviceModel'), p.statistics.serviceModel = 'slot_union'; end
-assert(any(strcmp(p.statistics.serviceModel,{'slot_union','periodic_chernoff'})));
-if strcmp(p.statistics.serviceModel,'periodic_chernoff')
+assert(any(strcmp(p.statistics.serviceModel,{'slot_union','periodic_chernoff','periodic_multilevel'})));
+if any(strcmp(p.statistics.serviceModel,{'periodic_chernoff','periodic_multilevel'}))
     assert(isfield(p.statistics,'independentSlots') && ...
         isequal(p.statistics.independentSlots,true), ...
         '周期 Chernoff 证书要求用户内基本槽独立；相关衰落请使用 slot_union。');
     v = [p.statistics.goodFadeThreshold,p.statistics.chernoffTilt];
     assert(numel(v)==2 && all(isfinite(v)) && all(v>0));
 end
+if strcmp(p.statistics.serviceModel,'periodic_multilevel')
+    assert(isscalar(p.statistics.fadingLevels) && p.statistics.fadingLevels>=1 && p.statistics.fadingLevels==fix(p.statistics.fadingLevels));
+    for field={'referenceFadeGrid','tiltGrid'}
+        values=p.statistics.(field{1});
+        assert(isrow(values) && ~isempty(values) && all(isfinite(values)) && all(values>0));
+    end
+end
+if ~isfield(p.problem,'requireFullQos'), p.problem.requireFullQos=false; end
+assert(isscalar(p.problem.requireFullQos) && any(p.problem.requireFullQos==[0,1]));
 if isempty(p.problem.referenceBits)
     p.problem.referenceBits = sum(q);
 end

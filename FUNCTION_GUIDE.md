@@ -1395,3 +1395,14 @@ function test_leo_surrogate()
 
 直接调用：`leo_build_resources`, `leo_build_service_surrogates`, `leo_check_surrogate_groups`, `leo_chord_upper`, `leo_default_parameters`, `leo_enumerate_resource_groups`, `leo_evaluate_service`, `leo_evaluate_service_bounds`, `leo_form_problem`, `leo_rate_and_derivatives`, `leo_schedule_interference`, `leo_tangent_lower`, `leo_validate_parameters`, `run_leo_sinr`。
 调用入口：用户直接调用 / 独立测试。
+
+
+## V5 公共证书及全员 QoS
+
+- `leo_fading_floor_distribution(z,kappa,J)`：输出向下量化衰落比例及保守离散概率。
+- `leo_prepare_multilevel_design(p,r,b,c,link)`：用公共确定性日程选取每用户参数，并冻结所有方法共用的服务斜率/余量。
+- `leo_requires_full_qos(data)`：读取统一全员QoS门槛开关，历史数据默认关闭。
+- `leo_export_certificate_audit(report,directory)`：输出冻结参数和相同日程的新旧证书对照。
+- `test_leo_v5()`：独立概率枚举、服务与上界一致性、可行/不可行情况下的阶段门控。
+
+V5各求解器的阶段2只有在全员G>=q后运行，门槛固定为1；未达标返回诊断日程，`goalStatus`独立于程序完成状态。

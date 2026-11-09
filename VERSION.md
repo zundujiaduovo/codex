@@ -1,17 +1,11 @@
-# LEO QoS Comparison V4
+# LEO QoS Comparison V5
 
-Git 分支：`leo-qos-v4-paper-reference-sb`。运行包：`LEO_QoS_Comparison_v4.zip`，解压后目录同名。
+分支：`leo-qos-v5-full-qos`；完整包：`LEO_QoS_Comparison_v5.zip`，解压目录同名。
 
-V4 包含完整 MATLAB 建模与算法源码、原始方法和本次新增的周期 QoS 保证、16 项方法/消融对比、绘图和测试函数、Python 渲染脚本以及公式文档；不依赖旧版代码包。可选 Gurobi/Optimization Toolbox 未打包，缺失时相应方法标记不可用。
+目标修改：所有用户 G_i>=q_i 后才比较保证总服务；未达标只作为诊断，标记 full_qos_not_found。数学修改：多级衰落下界保留部分低衰落服务，公共确定性校准后冻结所有方法共用的证书参数。公式见 FULL_QOS_MODEL.md。
 
-运行包也含历史示例图、CSV 汇总和少量重画所需 MAT 文件。它不包含仓库中全部历史 MAT 结果（约 172 MB）；运行新实验会在本地生成新的结果文件。
+固定 32 用户、8×8 阵元、32 波束，每块最多7人；不提高功率、不降低1 Mbit需求或95%联合可靠性。默认14项基础方法/消融，单个自动随机种子，每方法12秒软预算，1000独立衰落周期验证。可选外部求解器接口保留但默认不比较。
 
-本分支根目录只保留本版的一个 ZIP，旧代码包和补丁仍在 `main`、`periodic-qos-20261107`、`leo-qos-v2-full-comparison` 或 `leo-qos-v3-theoretical-bound` 分支。Git 不重复存储这些分支的相同历史对象。
+本包包含所有 MATLAB 源码、公式文档、绘图脚本、测试、例图和 V5 CSV 报告。完整历史 MAT 数据留在 GitHub，不重复打包。V5 结果 MAT 存在本分支结果目录。旧版本保留在各自分支，本分支只放一个 V5 ZIP。
 
-在 MATLAB 切换到解压目录，运行 `RUN_COMPARISON`。默认 32 用户、16 项方法/消融、一个系统随机种子，分别给每个方法 12 秒软预算。统计与指标定义见 `METHODS_AND_METRICS.md`。默认 1 Mbit/用户时部分公平指标可能封顶，见 README 的 2 Mbit 负载例子。
-
-历史回归与新周期保证测试在 Octave 中验证；MATLAB 图形界面尚未在本构建环境验证。为避免混用不同版本，请解压到新目录，并将新目录的 `matlab` 添加到路径开头。
-
-V3 新增：全用户 QoS 达标条件下的保证总服务有效上界、算法差距区间、上界图和 CSV；可直接读取已有 benchmark.mat，不重新运行方法。上界不是必然可达的精确最优值。详见 THEORETICAL_BOUND.md。
-
-V4 参考论文部分物理参数，固定参考用户，并新增价格+SB 逐块原目标验收/切点刷新、轻量 SB 及局部搜索消融；使用单个自动随机种子。详见 PAPER_REFERENCE.md、ADAPTIVE_SB.md。
+数值/概率/上界/阶段门控及解压后入口在 Octave 检查；MATLAB 桌面图形未实机验证。新保证数值变化同时来自数学模型变化，不能宣称为纯 SB 改进或物理容量增长。

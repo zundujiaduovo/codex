@@ -12,13 +12,16 @@ end
 stamp = sprintf('%s | K=%d, M=%d, L=%d | median and min-max across %d seeds', ...
     data.caseName,data.shape(1),data.shape(2),data.maxStreams,numel(data.seeds));
 repStamp = sprintf('%s | first requested seed %d',data.caseName,data.representativeSeed);
-if isfield(data,'serviceModel') && strcmp(data.serviceModel,'periodic_chernoff')
+if isfield(data,'serviceModel') && any(strcmp(data.serviceModel,{'periodic_chernoff','periodic_multilevel'}))
     stamp = [stamp,' | certified period service'];
     repStamp = [repStamp,' | certified period service'];
 end
 
 p = metric(records,good,'fairness',1,'Capped minimum QoS ratio','Fairness');
-p(2) = metric(records,good,'totalBits',1e-6,'Original net service','Mbit');
+p(2) = metric(records,good,'totalBits',1e-6,'Diagnostic certified service (all returned schedules)','Mbit');
+if isfield(data,'requireFullQos') && data.requireFullQos
+    p(2)=metric(records,good,'feasibleTotalBits',1e-6,'Certified service ONLY for full-QoS schedules','Mbit');
+end
 p(3) = metric(records,good,'qosSatisfactionRate',100,'Users meeting full QoS','Percent');
 p(4) = metric(records,good,'worstDemandRatio',1,'Minimum uncapped demand ratio','Service / target');
 if ~isempty(data.reference) && data.reference.optimal
@@ -57,17 +60,17 @@ p(6) = metric(counts,good,'originalEvaluations',1,'Original baseline search eval
 figures = add_figure(figures,'04_search_work',stamp,3,2,p);
 
 p = history_curves(data,1,'fairness',1,'Saved original fairness: phase 1','Fairness');
-p(2) = history_curves(data,1,'totalBits',1e-6,'Saved throughput: phase 1 (may decrease)','Mbit');
+p(2) = history_curves(data,1,'totalBits',1e-6,'Diagnostic service: feasibility search (may decrease)','Mbit');
 p(3) = history_curves(data,2,'fairness',1,'Saved original fairness: phase 2','Fairness');
 p(4) = history_curves(data,2,'totalBits',1e-6,'Saved throughput: phase 2','Mbit');
 figures = add_figure(figures,'05_price_convergence',[repStamp,' | price methods; portfolio branches excluded'],2,2,p);
 
 p = time_curves(data,good,'fairness',1,'Original fairness versus accounted time','Fairness');
-p(2) = time_curves(data,good,'totalBits',1e-6,'Original throughput versus accounted time','Mbit');
+p(2) = time_curves(data,good,'totalBits',1e-6,'Diagnostic service versus accounted time (check full QoS)','Mbit');
 figures = add_figure(figures,'06_time_convergence',[repStamp,' | recorded checkpoints; no solver-internal interpolation'],2,1,p);
 
 p = metric(records,good,'fairnessGap',1,'Valid original fairness bound minus achieved value','Absolute fairness gap');
-p(2) = metric(records,good,'throughputGapBits',1e-6,'Valid throughput gap at each method own floor','Mbit');
+p(2) = metric(records,good,'throughputGapBits',1e-6,'Valid throughput gap at the recorded required floor','Mbit');
 p(3) = metric(records,good,'exactFairnessGap',1,'Gap to exhaustive fairness optimum','Absolute fairness gap');
 p(4) = metric(records,good,'exactThroughputGapBits',1e-6,'Exact throughput gap ONLY at exact fairness floor','Mbit');
 p(3).note = 'Only a completed exhaustive search supplies an exact reference.';

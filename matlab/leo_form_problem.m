@@ -17,6 +17,7 @@ data.qosTargetBits = p.system.qosTargetBits;
 data.referenceBits = p.problem.referenceBits;
 data.periodSeconds = p.time.nSlots*p.time.slotDurationS;
 data.design = design;
+data.requireFullQos = isfield(p.problem,'requireFullQos') && p.problem.requireFullQos;
 n = prod(data.shape);
 stage.name = 'P_F: maximize capped minimum normalized design service';
 stage.objective = @(z) leo_problem_objective(z,data,1);

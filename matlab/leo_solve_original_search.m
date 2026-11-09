@@ -7,21 +7,26 @@ assert(any(strcmp(kind,{'greedy','exchange','tabu','initial'})));
 options = leo_method_options(options); previous = rng; cleanup = onCleanup(@() rng(previous)); %#ok<NASGU>
 rng(options.seed,'twister'); budget.timer = tic; budget.seconds = options.maxSeconds;
 initial = leo_initial_schedules(problem,provided,options,budget); best = initial;
-data = problem.data; evaluations = 0;
+data = problem.data; evaluations = 0; strict = leo_requires_full_qos(data);
 cache = leo_prepare_upper_bounds(data);
 upperF = leo_original_upper_bound(data,cache,ones(data.shape(1),1)/data.shape(1),'fairness');
 for phaseIndex = 1:2
     localBudget = budget;
     if phaseIndex==1
         phase = 'fairness'; s0 = 0; localBudget.seconds = options.maxSeconds*options.fairnessBudgetFraction;
+        if strict, localBudget.seconds=options.maxSeconds; end
     else
         phase = 'throughput'; s0 = best.service.fairness;
+        if strict, s0=1; end
         upperV = leo_original_upper_bound(data,cache,zeros(data.shape(1),1),'throughput',s0);
     end
     phaseStart = best.service; phaseIterations = 0;
     history = leo_record_search_step([],best.service,0,toc(budget.timer),evaluations);
     iterationKind = 'none';
-    if strcmp(kind,'greedy')
+    skipPhase = strict && ((phaseIndex==1 && best.service.fairness==1) || (phaseIndex==2 && best.service.fairness<1));
+    if skipPhase
+        % 尚未达标时禁止按降低后的门槛优化吞吐。
+    elseif strcmp(kind,'greedy')
         start = best;
         if phaseIndex==1, start.x = false(data.shape); start.service = problem.evaluate(start.x); end
         candidate = leo_original_greedy(problem,start,phase,s0,localBudget);
@@ -47,6 +52,7 @@ for phaseIndex = 1:2
         iterationKind = [kind,'_round'];
         for iteration = 1:1000
             if leo_budget_expired(localBudget) || options.recoveryEvaluations==0, break; end
+            if strict && phaseIndex==1 && best.service.fairness==1, break; end
             before = best.service;
             if strcmp(kind,'exchange')
                 candidate = leo_recover_schedule(problem,current.x,phase,s0,options,iteration,localBudget);
@@ -81,6 +87,8 @@ for phaseIndex = 1:2
     stage.x = best.x; stage.service = best.service; stage.initialService = phaseStart;
     stage.history = history; stage.iterations = phaseIterations; stage.iterationKind = iterationKind;
     stage.elapsedAtEndSeconds = toc(budget.timer);
+    stage.status='search_finished';
+    if strict && phaseIndex==2 && best.service.fairness<1, stage.status='not_started_full_qos_not_found'; end
     if phaseIndex==1, result.stage1 = stage;
     else, result.stage2 = stage; result.fairnessFloor = s0; end
 end
@@ -88,6 +96,7 @@ result.initial = initial; result.x = best.x; result.service = best.service; resu
 result.fairnessUpperBound = upperF.value; result.fairnessGap = max(0,upperF.value-best.service.fairness);
 result.throughputUpperBoundBits = upperV.value*data.referenceBits;
 result.throughputGapBits = max(0,result.throughputUpperBoundBits-best.service.totalBits);
+if strict && best.service.fairness<1, result.throughputGapBits=NaN; end
 result.elapsedSeconds = toc(budget.timer); result.hardFeasible = true;
 result.usesExhaustiveSolution = false; result.optimal = false;
 end

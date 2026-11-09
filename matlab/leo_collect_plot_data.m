@@ -8,6 +8,7 @@ if isfield(report.problemData.design,'serviceModel'), data.serviceModel = report
 if isfield(report,'caseName'), data.caseName = report.caseName; end
 data.methods = report.options.methods; data.seeds = report.options.seeds;
 data.representativeSeed = data.seeds(1); data.budgetSeconds = report.options.budgetSeconds;
+data.requireFullQos=leo_requires_full_qos(report.problemData);
 data.records = report.records; data.summary = report.summary;
 data.shape = report.problemData.shape; data.maxStreams = report.problemData.maxStreams;
 data.nBeams = size(report.problemData.design.beamPowerW,2);
@@ -47,8 +48,10 @@ for r = 1:numel(report.records)
             end
         end
     else
+        trajectories=report.options.method.sbTrajectories;
+        if isfield(result,'options'), trajectories=result.options.sbTrajectories; end
         [data,count] = collect_stages(data,count,row,result,offset,'main', ...
-            report.options.method.sbTrajectories,true);
+            trajectories,true);
     end
     if isfield(result,'evaluations'), count.originalEvaluations = result.evaluations; end
     if isempty(data.counts), data.counts = count; else, data.counts(end+1,1) = orderfields(count,data.counts); end
@@ -84,7 +87,7 @@ for r = 1:numel(data.representatives)
     high = leo_evaluate_quadratic_service(problem.data,proxy.upper,rep.x);
     bound.method = rep.method; bound.lowerBits = low.userBits;
     bound.originalBits = rep.service.userBits; bound.upperBits = high.userBits;
-    if strcmp(data.serviceModel,'periodic_chernoff')
+    if any(strcmp(data.serviceModel,{'periodic_chernoff','periodic_multilevel'}))
         bound.lowerBits = max(0,bound.lowerBits); bound.upperBits = max(0,bound.upperBits);
     end
     bound.lowerErrorBoundBits = proxy.error.lowerUserBits;
@@ -96,7 +99,7 @@ data.notes = {'Counter NaN means not applicable or not reported, never zero iter
     'SB energy is the best-so-far discrete energy of one fixed Ising call before repair.', ...
     'Service/SINR figures use the statistical-CSI design coefficients, not instantaneous fading.', ...
     'Postprocessing and plotting time is excluded from measured algorithm time.'};
-if strcmp(data.serviceModel,'periodic_chernoff')
+if any(strcmp(data.serviceModel,{'periodic_chernoff','periodic_multilevel'}))
     data.notes{end+1} = 'Totals and QoS use period guaranteed service G; resource bars use additive A before the one-time risk margin. Nominal throughput is separate.';
 end
 end

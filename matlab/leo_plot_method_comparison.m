@@ -14,6 +14,8 @@ for j = 1:count
 end
 period = report.parameters.time.nSlots*report.parameters.time.slotDurationS;
 fields = {'fairness','qosSatisfactionRate','totalBits','nominalTotalBits','endToEndSeconds'};
+strict=leo_requires_full_qos(report.problemData);
+if strict && isfield(report.records,'feasibleTotalBits'), fields{3}='feasibleTotalBits'; end
 sampled = isfield(report.records,'sampleMeanTotalBits');
 if sampled, fields{4} = 'sampleMeanTotalBits'; end
 scales = [1,100,1/(1e6*period),1/(1e6*period),1];
@@ -42,7 +44,7 @@ annotation(fig,'textbox',[0,.965,1,.035],'String',sprintf( ...
     'EdgeColor','none','HorizontalAlignment','center','Interpreter','none');
 colors = lines(count);
 titles = {'Minimum certified QoS ratio','Users meeting certified full QoS', ...
-    'Certified sum rate','Sum rate at Z=1 (reference)','Accounted end-to-end runtime'};
+    'Certified sum rate (full QoS required)','Sum rate at Z=1 (reference)','Accounted end-to-end runtime'};
 if sampled
     if isfield(report,'validationSamples'), nValidation = report.validationSamples; else, nValidation = 1000; end
     titles{4} = sprintf('Mean sum rate (%d fresh fading periods)',nValidation);
@@ -59,7 +61,9 @@ for k = 1:5
     if k==1, ylim([0,1.05]); elseif k==2, ylim([0,105]); end
     limits = ylim;
     for j = find(~isfinite(values.median(:,k))).'
-        text(j,limits(1)+.03*diff(limits),'N/A','Rotation',90,'HorizontalAlignment','left');
+        label='N/A';
+        if k==3 && strict, label='No full-QoS result'; end
+        text(j,limits(1)+.03*diff(limits),label,'Rotation',90,'HorizontalAlignment','left');
     end
 end
 subplot(2,3,6); hold on;

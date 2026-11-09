@@ -118,3 +118,10 @@
 %   test_leo_plots                     - 验证图表计数、真实时间、有效界、SB 能量、缺失值和导出接口。
 %   test_leo_problem                   - 原始问题形成检查；独立 CDF 数值、直接接收功率、枚举硬约束。
 %   test_leo_surrogate                 - 凸性、minimax、硬约束干扰区间、二次系数、参考点和边界检查。
+
+% V5 full-QoS model:
+%   leo_prepare_multilevel_design      - Frozen common multilevel service certificate.
+%   leo_fading_floor_distribution      - Conservative quantized fading-factor distribution.
+%   leo_requires_full_qos              - Common all-user QoS constraint switch.
+%   test_leo_v5                        - Independent probability enumeration and strict phase gating.
+%   leo_export_certificate_audit       - Frozen parameters and old/new certificate scores for identical schedules.

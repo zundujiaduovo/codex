@@ -1,5 +1,5 @@
 function [report,fig] = run_leo_comparison(outputDirectory,overrides,render)
-%RUN_LEO_COMPARISON 同场景比较全部 16 项方法/消融，输出完整图组。
+%RUN_LEO_COMPARISON 同场景比较默认 14 项基础 MATLAB 方法/消融，输出完整图组。
 % 默认固定参考用户位置，采用论文部分参数；生成一个随机基础种子供所有方法共享。
 if nargin<1, outputDirectory = fullfile('results','comparison'); end
 if nargin<2, overrides = struct(); end
@@ -19,7 +19,7 @@ if isfield(overrides,'isolateRun')
     assert(isscalar(isolateRun) && (isolateRun==0 || isolateRun==1));
     overrides = rmfield(overrides,'isolateRun');
 end
-validationSamples = 100;
+validationSamples = 1000;
 if isfield(overrides,'validationSamples')
     validationSamples = overrides.validationSamples;
     overrides = rmfield(overrides,'validationSamples');
@@ -35,6 +35,9 @@ else
     runSeed = leo_random_seed();
 end
 p.seed = runSeed;
+if isfield(overrides,'serviceModel')
+    p.statistics.serviceModel=overrides.serviceModel; overrides=rmfield(overrides,'serviceModel');
+end
 if isfield(overrides,'usersLayout')
     p.users.layout = overrides.usersLayout;
     overrides = rmfield(overrides,'usersLayout');
@@ -52,6 +55,7 @@ if isfield(overrides,'qosTargetBits')
     overrides = rmfield(overrides,'qosTargetBits');
 end
 defaults = leo_benchmark_options(struct('seeds',runSeed));
+defaults.methods=defaults.methods(~ismember(defaults.methods,{'price_miqp','proxy_milp'}));
 names = fieldnames(overrides);
 for j = 1:numel(names), defaults.(names{j}) = overrides.(names{j}); end
 defaults.outputDirectory = outputDirectory;
@@ -74,6 +78,7 @@ for j = 1:numel(report.records)
     report.records(j).sampleMeanTotalBits = NaN;
     report.records(j).sampleMeanUserQosRate = NaN;
     report.records(j).sampleJointSuccessRate = NaN;
+    report.records(j).sampleJointFailure95Upper=NaN;
     report.records(j).jainFairness = NaN;
     if ~strcmp(report.records(j).status,'completed'), continue; end
     service = report.solutions{j}.service.userBits;
@@ -87,6 +92,7 @@ for j = 1:numel(report.records)
         report.records(j).sampleMeanTotalBits = mc.meanTotalBits;
         report.records(j).sampleMeanUserQosRate = mc.meanUserQosRate;
         report.records(j).sampleJointSuccessRate = mc.jointSuccessRate;
+        report.records(j).sampleJointFailure95Upper=mc.jointFailure95Upper;
         report.solutions{j}.sampleValidation = mc;
     catch err
         warning('leo:sampleValidation','Independent fading validation failed: %s',err.message);
@@ -101,9 +107,15 @@ catch err
     report.theory.pricingStatus = ['Full pricing failed; UB1 used: ',err.message];
 end
 leo_export_theory_bound(report,outputDirectory);
-fprintf('Theoretical upper bound: %.6f Mbit/period; best feasible: %.6f Mbit/period.\n', ...
-    report.theory.upperBits/1e6,report.theory.lowerBits/1e6);
+fprintf('Full-QoS solutions found: %d/%d completed methods.\n',sum([report.records.fullQosFeasible]),sum(strcmp({report.records.status},'completed')));
+if isfinite(report.theory.lowerBits)
+    fprintf('Theoretical upper bound: %.6f Mbit/period; best FULL-QOS feasible: %.6f Mbit/period.\n',report.theory.upperBits/1e6,report.theory.lowerBits/1e6);
+else
+    fprintf('No full-QoS schedule found: lower bound/gaps unavailable; this is not an infeasibility proof.\n');
+    fprintf('Conditional theoretical upper bound: %.6f Mbit/period.\n',report.theory.upperBits/1e6);
+end
 fprintf('Bound is for full-user QoS >= 100%% in the period certificate model; it may not be attainable.\n');
+leo_export_certificate_audit(report,outputDirectory);
 leo_export_benchmark(report,outputDirectory);
 if render, leo_plot_theory_bound(report,outputDirectory); end
 [fig,~] = leo_plot_method_comparison(report,outputDirectory,render);

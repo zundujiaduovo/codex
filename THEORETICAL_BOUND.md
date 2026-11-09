@@ -1,5 +1,7 @@
 # 全用户 QoS 下的保证总服务上界
 
+V5 主入口统一要求 G_i>=q_i，采用多级衰落下界；上界针对新的固定证书模型，不能与旧版数值直接混比，也不是物理吞吐的上界。未找到全员达标日程时，不填可行下界和最优差距。
+
 `run_leo_comparison` 会自动计算 `report.theory` 并保存 `theoretical_bound.png`、`theoretical_bound.fig`、`theoretical_bound_summary.csv`、`theoretical_bound_by_run.csv` 和 `theoretical_bound.mat`。
 
 全部结果使用当前一次实验的固定物理样本、链路、资源及周期可靠性参数。统一比较的问题为：在每个用户的保证服务 `G_i >= q_i` 下，最大化 `sum(G_i)`。不满足全用户 QoS 的方法显示 N/A，不与此门槛下的最优值直接比较。不同随机种子的物理样本相同；图中每个方法取达标的最好一次，全部逐次结果见 CSV。
@@ -23,10 +25,10 @@ U(lambda) = sum_m max_{x_m in X_m} sum_i (1+lambda_i)*A_im(x_m)
 
 ## 读取已有 MATLAB 实验，不重跑算法
 
-把 V4 的 `matlab` 目录加入路径，然后：
+把 V5 的 `matlab` 目录加入路径，然后：
 
 ```matlab
-addpath('D:\code\LEO_QoS_Comparison_v4\matlab','-begin')
+addpath('D:\code\LEO_QoS_Comparison_v5\matlab','-begin')
 rehash
 [theory,fig] = run_leo_theory_from_saved();
 ```

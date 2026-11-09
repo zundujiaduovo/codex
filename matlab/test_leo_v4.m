@@ -16,7 +16,7 @@ assert(strcmp(report.records(1).status,'completed'));
 assert(exist(fullfile(base,'seed_429756090','run_seed.csv'),'file')==2);
 assert(exist(fullfile(base,'seed_429756090','theoretical_bound_summary.csv'),'file')==2);
 assert(report.theory.upperBits>=report.theory.lowerBits);
-fprintf('PASS: V4 paper parameters, one seed, end-to-end comparison and bound.\n');
+fprintf('PASS: paper parameters, one seed, end-to-end comparison and bound.\n');
 end
 
 function cleanup_dir(path)
