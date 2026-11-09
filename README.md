@@ -6,7 +6,7 @@
 **2026-11-07 更新：默认 `periodic_chernoff`，按用户分配 5% 联合风险，利用独立基本槽的累计服务证书；
 旧 `slot_union` 保留为保守对照。完整公式、假设、上界及代码字段见 [PERIODIC_QOS.md](PERIODIC_QOS.md)。**
 本次三负载/三种子及独立衰落验证见 [实验报告](results/periodic_qos_20261107/REPORT.md)。
-[下载 V2 完整运行源码包](LEO_QoS_Comparison_v2.zip)。本分支只保留此版本包；旧版仍在 `main` 和 `periodic-qos-20261107` 分支。
+[下载 V3 完整运行源码包](LEO_QoS_Comparison_v3.zip)。本分支只保留此版本包；旧版仍在 `main`、`periodic-qos-20261107` 和 `leo-qos-v2-full-comparison` 分支。
 已接通切线/弦线、价格协调、QUBO/Ising、SB、约束修复、完整日程恢复与严格公平门槛下的吞吐阶段。
 完整状态及未实施的可选扩展见 [IMPLEMENTATION_STATUS.md](IMPLEMENTATION_STATUS.md)。
 算法参数与结果接口见 [METHOD.md](METHOD.md)，统一实验见 [BENCHMARKS.md](BENCHMARKS.md)，
@@ -22,13 +22,14 @@ MATLAB 多方法对比：解压后打开根目录的 `RUN_COMPARISON.m`，点击
 它会在同一 32 用户场景中比较 12 项方法和切点消融，每方法 12 秒软预算、三个算法种子；预计运行数分钟。MIQP 和 MILP 所需求解器不可用时标记 N/A。完整定义及新增指标见 [METHODS_AND_METRICS.md](METHODS_AND_METRICS.md)。
 计算后弹出综合对比及额外 QoS 指标图，并保存原有 18 类详细图。新增 Jain 公平、平均需求完成比例、独立衰落平均用户 QoS 达标率及全用户联合达标频率。
 图保存为 `results/comparison/method_comparison.png` 和可编辑 `.fig`；完整记录保存在同目录的 CSV/MAT 中。
+同一次运行自动计算全用户 QoS 达标条件下的保证总服务上界，显示 `theoretical_bound.png`，并将上下界与各方法差距范围写入 `theoretical_bound_summary.csv` 和 `theoretical_bound_by_run.csv`。已有实验不用重跑：`run_leo_theory_from_saved()`。计算范围和限制见 [THEORETICAL_BOUND.md](THEORETICAL_BOUND.md)。
 算法运行完会先保存 `results/comparison/raw_benchmark.mat`。若汇总或绘图被中断，打开根目录的 `RECOVER_COMPARISON.m` 运行，可直接恢复多种子报告的四项方法中位数对比图，不重新求解，也不需要加载任何 `leo_*` 辅助函数。恢复图保存在 `results/comparison/comparison_recovered.png`。
 
 也可在命令窗口运行：
 
 ```matlab
-cd('D:\code\LEO_QoS_Comparison_v2')
-addpath('D:\code\LEO_QoS_Comparison_v2\matlab')
+cd('D:\code\LEO_QoS_Comparison_v3')
+addpath('D:\code\LEO_QoS_Comparison_v3\matlab')
 [report,fig] = run_leo_comparison();
 ```
 

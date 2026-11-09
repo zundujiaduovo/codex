@@ -1,5 +1,11 @@
 % LEO 固定块 QoS：建模、两阶段拉格朗日 SB、原始穷举与统一实验。
-% 完整公式/输入输出/调用关系见仓库 FUNCTION_GUIDE.md 和 PERIODIC_QOS.md。
+% 完整公式/输入输出/调用关系见 FUNCTION_GUIDE.md、PERIODIC_QOS.md 和 THEORETICAL_BOUND.md。
+%
+%   leo_theory_bound                   - 全 QoS 保证总服务的全域上界与可行下界。
+%   leo_export_theory_bound            - 输出共同门槛下的上界与差距区间。
+%   leo_plot_theory_bound              - 显示并保存理论上界对比图。
+%   run_leo_theory_from_saved          - 用已有实验重算上界，不重跑算法。
+%   test_leo_theory_bound              - 完整小规模枚举验证上界。
 %
 %   leo_service_totals                 - 跨块累计后扣一次周期风险余量。
 %   leo_service_adjustment             - 逐用户可靠性斜率/余量；兼容历史数据。

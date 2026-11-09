@@ -26,3 +26,5 @@
 同目录 `01_performance` 至 `18_phase_results` 的 PNG/PDF/FIG 涵盖运行时间、实际迭代次数、上界与界差、收敛、调度矩阵、SINR、用户服务、SB 能量、切点消融和求解器状态；详见 [PLOTS.md](PLOTS.md)。CSV 与 MAT 保存每次原始记录、价格、日程、迭代等数据。
 
 `fairness` 是最差用户保证服务与需求比例（在 1 封顶），`jainFairness` 是保证服务分配的 Jain 指数，两者并不相同。保证总速率与衰落仿真平均总速率分别给出。上界仅针对当前周期保证模型；不同方法各自固定公平门槛下的吞吐界不能直接当作同一个问题的精确最优值。
+
+`theoretical_bound.png` 和 `theoretical_bound_by_run.csv`：统一全用户 QoS 达标门槛下，分别显示各方法的保证总服务、有效上界与最优差距区间；完整计算口径见 [THEORETICAL_BOUND.md](THEORETICAL_BOUND.md)。

@@ -4,6 +4,15 @@ function [report,fig] = run_leo_comparison(outputDirectory,overrides,render)
 if nargin<1, outputDirectory = fullfile('results','comparison'); end
 if nargin<2, overrides = struct(); end
 if nargin<3, render = true; end
+% 图形 print 使用绝对路径，避免当前目录与 print 内部路径解析不一致。
+if isempty(regexp(outputDirectory,'^([A-Za-z]:[\\/]|[\\/])','once'))
+    outputDirectory = fullfile(pwd,outputDirectory);
+end
+theoryOptions = struct();
+if isfield(overrides,'theoryOptions')
+    theoryOptions = overrides.theoryOptions;
+    overrides = rmfield(overrides,'theoryOptions');
+end
 p = leo_default_parameters();
 if isfield(overrides,'qosTargetBits')
     p.system.qosTargetBits = overrides.qosTargetBits;
@@ -38,7 +47,20 @@ for j = 1:numel(report.records)
         warning('leo:sampleValidation','Independent fading validation failed: %s',err.message);
     end
 end
+fprintf('Computing common theoretical bound for all-user QoS >= 100%%...\n');
+try
+    report.theory = leo_theory_bound(report,theoryOptions);
+catch err
+    warning('leo:theoryFallback','Full pricing failed, using safe cardinality bound: %s',err.message);
+    report.theory = leo_theory_bound(report,struct('maxSeconds',0));
+    report.theory.pricingStatus = ['Full pricing failed; UB1 used: ',err.message];
+end
+leo_export_theory_bound(report,outputDirectory);
+fprintf('Theoretical upper bound: %.6f Mbit/period; best feasible: %.6f Mbit/period.\n', ...
+    report.theory.upperBits/1e6,report.theory.lowerBits/1e6);
+fprintf('Bound is for full-user QoS >= 100%% in the period certificate model; it may not be attainable.\n');
 leo_export_benchmark(report,outputDirectory);
+if render, leo_plot_theory_bound(report,outputDirectory); end
 [fig,~] = leo_plot_method_comparison(report,outputDirectory,render);
 if render
     leo_plot_extra_metrics(report,outputDirectory);
