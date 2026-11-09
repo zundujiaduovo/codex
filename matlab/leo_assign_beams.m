@@ -19,7 +19,15 @@ for m = 1:M
     if isempty(slots), continue; end
     validGeometry = all(g.visible(:,slots),2);
     worst = min(b.gain(:,:,slots),[],3);
-    [best,index] = max(worst,[],2);   % MATLAB max 并列时取最小编号
+    [best,index] = max(worst,[],2);
+    % 只在同样满足覆盖门槛的近似并列波束中稳定选最小编号。
+    for i=1:K
+        eligible=find(worst(i,:)>=p.coverage.minGain);
+        if ~isempty(eligible)
+            j=leo_stable_argmax(worst(i,eligible),1e-12); index(i)=eligible(j);
+            best(i)=worst(i,index(i));
+        end
+    end
     valid = validGeometry & best>=p.coverage.minGain;
     b.available(:,m) = valid;
     b.index(valid,m) = index(valid);

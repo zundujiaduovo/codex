@@ -1,11 +1,11 @@
 # 基础方案的统一对比实验
 
-**V5 主入口更新：** 当前目标与多级证书以 [FULL_QOS_MODEL.md](FULL_QOS_MODEL.md) 为准；下文保留基础/历史推导与接口背景。主入口使用32用户、8×8阵列、32波束、每块最多7人，统一全员QoS门槛；旧入口的参数与降低门槛行为不能混作V5实验。
+**V6 主入口更新：** 当前目标与多级证书以 [FULL_QOS_MODEL.md](FULL_QOS_MODEL.md) 为准；下文保留基础/历史推导与接口背景。主入口使用32用户、8×8阵列、32波束、每块最多8人，统一全员QoS门槛；旧入口的参数与降低门槛行为不能混作V6实验。
 
 2026-11-07：默认采用 [周期累计 QoS 证书](PERIODIC_QOS.md)，旧 `slot_union` 可显式选择。服务总量/公平/QoS 均按当前证书口径；标称和衰落仿真吞吐单列，不混作保证。历史结果文件保持原样。
 
 本入口对应方案第 13.3 节，在用户指定的固定时间块模型下比较。代码完整性边界见
-[IMPLEMENTATION_STATUS.md](IMPLEMENTATION_STATUS.md)，实测数值见 [BENCHMARK_RESULTS.md](BENCHMARK_RESULTS.md)。
+[IMPLEMENTATION_STATUS.md](IMPLEMENTATION_STATUS.md)，实测数值见 [BENCHMARK_RESULTS.md](https://github.com/zundujiaduovo/codex/blob/leo-qos-v5-full-qos/BENCHMARK_RESULTS.md)。
 
 ## 一键运行
 
@@ -25,7 +25,7 @@ p.system.K = 16;
 report = run_leo_benchmarks(p,struct('budgetSeconds',30));
 ```
 
-默认实验预算为每方法 **12 s**，默认生成一个系统随机算法种子。
+默认实验预算为每方法 **12 s**，默认固定算法种子71669974。
 这是可快速复查的演示配置；正式统计实验需要更多物理样本、种子及预算档位。
 同一 case 的物理样本由 `p.seed` 决定，各算法种子只改变初始化/搜索。一次随机种子结果不代表多种用户/信道环境的统计表现。
 

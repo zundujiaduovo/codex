@@ -1,2 +1,0 @@
-fairnessFloor,upperBits,upperMbps,lowerBits,lowerMbps,bestMethod,bestSeed,pricingComplete,pricingIterations,elapsedSeconds,kind,pricingStatus,scope
-1,63531156.735159963,63.531156735159961,NaN,NaN,"",NaN,1,1,3.6777288913726807,"Full beam-subset pricing with Lagrangian dual","all legal beam subsets priced; upper bound need not be attainable","Full-user QoS floor 1; certified-service model; bound is not stochastic physical capacity."

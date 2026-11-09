@@ -1,6 +1,6 @@
 function [report,fig] = run_leo_comparison(outputDirectory,overrides,render)
 %RUN_LEO_COMPARISON 同场景比较默认 14 项基础 MATLAB 方法/消融，输出完整图组。
-% 默认固定参考用户位置，采用论文部分参数；生成一个随机基础种子供所有方法共享。
+% 默认固定参考用户、71669974种子及最多8人；所有方法共享同一场景。
 if nargin<1, outputDirectory = fullfile('results','comparison'); end
 if nargin<2, overrides = struct(); end
 if nargin<3, render = true; end
@@ -27,12 +27,22 @@ end
 assert(isnumeric(validationSamples) && isscalar(validationSamples) && isfinite(validationSamples) && ...
     validationSamples>=1 && validationSamples==fix(validationSamples));
 p = leo_paper_parameters();
+randomSeed=false;
+if isfield(overrides,'randomSeed')
+    randomSeed=overrides.randomSeed; overrides=rmfield(overrides,'randomSeed');
+    assert(isscalar(randomSeed) && (randomSeed==0 || randomSeed==1));
+end
+assert(~(randomSeed && isfield(overrides,'seeds')),'randomSeed=true 与显式 seeds 不能同时使用。');
+seedSource='fixed_default';
 if isfield(overrides,'seeds')
+    seedSource='explicit_override';
     runSeed = overrides.seeds;
     assert(isnumeric(runSeed) && isscalar(runSeed) && isfinite(runSeed) && ...
         runSeed>=0 && runSeed<=2^32-1 && runSeed==fix(runSeed),'比较入口只接受一个有效随机种子。');
+elseif randomSeed
+    runSeed = leo_random_seed(); seedSource='system_random';
 else
-    runSeed = leo_random_seed();
+    runSeed = p.seed;
 end
 p.seed = runSeed;
 if isfield(overrides,'serviceModel')
@@ -62,12 +72,14 @@ defaults.outputDirectory = outputDirectory;
 defaults.exhaustive = false; defaults.makePlots = false;
 validationSeed = mod(double(runSeed)+104729,2^32);
 fprintf('User layout: %s; base seed: %.0f; validation seed: %.0f\n',p.users.layout,runSeed,validationSeed);
+fprintf('Seed selection: %s; max concurrent users: %d.\n',seedSource,p.system.maxStreams);
 fprintf('Output directory: %s\n',outputDirectory);
 runInfo = struct('runSeed',runSeed,'validationSeed',validationSeed,'userLayout',p.users.layout, ...
-    'validationSamples',validationSamples);
+    'validationSamples',validationSamples,'seedSource',seedSource,'maxStreams',p.system.maxStreams);
 leo_write_struct_csv(fullfile(outputDirectory,'run_seed.csv'),runInfo);
 report = run_leo_benchmarks(p,defaults);
 report.runSeed = runSeed;
+report.seedSource=seedSource;
 report.validationSeed = validationSeed;
 report.validationSamples = validationSamples;
 if ~all(any(report.problemData.available,2))
@@ -114,6 +126,7 @@ else
     fprintf('No full-QoS schedule found: lower bound/gaps unavailable; this is not an infeasibility proof.\n');
     fprintf('Conditional theoretical upper bound: %.6f Mbit/period.\n',report.theory.upperBits/1e6);
 end
+fprintf('Upper-bound calculation: %s; full block pricing=%d; price iterations=%d.\n',report.theory.kind,report.theory.pricingComplete,report.theory.pricingIterations);
 fprintf('Bound is for full-user QoS >= 100%% in the period certificate model; it may not be attainable.\n');
 leo_export_certificate_audit(report,outputDirectory);
 leo_export_benchmark(report,outputDirectory);
@@ -149,10 +162,10 @@ titles = {'Jain fairness of certified service','Average certified demand complet
     'Mean user QoS rate under fading','Joint all-user QoS success under fading'};
 fig = figure('Visible','on','Color','w','Name','Additional QoS metrics','Position',[40,40,1500,800]);
 for k = 1:4
-    subplot(2,2,k); bar(values(:,k));
+    subplot(2,2,k); plot(1:count,values(:,k),'-o','LineWidth',1.5,'MarkerSize',5);
     set(gca,'XTick',1:count,'XTickLabel',methods,'XTickLabelRotation',35, ...
         'TickLabelInterpreter','none');
-    title(titles{k}); ylabel('Ratio'); ylim([0,1.05]); grid on;
+    title(titles{k}); ylabel('Ratio'); xlabel('Method (categorical)'); ylim([0,1.05]); xlim([.5,count+.5]); grid on;
     for j = find(~isfinite(values(:,k))).'
         text(j,.03,'N/A','Rotation',90,'HorizontalAlignment','left');
     end

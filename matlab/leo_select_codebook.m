@@ -17,6 +17,8 @@ else
     ux = ux(valid).'; uy = uy(valid).';
     a = leo_array_response(p,[ux;uy;sqrt(max(0,1-ux.^2-uy.^2))]);
     gain = abs(a'*cb.F).^2;
+    % 仅离线选择分数取固定精度，实际物理增益/覆盖判据保留原始值。
+    gain=round(gain*1e12)/1e12;
     best = zeros(size(gain,1),1);
     selected = zeros(1,N);
     used = false(1,cb.nBeams);
@@ -25,7 +27,7 @@ else
         newCoverage(used) = -Inf;
         candidates = find(newCoverage==max(newCoverage));
         improvement = sum(bsxfun(@max,gain(:,candidates),best)-best,1);
-        [~,j] = max(improvement);
+        j = leo_stable_argmax(improvement,1e-10);
         selected(k) = candidates(j);
         used(selected(k)) = true;
         best = max(best,gain(:,selected(k)));
@@ -33,6 +35,7 @@ else
     selected = sort(selected);       % 保留原网格字典序，稳定编号
 end
 cb.selectedCandidateIndex = selected;
+cb.selectionRule='coverage_grid_quantized_1e12_ties_1e10_v6';
 cb.F = cb.F(:,selected);
 cb.phaseIndex = cb.phaseIndex(:,selected);
 cb.directionArray = cb.directionArray(:,selected);

@@ -4,9 +4,9 @@ function o = leo_benchmark_options(overrides)
 o.methods = {'initial','original_greedy','original_exchange','original_tabu', ...
     'price_sb','price_sb_blockwise','price_sb_adaptive','price_sb_light','price_local','price_local_adaptive','price_miqp','proxy_milp', ...
     'sb_zero','sb_minimax_fixed','sb_current_fixed','sb_reference_portfolio'};
-% 默认只采样一个系统随机种子，显式提供 seeds 时不额外抽样。
+% 默认固定一个复查种子；显式提供 seeds 时使用指定值。
 if nargin>0 && isfield(overrides,'seeds'), o.seeds = overrides.seeds;
-else, o.seeds = leo_random_seed(); end
+else, o.seeds = 71669974; end
 o.budgetSeconds = 12;              % 演示预算；正式规模实验可统一提高到 60 s 等
 o.outputDirectory = '';
 o.exhaustive = true;

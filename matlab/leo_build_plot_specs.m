@@ -1,7 +1,7 @@
 function figures = leo_build_plot_specs(data)
 %LEO_BUILD_PLOT_SPECS 生成完整图组的数值规格，MATLAB/Python 共用同一数据和口径。
 % 输入：leo_collect_plot_data 输出；输出：图名、子图、曲线、误差范围、热图等结构数组。
-% 柱为多种子中位数，误差棒为最小至最大；非置信区间。缺失值保持 NaN。
+% 点为多种子中位数，误差棒为最小至最大；非置信区间。缺失值保持 NaN。
 figures = struct([]); records = data.records; counts = data.counts;
 methods = data.methods; good = {};
 for j = 1:numel(methods)
@@ -102,7 +102,7 @@ for j = 1:numel(data.representatives)
     p(2) = series(p(2),short_name(rep.method),values,(1:numel(values))/numel(values));
 end
 rep = main_rep(data);
-p(3) = panel('bar','Price+SB service and full QoS target','User','Mbit');
+p(3) = panel('categorical_line','Price+SB service and full QoS target','User','Mbit');
 p(4) = panel('line','Price+SB per-user service across phases','User','Mbit');
 if ~isempty(rep)
     p(3).labels = number_labels(data.shape(1));
@@ -209,8 +209,8 @@ p(2) = panel('heatmap','Physical availability (all candidates, before scheduling
 p(2).z = double(data.available); p(2).clim = [0,1];
 figures = add_figure(figures,'17_status_and_availability',repStamp,1,2,p);
 
-p = panel('bar','Fairness at common initialization and each saved phase','Method','Fairness');
-p(2) = panel('bar','Throughput at each phase (fairness is prioritized)','Method','Mbit');
+p = panel('categorical_line','Fairness at common initialization and each saved phase','Method','Fairness');
+p(2) = panel('categorical_line','Throughput at each phase (fairness is prioritized)','Method','Mbit');
 names = {}; if ~isempty(data.representatives), names = {data.representatives.method}; end
 for j = 1:2, p(j).labels = cellfun(@short_name,names,'UniformOutput',false); end
 for stage = 1:3
@@ -246,7 +246,7 @@ end
 
 function p = metric(rows,methods,fields,scale,titleText,unit)
 if ischar(fields), fields = {fields}; end
-p = panel('bar',titleText,'Method',unit);
+p = panel('categorical_line',titleText,'Method',unit);
 p.labels = cellfun(@short_name,methods,'UniformOutput',false);
 for f = 1:numel(fields)
     y = NaN(1,numel(methods)); lo = y; hi = y;

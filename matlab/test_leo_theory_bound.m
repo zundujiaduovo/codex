@@ -21,12 +21,17 @@ report.solutions={struct('x',bestX),struct('x',false(3,2))};
 t=leo_theory_bound(report,struct('maxSeconds',20,'maxIterations',50));
 assert(t.pricingComplete && t.upperBits>=best-1e-7 && abs(t.lowerBits-best)<1e-8);
 assert(t.recordFeasible(1) && ~t.recordFeasible(2));
+assert(numel(t.blockTrace)==data.shape(2) && numel(t.iterationTrace)==t.pricingIterations);
+assert(all(diff([t.iterationTrace.bestUpperBits])<=1e-10));
+assert(all([t.iterationTrace.bestUpperBits]>=best-1e-7));
 u=leo_theory_bound(report,struct('maxSeconds',0));
 assert(~u.pricingComplete && u.upperBits>=best-1e-7 && t.upperBits<=u.upperBits+1e-7);
 report.theory=t; directory=tempname; mkdir(directory); cleanup=onCleanup(@() rmdir(directory,'s')); %#ok<NASGU>
 leo_export_theory_bound(report,directory);
 assert(exist(fullfile(directory,'theoretical_bound_by_run.csv'),'file')==2);
 assert(exist(fullfile(directory,'theoretical_bound_summary.csv'),'file')==2);
+assert(exist(fullfile(directory,'theoretical_bound_iterations.csv'),'file')==2);
+assert(exist(fullfile(directory,'theoretical_bound_blocks.csv'),'file')==2);
 save(fullfile(directory,'benchmark.mat'),'report','-v7');
 [v,fig]=run_leo_theory_from_saved(fullfile(directory,'benchmark.mat'),struct('maxSeconds',0),false);
 assert(isempty(fig) && v.upperBits>=best-1e-7);

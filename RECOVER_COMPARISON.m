@@ -49,7 +49,7 @@ if ~exist('comparisonRender','var') || comparisonRender
     fig = figure('Color','w','Name','Recovered method comparison','Position',[60,60,1300,760]);
     for comparisonPanel = 1:4
         subplot(2,2,comparisonPanel);
-        bar(comparisonValues(comparisonPanel,:));
+        plot(1:numel(comparisonLabels),comparisonValues(comparisonPanel,:),'-o','LineWidth',1.5,'MarkerSize',5);
         set(gca,'XTick',1:numel(comparisonLabels),'XTickLabel',comparisonLabels, ...
             'XTickLabelRotation',20,'TickLabelInterpreter','none');
         title(comparisonTitles{comparisonPanel}); ylabel(comparisonUnits{comparisonPanel}); grid on;

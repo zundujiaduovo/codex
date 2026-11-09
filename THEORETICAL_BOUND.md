@@ -1,6 +1,6 @@
 # 全用户 QoS 下的保证总服务上界
 
-V5 主入口统一要求 G_i>=q_i，采用多级衰落下界；上界针对新的固定证书模型，不能与旧版数值直接混比，也不是物理吞吐的上界。未找到全员达标日程时，不填可行下界和最优差距。
+V6 主入口统一要求 G_i>=q_i，采用多级衰落下界；上界针对新的固定证书模型，不能与旧版数值直接混比，也不是物理吞吐的上界。未找到全员达标日程时，不填可行下界和最优差距。
 
 `run_leo_comparison` 会自动计算 `report.theory` 并保存 `theoretical_bound.png`、`theoretical_bound.fig`、`theoretical_bound_summary.csv`、`theoretical_bound_by_run.csv` 和 `theoretical_bound.mat`。
 
@@ -25,10 +25,10 @@ U(lambda) = sum_m max_{x_m in X_m} sum_i (1+lambda_i)*A_im(x_m)
 
 ## 读取已有 MATLAB 实验，不重跑算法
 
-把 V5 的 `matlab` 目录加入路径，然后：
+把 V6 的 `matlab` 目录加入路径，然后：
 
 ```matlab
-addpath('D:\code\LEO_QoS_Comparison_v5\matlab','-begin')
+addpath('D:\code\LEO_QoS_Comparison_v6\matlab','-begin')
 rehash
 [theory,fig] = run_leo_theory_from_saved();
 ```
@@ -36,3 +36,13 @@ rehash
 在弹窗选择原实验 `results\comparison\benchmark.mat`（若不存在可选 `raw_benchmark.mat`）。图和 CSV 保存到该 MAT 文件所在目录。注意选择本人那次实验的数据，不要将不同用户/码本场景的界交叉比较。
 
 另可指定参数，例如 `options.maxSeconds=90`、`options.maxIterations=100`；更久不保证一定更紧。小规模完整枚举验证：`test_leo_theory_bound()`。
+
+## V6计算过程与用户这轮结果
+
+V6恢复最多8人并发，默认基础种子71669974；当前上界必须按本次实际数据重算，不能沿用L=7或不同码本的界。上式的推导是：对可行日程 A_i-q_i-m_i>=0，给目标添加非负项 sum_i lambda_i(A_i-q_i-m_i)，得到不小于原目标的值；再放松跨块QoS约束，把20块分别求最大，便得到上界。每块枚举所有最多L个波束的合法子集，固定子集后逐波束挑加权服务最高的用户。它覆盖该块的全部可行组，不只搜索某个算法已经访问过的候选。
+
+对偶价格迭代默认至多40轮，取这些完整有效界与UB1中最小的一个。有限轮数不保证找到最紧对偶界，即使找到最紧对偶界，也可能有整数对偶间隙；所以这里是有效上界，不是宣称已算出可达最优解。枚举超出时间/规模限制时使用安全UB1，控制台和summary会写明实际采用的kind。
+
+新增 `theoretical_bound_blocks.csv` 记录每块的用户数、波束数和子集数；`theoretical_bound_iterations.csv` 记录每轮候选上界、保留上界、已知可行下界和步长。可以核对保留上界不增、且没有低于已验证可行下界。没有运行完整定价时，迭代文件为空。
+
+用户提供的V5日志（L=7、种子1936225709）给出U=108.645323、最好可行L=104.727777 Mbit/周期，因此该模型的未知整数最优值在这个区间。禁忌相对最优的差距在0%–3.61%；自适应SB的97.6075对应约6.80%–10.16%。这是这次旧配置的解释，不是V6的性能预测，且没有把用户日志或验证数据打包。

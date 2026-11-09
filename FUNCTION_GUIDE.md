@@ -240,7 +240,7 @@ function figures = leo_build_plot_specs(data)
 ```
 
 输入：leo_collect_plot_data 输出；输出：图名、子图、曲线、误差范围、热图等结构数组。
-柱为多种子中位数，误差棒为最小至最大；非置信区间。缺失值保持 NaN。
+折线点为多种子中位数，误差棒为最小至最大；非置信区间。缺失值保持 NaN。
 
 直接调用：基础 MATLAB 运算。
 调用入口：`leo_export_plot_data`, `test_leo_plots`。
@@ -1406,3 +1406,8 @@ function test_leo_surrogate()
 - `test_leo_v5()`：独立概率枚举、服务与上界一致性、可行/不可行情况下的阶段门控。
 
 V5各求解器的阶段2只有在全员G>=q后运行，门槛固定为1；未达标返回诊断日程，`goalStatus`独立于程序完成状态。
+
+
+## V6 复现与折线图
+
+`leo_stable_argmax`在数值并列时稳定选最小编号；`leo_export_scenario`导出码本、用户位置和候选域。主对比默认种子71669974、最多8人，randomSeed=true才抽新种子。原bar规格改为categorical_line，旧bar输入也按折线重画；无效/缺失点保留NaN，不连接跨缺失点的线段。理论界额外导出逐块和逐轮记录。

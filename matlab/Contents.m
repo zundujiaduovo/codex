@@ -125,3 +125,8 @@
 %   leo_requires_full_qos              - Common all-user QoS constraint switch.
 %   test_leo_v5                        - Independent probability enumeration and strict phase gating.
 %   leo_export_certificate_audit       - Frozen parameters and old/new certificate scores for identical schedules.
+
+% V6 reproducibility and plotting:
+%   leo_stable_argmax                  - Stable tie-breaking for offline codebook scores.
+%   leo_export_scenario                - Codebook/user/candidate-domain audit files.
+%   test_leo_v6                        - Fixed seed, concurrency, codebook and line-plot schema checks.

@@ -2,6 +2,7 @@ function leo_export_benchmark(report,directory)
 %LEO_EXPORT_BENCHMARK 导出实验 CSV/MAT 及全部可重画数值，包含迭代/价格/SB 能量日志。
 % 输入：对比报告、目录；输出：目录内文件，无函数句柄序列化依赖。
 if ~exist(directory,'dir'), mkdir(directory); end
+leo_export_scenario(report,directory);
 leo_write_struct_csv(fullfile(directory,'runs.csv'),report.records);
 leo_write_struct_csv(fullfile(directory,'summary.csv'),report.summary);
 users = struct([]); schedule = struct([]);

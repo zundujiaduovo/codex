@@ -1,3 +1,0 @@
-PASS: periodic certificate, all 49 schedules, exact Bernoulli tails, incremental/proxy/exhaustive/upper-bound checks.
-PASS: 7 benchmark test groups; SKIP: 0 (MILP backend present: 1).
-PASS: 9 plotting data and iteration logging test groups (no graphics backend required).

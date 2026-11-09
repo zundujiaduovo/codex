@@ -1,4 +1,0 @@
-PASS: small: 33 feasible runs, 3 unavailable; counts, timestamps, valid bounds, fixed floors, capacity/beam constraints and plotted medians verified.
-PASS: default: 33 feasible runs, 3 unavailable; counts, timestamps, valid bounds, fixed floors, capacity/beam constraints and plotted medians verified.
-PASS: small: 18 PNG/PDF pairs verified, 18-page PDF bundle, overview and index.
-PASS: default: 18 PNG/PDF pairs verified, 18-page PDF bundle, overview and index.

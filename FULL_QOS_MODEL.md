@@ -1,14 +1,14 @@
-# V5：先全员 QoS，再最大化保证总服务
+# V6：先全员 QoS，再最大化保证总服务
 
 ## 目标与状态
 
-物理配置固定为 32 用户、8×8 阵元、32 个码本波束、8 条射频链；用户要求每块“小于 8 人”，因此 L=7。保持 20 MHz、1 秒周期、20 个块、每流 10 W、80 W 总功率预算、每人 1 Mbit 需求、5% 联合风险。7 流实际最多使用 70 W，未增加发射功率。
+物理配置固定为 32 用户、8×8 阵元、32 个码本波束、8 条射频链；本版恢复每块“最多 8 人”，因此 L=8。保持 20 MHz、1 秒周期、20 个块、每流 10 W、80 W 总功率预算、每人 1 Mbit 需求、5% 联合风险。8 流实际最多使用 80 W，保持原预算。
 
 实际服务为 D_i(x,Z)。要求 P(D_i(x,Z)>=q_i, 对所有 i)>=0.95。为便于求解，构造满足 P(D_i>=G_i(x), 对所有 i)>=0.95 的充分证书 G。优化问题为：
 
     maximize sum_i G_i(x)
     subject to G_i(x) >= q_i for every user,
-               x binary, at most 7 users per block, at most one user per beam.
+               x binary, at most 8 users per block, at most one user per beam.
 
 辅助阶段先最大化 s=min(1,min_i G_i/q_i) 来寻找可行起点；仅 s=1 时才进入吞吐阶段，且统一门槛固定为 1。s<1 时只返回诊断日程，标为 full_qos_not_found，不把它纳入达标吞吐排名。该状态不是原机会约束问题不可行的证明。completed 仅表示程序返回；goalStatus 独立记录目标是否达到。
 

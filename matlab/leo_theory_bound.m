@@ -32,6 +32,7 @@ upperM = coarse.value*data.referenceBits/1e6;
 result.kind = 'UB1 cardinality relaxation'; result.pricingComplete = false;
 result.pricingIterations = 0; result.subsetCounts = zeros(1,M);
 result.pricingStatus = '';
+result.iterationTrace=struct([]); result.blockTrace=struct([]);
 % 枚举时守住规模与预算；任何未完成块都不能用于完整定价上界。
 blocks = cell(1,M); canEnumerate = true;
 for m = 1:M
@@ -62,6 +63,8 @@ for m = 1:M
     rates = bsxfun(@times,scale,rates);
     rates(~data.available(:,m),:) = 0;
     for i = ids.', rates(i,:) = rates(i,:).*double(chosen(:,local(i)).'); end
+    blockRow=struct('resource',m,'availableUsers',numel(ids),'availableBeams',B,'subsets',count);
+    if isempty(result.blockTrace), result.blockTrace=blockRow; else, result.blockTrace(end+1,1)=blockRow; end
     blocks{m} = struct('beams',beams,'chosen',chosen,'rates',rates);
     fprintf('Theory pricing: block %d/%d, %d beams, %d subsets\n',m,M,B,count);
 end
@@ -79,6 +82,10 @@ if canEnumerate
             bestKind = 'Full beam-subset pricing with Lagrangian dual';
         end
         result.pricingIterations = k;
+        traceRow=struct('iteration',k,'candidateUpperBits',candidateM*1e6, ...
+            'bestUpperBits',bestM*1e6,'knownFeasibleLowerBits',result.lowerBits, ...
+            'lambdaL2',norm(lambda),'gradientNorm',NaN,'stepSize',NaN);
+        if isempty(result.iterationTrace), result.iterationTrace=traceRow; else, result.iterationTrace(end+1,1)=traceRow; end
         if isnan(result.lowerBits), break; end
         lowerM = result.lowerBits/1e6;
         if candidateM<lowerM-1e-6*max(1,abs(lowerM))
@@ -88,6 +95,7 @@ if canEnumerate
         norm2 = sum(gradient.^2);
         if norm2<1e-16 || candidateM-lowerM<1e-8, break; end
         step = .8*max(0,candidateM-lowerM)/norm2;
+        result.iterationTrace(end).gradientNorm=sqrt(norm2); result.iterationTrace(end).stepSize=step;
         lambda = max(0,lambda-step*gradient);
     end
     upperM = bestM; result.lambda = bestLambda; result.kind = bestKind;

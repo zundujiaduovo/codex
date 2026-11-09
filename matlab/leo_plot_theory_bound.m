@@ -20,7 +20,7 @@ for j = 1:N
 end
 upper = t.upperBits/scale; lower = t.lowerBits/scale;
 fig = figure('Visible','on','Color','w','Name','Theoretical bound at full QoS','Position',[50,50,1450,800]);
-subplot(2,1,1); bar(best); hold on;
+subplot(2,1,1); plot(1:N,best,'-o','LineWidth',1.5,'MarkerSize',5); hold on;
 line([.5,N+.5],[upper,upper],'Color',[.8,0,0],'LineStyle','--','LineWidth',1.7);
 set(gca,'XTick',1:N,'XTickLabel',labels,'XTickLabelRotation',35,'TickLabelInterpreter','none');
 title('Certified sum rate: full-QoS feasible runs and common upper bound'); ylabel('Mbps'); grid on;
@@ -30,11 +30,12 @@ for j = find(~isfinite(best)).', text(j,limits(1)+.03*diff(limits),'N/A','Rotati
 subplot(2,1,2);
 if isfinite(lower)
     lo = max(0,lower-best); hi = max(0,upper-best);
-    bar([lo,hi]); legend({'At least','At most'},'Location','best');
+    plot(1:N,lo,'-o',1:N,hi,'--s','LineWidth',1.5); legend({'At least','At most'},'Location','best');
 else
     text(.1,.5,'No recorded full-QoS feasible schedule; lower gap unavailable','Units','normalized');
 end
 set(gca,'XTick',1:N,'XTickLabel',labels,'XTickLabelRotation',35,'TickLabelInterpreter','none');
+xlabel('Method (categorical)'); xlim([.5,N+.5]);
 title('Possible optimality gap interval at the same full-QoS floor'); ylabel('Mbps'); grid on;
 annotation(fig,'textbox',[0,.965,1,.035],'String', ...
     'Upper bound is for the deterministic period certificate model; not necessarily attainable', ...

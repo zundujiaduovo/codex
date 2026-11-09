@@ -35,10 +35,10 @@ for j = 1:count
 end
 fig = [];
 if ~render, return; end
-fig = figure('Visible','on','Color','w','Name','LEO method comparison','Position',[40,40,1450,820]);
+fig = figure('Visible','on','Color','w','Name','LEO method comparison','Position',[40,40,1700,900]);
 annotation(fig,'textbox',[0,.965,1,.035],'String',sprintf( ...
-    '%d users | %.2f Mbit/user | %.1f GHz | Rician %.1f dB | %.0f s/method | seed %.0f', ...
-    report.problemData.shape(1),report.problemData.qosTargetBits(1)/1e6, ...
+    '%d users | max %d concurrent | %.2f Mbit/user | %.1f GHz | Rician %.1f dB | %.0f s/method | seed %.0f', ...
+    report.problemData.shape(1),report.problemData.maxStreams,report.problemData.qosTargetBits(1)/1e6, ...
     report.parameters.system.carrierHz/1e9,report.parameters.channel.ricianKDb, ...
     report.options.budgetSeconds,report.options.seeds(1)), ...
     'EdgeColor','none','HorizontalAlignment','center','Interpreter','none');
@@ -52,12 +52,18 @@ end
 ylabels = {'Ratio','Percent','Mbps','Mbps','Seconds'};
 for k = 1:5
     subplot(2,3,k);
-    bars = bar(values.median(:,k),'FaceColor','flat'); set(bars,'CData',colors);
+    plot(1:count,values.median(:,k),'-o','LineWidth',1.5,'MarkerSize',5,'Color',[.1,.4,.7]);
     hold on;
     errorbar(1:count,values.median(:,k),values.median(:,k)-values.low(:,k), ...
         values.high(:,k)-values.median(:,k),'k.','LineWidth',1);
     set(gca,'XTick',1:count,'XTickLabel',labels,'XTickLabelRotation',35,'TickLabelInterpreter','none');
-    title(titles{k}); ylabel(ylabels{k}); grid on;
+    title(titles{k}); ylabel(ylabels{k}); xlabel('Method (categorical)'); grid on; xlim([.5,count+.5]);
+    if k==3 || k==5
+        for j=find(isfinite(values.median(:,k))).'
+            text(j,values.median(j,k),sprintf(' %.2f',values.median(j,k)), ...
+                'VerticalAlignment','bottom','FontSize',8);
+        end
+    end
     if k==1, ylim([0,1.05]); elseif k==2, ylim([0,105]); end
     limits = ylim;
     for j = find(~isfinite(values.median(:,k))).'

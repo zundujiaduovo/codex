@@ -113,6 +113,11 @@ if options.exhaustive
         end
     end
 end
+if isfield(model,'codebook') && isfield(model.codebook,'selectedCandidateIndex')
+    report.scenario=struct('selectedCandidateIndex',model.codebook.selectedCandidateIndex, ...
+        'gridIndex',model.codebook.gridIndex,'phaseIndex',model.codebook.phaseIndex, ...
+        'userLatDeg',model.users.latDeg,'userLonDeg',model.users.lonDeg,'selectionRule',model.codebook.selectionRule);
+end
 report.parameters = model.parameters; report.options = options;
 report.problemData = problem.data; report.records = records; report.solutions = solutions;
 report.exhaustive = reference; report.summary = struct([]);

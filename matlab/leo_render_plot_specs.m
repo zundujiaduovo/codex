@@ -41,12 +41,12 @@ if strcmp(p.kind,'heatmap')
         if ~isempty(p.xlabels), set(ax,'XTick',1:numel(p.xlabels),'XTickLabel',p.xlabels); end
         if ~isempty(p.ylabels), set(ax,'YTick',1:numel(p.ylabels),'YTickLabel',p.ylabels); end
     end
-elseif strcmp(p.kind,'bar')
-    count = numel(p.series); width = .8/max(1,count);
+elseif any(strcmp(p.kind,{'bar','categorical_line'}))
+    count = numel(p.series); styles={'-o','--s','-.^',':d'};
     for j = 1:count
-        s = p.series(j); x = s.x+(j-(count+1)/2)*width;
+        s = p.series(j); x = s.x;
         color = colors(j,:);
-        h = bar(ax,x,s.y,width,'FaceColor',color,'EdgeColor','none');
+        h = plot(ax,x,s.y,styles{mod(j-1,numel(styles))+1},'Color',color,'LineWidth',1.4,'MarkerSize',4);
         handles{end+1} = h; names{end+1} = s.name; %#ok<AGROW>
         if ~isempty(s.low)
             errorbar(ax,x,s.y,s.y-s.low,s.high-s.y,'k.','LineWidth',.7,'HandleVisibility','off');
@@ -77,8 +77,8 @@ else
 end
 if ~hasValues
     text(ax,.5,.5,'Not applicable / not reported','Units','normalized','HorizontalAlignment','center','Color',[.4,.4,.4]);
-    if strcmp(p.kind,'bar'), ylim(ax,[0,1]); set(ax,'YTick',[]); end
-elseif strcmp(p.kind,'bar') && ~isempty(p.series)
+    if any(strcmp(p.kind,{'bar','categorical_line'})), ylim(ax,[0,1]); set(ax,'YTick',[]); end
+elseif any(strcmp(p.kind,{'bar','categorical_line'})) && ~isempty(p.series)
     missing = true(size(p.series(1).y));
     for j = 1:numel(p.series), missing = missing & ~isfinite(p.series(j).y); end
     bounds = ylim(ax); level = bounds(1)+.03*diff(bounds);

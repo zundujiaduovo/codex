@@ -69,13 +69,13 @@ def draw_panel(fig, ax, panel):
                         getattr(ax, f"set_{dim}ticks")(np.arange(1, size+1))
                     else:
                         getattr(ax, f"{dim}axis").set_major_locator(matplotlib.ticker.MaxNLocator(integer=True, nbins=8))
-    elif kind == "bar":
-        width = .8 / max(1, len(series))
+    elif kind in {"bar", "categorical_line"}:
+        styles = ["-o", "--s", "-.^", ":d"]
         for j, s in enumerate(series):
             x, y = vec(s["x"]), vec(s["y"])
-            x = x + (j - (len(series)-1)/2)*width
             c = COLORS[4] if len(series) == 1 else COLORS[(j+2) % len(COLORS)]
-            ax.bar(x, y, width=width, color=c, label=FIELD_LABELS.get(s["name"], s["name"]), zorder=3)
+            ax.plot(x, y, styles[j % len(styles)], color=c, linewidth=1.5, markersize=4,
+                    label=FIELD_LABELS.get(s["name"], s["name"]), zorder=3)
             if np.asarray(s["low"]).size:
                 lo, hi = vec(s["low"]), vec(s["high"])
                 finite = np.isfinite(y) & np.isfinite(lo) & np.isfinite(hi)
@@ -116,7 +116,7 @@ def draw_panel(fig, ax, panel):
     if not has_values:
         ax.text(.5, .5, "Not applicable / not reported", transform=ax.transAxes,
                 ha="center", va="center", color="#738095", fontsize=10)
-        if kind == "bar":
+        if kind in {"bar", "categorical_line"}:
             ax.set_ylim(0, 1)
             ax.set_yticks([])
     if np.asarray(panel["reference"]).size:
@@ -174,7 +174,7 @@ def render(source: Path, directory: Path):
     plt.close(fig)
     links = ["# 图表索引", "", "数值和图形规格由 MATLAB 生成；本目录图像使用 Matplotlib 渲染。", "",
              "[全部图表 PDF](all_figures.pdf) · [总览](overview.png)", "",
-             "柱：多种子中位数；误差棒：最小至最大（不是置信区间）。代表曲线固定取第一个请求的种子。", "",
+             "折线点：多种子中位数；误差棒：最小至最大（不是置信区间）。代表曲线固定取第一个请求的种子。", "",
              "NaN / N/A 表示不适用或未报告；迭代计数的单位详见项目 PLOTS.md。", ""]
     for spec in specs:
         links.append(f'- {spec["name"]}: [PNG]({spec["name"]}.png) · [PDF]({spec["name"]}.pdf)')

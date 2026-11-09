@@ -1,2 +1,0 @@
-fairnessFloor,upperBits,upperMbps,lowerBits,lowerMbps,bestMethod,bestSeed,pricingComplete,pricingIterations,elapsedSeconds,kind,pricingStatus,scope
-1,60167467.214437798,60.167467214437799,54831191.430556424,54.831191430556423,"original_tabu",429756090,1,40,16.127973079681396,"Full beam-subset pricing with Lagrangian dual","all legal beam subsets priced; upper bound need not be attainable","Full-user QoS floor 1; certified-service model; bound is not stochastic physical capacity."

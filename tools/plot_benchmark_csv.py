@@ -36,7 +36,7 @@ def main(directory):
     fig, axes = plt.subplots(2,2,figsize=(17,12),layout='constrained')
     for ax,(field,scale,title) in zip(axes.flat,panels):
         values = np.array([float(r[field])*scale for r in rows])
-        ax.barh(y,values,color=colors,height=.65)
+        ax.plot(values,y,"-o",color="#1678aa",linewidth=1.5)
         ax.set_yticks(y,labels); ax.invert_yaxis(); ax.set_title(title,fontweight='bold')
         ax.grid(axis='x',alpha=.22); ax.set_axisbelow(True)
         ax.spines[['right','top']].set_visible(False)
@@ -50,7 +50,7 @@ def main(directory):
     skipped = [LABELS.get(r['method'],r['method']) for r in all_rows if int(r['completed'])==0]
     n_seeds = len({r['seed'] for r in runs})
     note = f'{directory.name}: medians over {n_seeds} algorithm seeds; one fixed physical sample'
-    if skipped: note += '\nUnavailable/failed (excluded from bars): '+', '.join(skipped)
+    if skipped: note += '\nUnavailable/failed (excluded from lines): '+', '.join(skipped)
     fig.suptitle(note,fontsize=13)
     fig.savefig(directory/'comparison.png',dpi=160)
     fig.savefig(directory/'comparison.pdf')
@@ -58,7 +58,7 @@ def main(directory):
     exact = [float(r['medianExactFairnessGap']) for r in rows]
     if all(np.isfinite(exact)):
         fig,ax = plt.subplots(figsize=(10,6),layout='constrained')
-        ax.barh(y,exact,color=colors); ax.set_yticks(y,labels); ax.invert_yaxis()
+        ax.plot(exact,y,"-o",color="#1678aa",linewidth=1.5); ax.set_yticks(y,labels); ax.invert_yaxis()
         ax.set_xlabel('Original fairness gap to complete exhaustive optimum')
         ax.set_title('Small case: exact fairness gaps (median)')
         ax.grid(axis='x',alpha=.25); ax.set_axisbelow(True)

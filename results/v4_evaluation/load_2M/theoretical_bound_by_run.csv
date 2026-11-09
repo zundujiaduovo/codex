@@ -1,9 +1,0 @@
-method,seed,status,fullQosFeasible,guaranteedServiceBits,conditionalUpperBits,bestFeasibleBits,gapAtLeastBits,gapAtMostBits,gapAtLeastPercent,gapAtMostPercent
-"initial",429756090,"completed",0,49979955.039657868,63531156.735159963,NaN,NaN,NaN,NaN,NaN
-"original_exchange",429756090,"completed",0,51459472.906414539,63531156.735159963,NaN,NaN,NaN,NaN,NaN
-"original_tabu",429756090,"completed",0,53339948.995067924,63531156.735159963,NaN,NaN,NaN,NaN,NaN
-"price_sb",429756090,"completed",0,49979955.039657868,63531156.735159963,NaN,NaN,NaN,NaN,NaN
-"price_sb_blockwise",429756090,"completed",0,50840444.798841611,63531156.735159963,NaN,NaN,NaN,NaN,NaN
-"price_sb_adaptive",429756090,"completed",0,50840444.798841611,63531156.735159963,NaN,NaN,NaN,NaN,NaN
-"price_sb_light",429756090,"completed",0,50994733.391737163,63531156.735159963,NaN,NaN,NaN,NaN,NaN
-"price_local_adaptive",429756090,"completed",0,50840444.798841611,63531156.735159963,NaN,NaN,NaN,NaN,NaN

@@ -86,6 +86,7 @@ assert(numel(unique({specs.name}))==18);
 for j = 1:numel(specs)
     for k = 1:numel(specs(j).panels)
         p = specs(j).panels(k); assert(isequal(size(p.z),p.zShape));
+        assert(~strcmp(p.kind,'bar'),'All comparisons must use categorical lines.');
         for s = p.series(:).'
             assert(numel(s.x)==numel(s.y));
             if ~isempty(s.low), assert(all(s.low<=s.y | isnan(s.y)) && all(s.high>=s.y | isnan(s.y))); end
