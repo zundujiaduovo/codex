@@ -88,6 +88,12 @@ for phaseIndex = 1:2
     stage.history = history; stage.iterations = phaseIterations; stage.iterationKind = iterationKind;
     stage.elapsedAtEndSeconds = toc(budget.timer);
     stage.status='search_finished';
+    if strcmp(kind,'initial'), stage.status='initialization_only';
+    elseif leo_budget_expired(localBudget), stage.status='time_limit';
+    elseif strcmp(kind,'greedy'), stage.status='no_improving_addition';
+    elseif strcmp(kind,'exchange'), stage.status='stagnation';
+    elseif phaseIterations>=1000, stage.status='iteration_limit'; end
+    if strict && phaseIndex==1 && phaseStart.fairness==1, stage.status='full_qos_already_met'; end
     if strict && phaseIndex==2 && best.service.fairness<1, stage.status='not_started_full_qos_not_found'; end
     if phaseIndex==1, result.stage1 = stage;
     else, result.stage2 = stage; result.fairnessFloor = s0; end

@@ -126,7 +126,12 @@ else
     fprintf('No full-QoS schedule found: lower bound/gaps unavailable; this is not an infeasibility proof.\n');
     fprintf('Conditional theoretical upper bound: %.6f Mbit/period.\n',report.theory.upperBits/1e6);
 end
-fprintf('Upper-bound calculation: %s; full block pricing=%d; price iterations=%d.\n',report.theory.kind,report.theory.pricingComplete,report.theory.pricingIterations);
+fprintf('Upper-bound calculation: %s; full block pricing=%d; pricing rounds=%d.\n',report.theory.kind,report.theory.pricingComplete,report.theory.pricingIterations);
+if isfield(report.theory,'relativeGap') && isfinite(report.theory.relativeGap)
+    fprintf('Certified remaining gap: %.6f%% (target %.6f%%); target met=%d; nodes=%d.\n', ...
+        100*report.theory.relativeGap,100*report.theory.targetRelativeGap,report.theory.gapTargetMet,report.theory.nodesProcessed);
+    fprintf('Certificate-stage feasible schedules are separate from benchmark method results.\n');
+end
 fprintf('Bound is for full-user QoS >= 100%% in the period certificate model; it may not be attainable.\n');
 leo_export_certificate_audit(report,outputDirectory);
 leo_export_benchmark(report,outputDirectory);

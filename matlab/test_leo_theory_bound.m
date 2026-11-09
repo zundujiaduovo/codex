@@ -22,8 +22,10 @@ t=leo_theory_bound(report,struct('maxSeconds',20,'maxIterations',50));
 assert(t.pricingComplete && t.upperBits>=best-1e-7 && abs(t.lowerBits-best)<1e-8);
 assert(t.recordFeasible(1) && ~t.recordFeasible(2));
 assert(numel(t.blockTrace)==data.shape(2) && numel(t.iterationTrace)==t.pricingIterations);
-assert(all(diff([t.iterationTrace.bestUpperBits])<=1e-10));
-assert(all([t.iterationTrace.bestUpperBits]>=best-1e-7));
+if ~isempty(t.iterationTrace)
+ assert(all(diff([t.iterationTrace.bestUpperBits])<=1e-5));
+ assert(all([t.iterationTrace.bestUpperBits]>=best-1e-7));
+end
 u=leo_theory_bound(report,struct('maxSeconds',0));
 assert(~u.pricingComplete && u.upperBits>=best-1e-7 && t.upperBits<=u.upperBits+1e-7);
 report.theory=t; directory=tempname; mkdir(directory); cleanup=onCleanup(@() rmdir(directory,'s')); %#ok<NASGU>

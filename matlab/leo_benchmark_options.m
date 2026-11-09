@@ -12,7 +12,7 @@ o.outputDirectory = '';
 o.exhaustive = true;
 o.makePlots = true;
 o.verbose = true;
-o.method = leo_method_options(struct('verbose',false));
+o.method = leo_method_options(struct('verbose',false,'fairnessRounds',1000,'throughputRounds',1000));
 if nargin>0
     assert(isstruct(overrides) && isscalar(overrides));
     names = fieldnames(overrides);

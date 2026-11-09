@@ -1,38 +1,52 @@
-# LEO QoS V6：固定种子与折线对比
+# LEO QoS V7：更紧的最优区间与公平的搜索预算
 
-[下载 V6 纯源码包](LEO_QoS_Comparison_v6.zip)。独立分支 `leo-qos-v6-reproducible-lines`，旧版保留在原分支。本版ZIP不含验证结果、示例图、MAT数据或旧压缩包。
+[下载 V7 纯源码包](LEO_QoS_Comparison_v7.zip)。分支leo-qos-v7-certified-gap；包内只有源码、测试代码和必要说明，不包含验证数据、图片、MAT或旧版ZIP。
 
-默认32用户、8×8=64阵元、32码本波束、8射频链、**每块最多8人**；20个50 ms块、1秒周期、20 MHz、每流10 W、80 W功率预算、每用户1 Mbit需求、95%联合可靠性。基础种子固定 **71669974**。物理参考参数为600 km、4 GHz、Rician 12 dB和6/1 dB天线增益；论文与本模型的区别见 PAPER_REFERENCE.md。
+配置延续V6：32用户、8×8阵元、32波束、最多8人、固定种子71669974、每用户1 Mbit、95%联合可靠性、每流10 W、80 W预算、1秒周期。G的定义和业务目标不变。
 
-## MATLAB运行
+## 修改内容
 
-解压到新目录，例如 `D:\code\LEO_QoS_Comparison_v6`。在命令窗口运行：
+1. 上界从有限轮价格迭代改为列生成与分支定价，并加入对原整数调度等价的截断服务表达和合法计数割。无需外部优化工具箱。默认争取把整数可行下界与全域上界的差距收至0.01%，最多180秒/128节点；未达到目标就显示真实剩余差距。
+2. 证书阶段找到的新整数日程另存，绝不算进SB/禁忌成绩。分数主问题值不当成真实整数下界。
+3. 对比默认仍是14项基础MATLAB方法/消融，每方法12秒软预算。价格+SB等方法的轮数上限由12/24提高到1000，避免在约2–3秒就因轮数结束，而禁忌继续跑满预算。日志打印停止原因；不保证SB排名领先。
+4. 保留折线对比、场景核对文件和固定默认种子。历史上界或场景的数值不直接套到当前模型。
+
+完整推导、证书精度和禁忌实现说明见 [CERTIFICATE_SEARCH.md](CERTIFICATE_SEARCH.md)。
+
+## 运行完整比较
+
+解压到新目录，例如D:\code\LEO_QoS_Comparison_v7，在MATLAB命令窗口运行：
 
 ```matlab
 clear functions
-cd('D:\code\LEO_QoS_Comparison_v6')
+cd('D:\code\LEO_QoS_Comparison_v7')
 addpath(fullfile(pwd,'matlab'),'-begin')
 rehash
-[report,fig] = run_leo_comparison();
+[report,fig]=run_leo_comparison();
 ```
 
-也可直接打开根目录 `RUN_COMPARISON.m` 并点击运行。默认14项基础MATLAB方法/消融，不使用外部优化求解器。每方法12秒端到端软预算；一些方法可能提前停止或略超时，耗时按实际记录。1000个独立衰落周期用于固定日程后的验证。
+完整对比、1000周期独立验证及证书搜索可能需要数分钟。结果生成在results/comparison/seed_71669974，重复运行增加后缀，不覆盖。
 
-结果保存在 `results/comparison/seed_71669974`；重复运行增加 `_run_2` 后缀，不覆盖已有结果。`run_seed.csv`首先记录本次种子，`raw_benchmark.mat`保存算法原始结果。图形失败时可运行 `RECOVER_COMPARISON.m` 选择备份恢复。
+## 只重算已有V6结果的证书
 
-## 本次修改
+不必重跑14种算法：
 
-- L恢复8，默认固定种子71669974；只有显式传入`randomSeed=true`才自动抽新种子。
-- 修正离线码本数值并列的选择方式，导出码本、固定用户和候选域用于跨MATLAB/Octave核对。见 [REPRODUCIBILITY.md](REPRODUCIBILITY.md)。
-- 综合对比、QoS、理论界、恢复图和详细图中的原柱状图全部改为带标记的折线；调度矩阵等仍用热图。方法轴是离散类别，连接线不代表类别之间存在连续插值。缺失/未达标结果留空。
-- 上界新增逐块枚举数量与逐轮对偶界CSV，计算过程与局限见 [THEORETICAL_BOUND.md](THEORETICAL_BOUND.md)。
+```matlab
+clear functions
+cd('D:\code\LEO_QoS_Comparison_v7')
+addpath(fullfile(pwd,'matlab'),'-begin')
+rehash
+source='D:\code\LEO_QoS_Comparison_v6\results\comparison\seed_71669974\benchmark.mat';
+[theory,fig]=run_leo_theory_from_saved(source, ...
+    struct('maxSeconds',300,'relativeGap',1e-4));
+```
 
-固定种子不会使SB必然优于禁忌，也不能消除运行速度和浮点实现差异。本版没有为获得某个排名而改变需求、可靠性目标或搜索结果。
+默认另存到旧结果目录下certificate_v7。重点看lowerBits、upperBits、relativeGap和gapTargetMet。输出最优区间、各算法差距范围、分支过程及最好证书整数日程。更长预算仍不保证所有实例都达到目标。
 
-## 目标与指标
+## 结果含义
 
-所有用户的充分保证条件G_i>=q_i满足后，才最大化保证总服务；否则报告`full_qos_not_found`，只保留诊断日程，不参与正式吞吐与界差排名。目标与多级衰落证书推导见 [FULL_QOS_MODEL.md](FULL_QOS_MODEL.md)。`completed`只表示程序完成，不代表QoS达标或全局最优。
+goalStatus=full_qos_met表示通过当前充分证书的全员QoS门槛；full_qos_not_found保留诊断，不当作业务目标完成。证书搜索发生在方法比较结束后，单独计时；bestMethod=certificate_search时，该下界属于额外搜索，不是某个被测算法的成绩。比较方法质量使用各自返回的日程。
 
-`method_comparison.png`比较证书公平、达标率、全员达标后的保证速率、衰落平均速率和实际耗时；`additional_qos_metrics.png`给出Jain等额外指标；`theoretical_bound.png`显示统一门槛下的有效上界与最优差距范围；另外输出18张诊断图。方法定义见 METHODS_AND_METRICS.md。
+数学目标见FULL_QOS_MODEL.md；上界与新证书见THEORETICAL_BOUND.md和CERTIFICATE_SEARCH.md；方法字段见METHODS_AND_METRICS.md；种子/码本复现见REPRODUCIBILITY.md。所有图沿用折线或调度热图。
 
-数学证书与物理平均吞吐是不同量，上界针对固定的确定性保证服务模型，不能当作实际平均吞吐的上界。所有测试与数值检查在Octave完成，Python图形规格渲染用于检查折线；MATLAB桌面图形仍需用户实际环境验证。
+数值验证在Octave完成；包含独立整数枚举与分数间隙反例，不把同一实现的输出当作唯一oracle。MATLAB桌面图形未实机运行。固定证书的最优区间不能解释为真实随机物理容量的最优区间。

@@ -130,3 +130,12 @@
 %   leo_stable_argmax                  - Stable tie-breaking for offline codebook scores.
 %   leo_export_scenario                - Codebook/user/candidate-domain audit files.
 %   test_leo_v6                        - Fixed seed, concurrency, codebook and line-plot schema checks.
+
+% V7 certified integer gap:
+%   leo_prepare_pricing_cache          - All legal beam-subset service coefficients.
+%   leo_simplex_feasible               - Toolbox-free feasible-basis master simplex.
+%   leo_price_node                     - Complete pricing under original binary branch fixes.
+%   leo_refine_certificate_node        - Column generation with valid strengthening.
+%   leo_round_column_schedule          - Independently verified certificate-stage integer candidates.
+%   test_leo_branch_price              - Exact integer-gap and infeasibility counterexamples.
+%   test_leo_pricing_oracle            - Independent pricing/cut enumeration oracle.

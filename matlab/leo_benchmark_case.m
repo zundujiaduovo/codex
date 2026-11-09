@@ -90,6 +90,7 @@ for seed = options.seeds(:).'
         if options.verbose
             fprintf('%-23s seed=%d %-12s s=%.9g V=%.6g Mbit wall=%.3f s\n', ...
                 name,seed,row.status,row.fairness,row.totalBits/1e6,row.endToEndSeconds);
+            if ~isempty(row.solverStatus), fprintf('  Stop: %s\n',row.solverStatus); end
             if ~isempty(row.goalStatus), fprintf('  Goal: %s (full-user QoS floor 1).\n',row.goalStatus); end
             if ~isempty(row.message), fprintf('  %s\n',row.message); end
         end

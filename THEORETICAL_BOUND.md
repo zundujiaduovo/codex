@@ -1,48 +1,22 @@
-# 全用户 QoS 下的保证总服务上界
+# V7 全员 QoS 下的整数最优区间
 
-V6 主入口统一要求 G_i>=q_i，采用多级衰落下界；上界针对新的固定证书模型，不能与旧版数值直接混比，也不是物理吞吐的上界。未找到全员达标日程时，不填可行下界和最优差距。
+当前采用完整组定价、列生成、合法强化和原变量分支定界，推导与实现边界见 [CERTIFICATE_SEARCH.md](CERTIFICATE_SEARCH.md)。目标与V6相同：固定保证模型下，所有用户G_i>=q_i后最大化sum G_i。
 
-`run_leo_comparison` 会自动计算 `report.theory` 并保存 `theoretical_bound.png`、`theoretical_bound.fig`、`theoretical_bound_summary.csv`、`theoretical_bound_by_run.csv` 和 `theoretical_bound.mat`。
+原始可行日程给下界L；全部未关闭分支给上界U，未知整数最优值V*满足L<=V*<=U。某方法的合法成绩V距最优的绝对差在[L-V,U-V]，相对差在[1-V/L,1-V/U]。没有整数可行日程时，不能把分数主问题的值填成L。
 
-全部结果使用当前一次实验的固定物理样本、链路、资源及周期可靠性参数。统一比较的问题为：在每个用户的保证服务 `G_i >= q_i` 下，最大化 `sum(G_i)`。不满足全用户 QoS 的方法显示 N/A，不与此门槛下的最优值直接比较。不同随机种子的物理样本相同；图中每个方法取达标的最好一次，全部逐次结果见 CSV。
+默认目标差距0.01%，180秒、128节点；达到目标才显示gapTargetMet=1。未达到时显示实际差距及停止原因。完整定价因规模/时间无法运行时，保留安全UB1或同一完整输入的已有证书界，不能将部分列池的解当全域上界。上界针对固定证书模型，不是物理平均吞吐的上界，也不保证其数值可达。
 
-全用户目标严格为正时，`G_i=[A_i-m_i]_+ >= q_i` 等价于 `A_i >= q_i+m_i`，目标为 `sum(A_i)-sum(m_i)`。其中 `A_i` 跨块可加，`m_i` 是周期风险余量。
+输出：theoretical_bound_summary.csv保存上下界、节点数、目标/实际差距和状态；theoretical_bound_by_run.csv保存每种算法的最优差距区间；theoretical_bound_iterations.csv保存完整定价过程；theoretical_bound_nodes.csv记录分支、关闭与预算状态；certificate_incumbent_schedule.csv和certificate_incumbent_users.csv给出独立验收的最好整数日程。证书搜索的新日程与被测算法成绩分别保存。
 
-对任意 `lambda_i>=0`，完整可行块组集合 `X_m` 给出有效上界：
-
-```
-U(lambda) = sum_m max_{x_m in X_m} sum_i (1+lambda_i)*A_im(x_m)
-            - sum_i lambda_i*(q_i+m_i) - sum_i m_i.
-```
-
-算法对每块枚举满足并发数的全部可用波束子集；固定波束子集时，其他波束对用户的干扰不取决于其服务的用户身份，因此可逐波束选择加权服务最高的用户，得到该价格下全域资源支持函数。使用非负投影次梯度调整价格，并保留找到的最小有效上界；次梯度停止不意味着对偶或原问题最优。每次迭代均完成所有块定价才记录界。
-
-默认最多 40 次价格迭代、45 秒软预算；单块最多 18 个不同候选波束、20 万个合法子集，累计最多 150 万个子集。超时或规模过大时自动退回原有 UB1 基数放松上界；报告 `pricingComplete`、`kind` 和 `pricingStatus`，不将未枚举完整的结果当作全域上界。计算时间在对比实验之后单列，不计入某种算法耗时。
-
-已完成且严格逐用户满足 QoS 的日程，重新由原评价器检查，其最大保证总服务是可行下界 `L`。设有效上界为 `U`、某方法的可行值为 `V`，未知的真实整数最优值满足 `L <= V* <= U`，该方法的绝对最优差距属于 `[L-V, U-V]`。`theoretical_bound_by_run.csv` 中 `gapAtLeastBits` / `gapAtMostBits` 即此区间；百分比相应为 `[1-V/L, 1-V/U]`。没有达标日程时下界与差距显示 NaN，上界仍是有条件的界，不能据此声称问题可行。
-
-此上界针对**确定性周期保证服务模型**，不是随机衰落下平均总速率的上界；上界不一定可达，也不是自动证明精确最优。浮点计算附带小量向上裕量，不是区间算术证明。
-
-## 读取已有 MATLAB 实验，不重跑算法
-
-把 V6 的 `matlab` 目录加入路径，然后：
+读取已有V6结果只重算证书，无需重跑算法：
 
 ```matlab
-addpath('D:\code\LEO_QoS_Comparison_v6\matlab','-begin')
+addpath('D:\code\LEO_QoS_Comparison_v7\matlab','-begin');
 rehash
-[theory,fig] = run_leo_theory_from_saved();
+source='D:\code\LEO_QoS_Comparison_v6\results\comparison\seed_71669974\benchmark.mat';
+[theory,fig]=run_leo_theory_from_saved(source,struct('maxSeconds',300));
 ```
 
-在弹窗选择原实验 `results\comparison\benchmark.mat`（若不存在可选 `raw_benchmark.mat`）。图和 CSV 保存到该 MAT 文件所在目录。注意选择本人那次实验的数据，不要将不同用户/码本场景的界交叉比较。
+结果默认另存于原结果目录下certificate_v7。用户此前L=7的108.645323与L=8的118.663265是不同配置的旧计算，不作为本版固定上界。
 
-另可指定参数，例如 `options.maxSeconds=90`、`options.maxIterations=100`；更久不保证一定更紧。小规模完整枚举验证：`test_leo_theory_bound()`。
-
-## V6计算过程与用户这轮结果
-
-V6恢复最多8人并发，默认基础种子71669974；当前上界必须按本次实际数据重算，不能沿用L=7或不同码本的界。上式的推导是：对可行日程 A_i-q_i-m_i>=0，给目标添加非负项 sum_i lambda_i(A_i-q_i-m_i)，得到不小于原目标的值；再放松跨块QoS约束，把20块分别求最大，便得到上界。每块枚举所有最多L个波束的合法子集，固定子集后逐波束挑加权服务最高的用户。它覆盖该块的全部可行组，不只搜索某个算法已经访问过的候选。
-
-对偶价格迭代默认至多40轮，取这些完整有效界与UB1中最小的一个。有限轮数不保证找到最紧对偶界，即使找到最紧对偶界，也可能有整数对偶间隙；所以这里是有效上界，不是宣称已算出可达最优解。枚举超出时间/规模限制时使用安全UB1，控制台和summary会写明实际采用的kind。
-
-新增 `theoretical_bound_blocks.csv` 记录每块的用户数、波束数和子集数；`theoretical_bound_iterations.csv` 记录每轮候选上界、保留上界、已知可行下界和步长。可以核对保留上界不增、且没有低于已验证可行下界。没有运行完整定价时，迭代文件为空。
-
-用户提供的V5日志（L=7、种子1936225709）给出U=108.645323、最好可行L=104.727777 Mbit/周期，因此该模型的未知整数最优值在这个区间。禁忌相对最优的差距在0%–3.61%；自适应SB的97.6075对应约6.80%–10.16%。这是这次旧配置的解释，不是V6的性能预测，且没有把用户日志或验证数据打包。
+小规模精确验证包含：独立二元枚举最优、分数与整数有严格间隙的例子、分数可行但整数不可行、截断服务/计数割/分支条件下的完整定价核对、时间预算中断和保存恢复。对应test_leo_branch_price、test_leo_pricing_oracle、test_leo_theory_bound。

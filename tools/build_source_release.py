@@ -1,13 +1,13 @@
-"""Build the V6 source-only MATLAB release; deliberately exclude every result artifact."""
+"""Build the V7 source-only MATLAB release; deliberately exclude every result artifact."""
 from pathlib import Path
 import hashlib
 import zipfile
 
 ROOT = Path(__file__).resolve().parents[1]
-NAME = "LEO_QoS_Comparison_v6"
+NAME = "LEO_QoS_Comparison_v7"
 DOCS = {
     "README.md", "VERSION.md", "REPRODUCIBILITY.md", "FULL_QOS_MODEL.md",
-    "THEORETICAL_BOUND.md", "METHODS_AND_METRICS.md", "PAPER_REFERENCE.md",
+    "THEORETICAL_BOUND.md", "CERTIFICATE_SEARCH.md", "METHODS_AND_METRICS.md", "PAPER_REFERENCE.md",
     "ADAPTIVE_SB.md", "PERIODIC_QOS.md", "PROBLEM_FORMULATION.md", "METHOD.md",
     "FUNCTION_GUIDE.md", "PLOTS.md", "IMPLEMENTATION_STATUS.md", "BENCHMARKS.md",
     "TANGENT_CHORD.md",

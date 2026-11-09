@@ -24,7 +24,12 @@ subplot(2,1,1); plot(1:N,best,'-o','LineWidth',1.5,'MarkerSize',5); hold on;
 line([.5,N+.5],[upper,upper],'Color',[.8,0,0],'LineStyle','--','LineWidth',1.7);
 set(gca,'XTick',1:N,'XTickLabel',labels,'XTickLabelRotation',35,'TickLabelInterpreter','none');
 title('Certified sum rate: full-QoS feasible runs and common upper bound'); ylabel('Mbps'); grid on;
-legend({'Best feasible run','Valid upper bound'},'Location','best');
+if isfinite(lower)
+    line([.5,N+.5],[lower,lower],'Color',[0,.5,.2],'LineStyle',':','LineWidth',1.5);
+    legend({'Method result','Global upper','Verified lower incl. certificate search'},'Location','best');
+else
+    legend({'Method result','Global upper'},'Location','best');
+end
 limits = ylim;
 for j = find(~isfinite(best)).', text(j,limits(1)+.03*diff(limits),'N/A','Rotation',90); end
 subplot(2,1,2);
@@ -37,8 +42,12 @@ end
 set(gca,'XTick',1:N,'XTickLabel',labels,'XTickLabelRotation',35,'TickLabelInterpreter','none');
 xlabel('Method (categorical)'); xlim([.5,N+.5]);
 title('Possible optimality gap interval at the same full-QoS floor'); ylabel('Mbps'); grid on;
-annotation(fig,'textbox',[0,.965,1,.035],'String', ...
-    'Upper bound is for the deterministic period certificate model; not necessarily attainable', ...
+caption='Bounds are for the fixed certified-service integer model.';
+if isfield(t,'relativeGap') && isfinite(t.relativeGap)
+    caption=sprintf('Verified integer interval [%.6f, %.6f] Mbit/period | remaining gap %.6f%% | target met %d', ...
+        t.lowerBits/1e6,t.upperBits/1e6,100*t.relativeGap,t.gapTargetMet);
+end
+annotation(fig,'textbox',[0,.965,1,.035],'String',caption, ...
     'EdgeColor','none','HorizontalAlignment','center','Interpreter','none');
 if ~exist(directory,'dir'), mkdir(directory); end
 print(fig,fullfile(directory,'theoretical_bound.png'),'-dpng','-r160');

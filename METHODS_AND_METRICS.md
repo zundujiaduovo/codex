@@ -34,3 +34,6 @@ V6 目标状态单列：`full_qos_met` 表示所有用户 G_i>=q_i，`full_qos_n
 `fairness` 是最差用户保证服务与需求比例（在 1 封顶），`jainFairness` 是保证服务分配的 Jain 指数，两者并不相同。保证总速率与衰落仿真平均总速率分别给出。上界仅针对当前周期保证模型；V6 主入口统一全员公平门槛为1；历史入口的不同公平门槛不能混作同一问题。
 
 `theoretical_bound.png` 和 `theoretical_bound_by_run.csv`：统一全用户 QoS 达标门槛下，分别显示各方法的保证总服务、有效上界与最优差距区间；完整计算口径见 [THEORETICAL_BOUND.md](THEORETICAL_BOUND.md)。
+
+
+V7上界采用CERTIFICATE_SEARCH.md中的列生成/分支定价，证书整数下界可能来自额外certificate_search，不属于某一被测方法。默认价格方法的轮数上限提高到1000，仍受12秒软预算；日志Stop区分time_limit、iteration_limit和bound_gap。上界summary新增relativeGap、gapTargetMet、nodesProcessed、openNodeCount及rootRelaxationUpperBits。目标差距默认0.01%，未达到时不得宣称已精确最优。
