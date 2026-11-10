@@ -1,0 +1,50 @@
+original_tabu           seed=71669974 completed    s=1 V=113.869 Mbit wall=120.360 s
+  Stop: full_qos_already_met / time_limit
+  Goal: full_qos_met (full-user QoS floor 1).
+sb_v8_blockwise         seed=71669974 completed    s=1 V=107.508 Mbit wall=120.352 s
+  Stop: bound_gap / time_limit
+  Goal: full_qos_met (full-user QoS floor 1).
+local_v8_blockwise      seed=71669974 completed    s=1 V=107.869 Mbit wall=120.350 s
+  Stop: bound_gap / time_limit
+  Goal: full_qos_met (full-user QoS floor 1).
+V11_PAIR_SAVED seed=71669974 (1/20).
+sb_v8_blockwise         seed=72088890 completed    s=1 V=108.105 Mbit wall=120.354 s
+  Stop: bound_gap / time_limit
+  Goal: full_qos_met (full-user QoS floor 1).
+local_v8_blockwise      seed=72088890 completed    s=1 V=109.104 Mbit wall=120.349 s
+  Stop: bound_gap / time_limit
+  Goal: full_qos_met (full-user QoS floor 1).
+original_tabu           seed=72088890 completed    s=1 V=114.048 Mbit wall=120.190 s
+  Stop: full_qos_already_met / time_limit
+  Goal: full_qos_met (full-user QoS floor 1).
+V11_PAIR_SAVED seed=72088890 (5/20).
+local_v8_blockwise      seed=72507806 completed    s=1 V=107.869 Mbit wall=120.402 s
+  Stop: bound_gap / time_limit
+  Goal: full_qos_met (full-user QoS floor 1).
+original_tabu           seed=72507806 completed    s=1 V=113.869 Mbit wall=120.328 s
+  Stop: full_qos_already_met / time_limit
+  Goal: full_qos_met (full-user QoS floor 1).
+sb_v8_blockwise         seed=72507806 completed    s=1 V=107.869 Mbit wall=120.411 s
+  Stop: bound_gap / time_limit
+  Goal: full_qos_met (full-user QoS floor 1).
+V11_PAIR_SAVED seed=72507806 (9/20).
+original_tabu           seed=72926722 completed    s=1 V=113.869 Mbit wall=120.264 s
+  Stop: full_qos_already_met / time_limit
+  Goal: full_qos_met (full-user QoS floor 1).
+sb_v8_blockwise         seed=72926722 completed    s=1 V=107.869 Mbit wall=120.279 s
+  Stop: bound_gap / time_limit
+  Goal: full_qos_met (full-user QoS floor 1).
+local_v8_blockwise      seed=72926722 completed    s=1 V=107.869 Mbit wall=120.472 s
+  Stop: bound_gap / time_limit
+  Goal: full_qos_met (full-user QoS floor 1).
+V11_PAIR_SAVED seed=72926722 (13/20).
+sb_v8_blockwise         seed=73345638 completed    s=1 V=107.577 Mbit wall=120.532 s
+  Stop: bound_gap / time_limit
+  Goal: full_qos_met (full-user QoS floor 1).
+local_v8_blockwise      seed=73345638 completed    s=1 V=107.869 Mbit wall=120.353 s
+  Stop: bound_gap / time_limit
+  Goal: full_qos_met (full-user QoS floor 1).
+original_tabu           seed=73345638 completed    s=1 V=113.869 Mbit wall=120.331 s
+  Stop: full_qos_already_met / time_limit
+  Goal: full_qos_met (full-user QoS floor 1).
+V11_PAIR_SAVED seed=73345638 (17/20).

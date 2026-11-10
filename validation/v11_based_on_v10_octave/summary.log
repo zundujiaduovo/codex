@@ -1,0 +1,101 @@
+V11 based on V10: 20 paired search seeds, 3 methods, 120 s/method; scene seed 71669974.
+Output: /workspace/codex/results/v11_based_on_v10_20seeds_120s
+Theory pricing cache: block 1/20, 16 beams, 39203 subsets
+Theory pricing cache: block 2/20, 16 beams, 39203 subsets
+Theory pricing cache: block 3/20, 16 beams, 39203 subsets
+Theory pricing cache: block 4/20, 16 beams, 39203 subsets
+Theory pricing cache: block 5/20, 16 beams, 39203 subsets
+Theory pricing cache: block 6/20, 16 beams, 39203 subsets
+Theory pricing cache: block 7/20, 16 beams, 39203 subsets
+Theory pricing cache: block 8/20, 16 beams, 39203 subsets
+Theory pricing cache: block 9/20, 16 beams, 39203 subsets
+Theory pricing cache: block 10/20, 16 beams, 39203 subsets
+Theory pricing cache: block 11/20, 16 beams, 39203 subsets
+Theory pricing cache: block 12/20, 16 beams, 39203 subsets
+Theory pricing cache: block 13/20, 16 beams, 39203 subsets
+Theory pricing cache: block 14/20, 17 beams, 65536 subsets
+Theory pricing cache: block 15/20, 17 beams, 65536 subsets
+Theory pricing cache: block 16/20, 17 beams, 65536 subsets
+Theory pricing cache: block 17/20, 17 beams, 65536 subsets
+Theory pricing cache: block 18/20, 17 beams, 65536 subsets
+Theory pricing cache: block 19/20, 17 beams, 65536 subsets
+Theory pricing cache: block 20/20, 17 beams, 65536 subsets
+Certificate node 1: lower=115.112504 upper=115.227092 Mbit, open=2, full_lp_priced
+Certificate node 2: lower=115.112504 upper=115.227092 Mbit, open=3, full_lp_priced
+Certificate node 3: lower=115.112504 upper=115.226487 Mbit, open=4, full_lp_priced
+Certificate node 6: lower=115.112504 upper=115.226487 Mbit, open=5, full_lp_priced
+Certificate node 7: lower=115.216590 upper=115.226357 Mbit, open=6, full_lp_priced
+Certificate node 8: lower=115.216590 upper=115.226357 Mbit, open=7, full_lp_priced
+Certificate node 9: lower=115.216590 upper=115.226194 Mbit, open=8, full_lp_priced
+Certificate node 4: lower=115.216590 upper=115.226194 Mbit, open=9, full_lp_priced
+Certificate node 5: lower=115.216590 upper=115.226097 Mbit, open=10, full_lp_priced
+Certificate node 10: lower=115.222389 upper=115.226097 Mbit, open=11, full_lp_priced
+Certificate node 11: lower=115.222389 upper=115.226065 Mbit, open=12, full_lp_priced
+Certificate node 16: lower=115.222389 upper=115.226065 Mbit, open=13, full_lp_priced
+Certificate node 17: lower=115.222389 upper=115.225988 Mbit, open=14, full_lp_priced
+Certificate node 22: lower=115.222389 upper=115.225988 Mbit, open=15, full_lp_priced
+Certificate node 23: lower=115.222389 upper=115.225799 Mbit, open=16, full_lp_priced
+Certificate node 18: lower=115.222389 upper=115.225799 Mbit, open=17, full_lp_priced
+Certificate node 19: lower=115.222389 upper=115.225691 Mbit, open=18, full_lp_priced
+Certificate node 32: lower=115.222389 upper=115.225691 Mbit, open=19, full_lp_priced
+Certificate node 33: lower=115.222389 upper=115.225572 Mbit, open=18, full_lp_priced
+Certificate node 14: lower=115.222389 upper=115.225572 Mbit, open=19, full_lp_priced
+Certificate node 15: lower=115.222389 upper=115.225454 Mbit, open=20, full_lp_priced
+Certificate node 12: lower=115.222389 upper=115.225454 Mbit, open=19, full_lp_priced
+Certificate node 13: lower=115.222389 upper=115.225348 Mbit, open=20, full_lp_priced
+Certificate node 36: lower=115.222389 upper=115.225348 Mbit, open=21, full_lp_priced
+Certificate node 37: lower=115.222389 upper=115.225270 Mbit, open=22, full_lp_priced
+Certificate node 26: lower=115.222389 upper=115.225270 Mbit, open=21, full_lp_priced
+Certificate node 27: lower=115.222389 upper=115.225172 Mbit, open=22, full_lp_priced
+Certificate node 24: lower=115.222389 upper=115.225172 Mbit, open=23, full_lp_priced
+Certificate node 25: lower=115.222389 upper=115.225103 Mbit, open=24, full_lp_priced
+Certificate node 28: lower=115.222389 upper=115.225103 Mbit, open=25, full_lp_priced
+Certificate node 29: lower=115.222389 upper=115.225060 Mbit, open=26, full_lp_priced
+Certificate node 52: lower=115.222389 upper=115.225060 Mbit, open=27, full_lp_priced
+Certificate node 53: lower=115.222389 upper=115.224871 Mbit, open=28, full_lp_priced
+Certificate node 38: lower=115.222389 upper=115.224871 Mbit, open=29, full_lp_priced
+Certificate node 39: lower=115.222389 upper=115.224842 Mbit, open=30, full_lp_priced
+Certificate node 44: lower=115.222389 upper=115.224842 Mbit, open=31, full_lp_priced
+Certificate node 45: lower=115.222389 upper=115.224584 Mbit, open=32, full_lp_priced
+Certificate node 66: lower=115.222389 upper=115.224584 Mbit, open=33, full_lp_priced
+Certificate node 67: lower=115.222389 upper=115.224577 Mbit, open=34, full_lp_priced
+Certificate node 48: lower=115.222389 upper=115.224577 Mbit, open=35, full_lp_priced
+Certificate node 49: lower=115.222389 upper=115.224572 Mbit, open=36, full_lp_priced
+Certificate node 42: lower=115.222389 upper=115.224572 Mbit, open=37, full_lp_priced
+Certificate node 43: lower=115.222389 upper=115.224488 Mbit, open=38, full_lp_priced
+Certificate node 62: lower=115.222389 upper=115.224488 Mbit, open=39, full_lp_priced
+Certificate node 63: lower=115.222389 upper=115.224456 Mbit, open=40, full_lp_priced
+Certificate node 68: lower=115.222389 upper=115.224456 Mbit, open=41, full_lp_priced
+Certificate node 69: lower=115.222389 upper=115.224386 Mbit, open=42, full_lp_priced
+Certificate node 20: lower=115.222389 upper=115.224386 Mbit, open=43, full_lp_priced
+Certificate node 21: lower=115.222389 upper=115.224385 Mbit, open=42, full_lp_priced
+Certificate node 78: lower=115.222389 upper=115.224385 Mbit, open=43, full_lp_priced
+Certificate node 79: lower=115.222389 upper=115.224307 Mbit, open=42, full_lp_priced
+Certificate node 90: lower=115.222389 upper=115.224307 Mbit, open=41, full_lp_priced
+Certificate node 91: lower=115.222389 upper=115.224233 Mbit, open=42, full_lp_priced
+Certificate node 72: lower=115.222389 upper=115.224233 Mbit, open=43, full_lp_priced
+Certificate node 73: lower=115.222389 upper=115.224189 Mbit, open=44, full_lp_priced
+Certificate node 76: lower=115.222389 upper=115.224189 Mbit, open=45, full_lp_priced
+Certificate node 77: lower=115.222389 upper=115.224174 Mbit, open=46, full_lp_priced
+Certificate node 58: lower=115.222389 upper=115.224174 Mbit, open=47, full_lp_priced
+Certificate node 59: lower=115.222389 upper=115.224154 Mbit, open=48, full_lp_priced
+Certificate node 96: lower=115.222389 upper=115.224154 Mbit, open=49, full_lp_priced
+Certificate node 97: lower=115.222389 upper=115.224134 Mbit, open=50, full_lp_priced
+Certificate node 84: lower=115.222389 upper=115.224134 Mbit, open=51, full_lp_priced
+Certificate node 85: lower=115.222389 upper=115.224127 Mbit, open=50, full_lp_priced
+Certificate node 60: lower=115.222389 upper=115.224127 Mbit, open=49, full_lp_priced
+Certificate node 61: lower=115.222389 upper=115.224105 Mbit, open=48, full_lp_priced
+Certificate node 88: lower=115.222389 upper=115.224105 Mbit, open=47, full_lp_priced
+Certificate node 89: lower=115.222389 upper=115.224031 Mbit, open=48, full_lp_priced
+Certificate node 46: lower=115.222389 upper=115.224031 Mbit, open=49, full_lp_priced
+Certificate node 47: lower=115.222389 upper=115.223985 Mbit, open=50, full_lp_priced
+Certificate node 94: lower=115.222389 upper=115.223985 Mbit, open=51, full_lp_priced
+Certificate node 95: lower=115.222389 upper=115.223916 Mbit, open=52, full_lp_priced
+Certificate node 34: lower=115.222389 upper=115.223916 Mbit, open=51, full_lp_priced
+Certificate node 35: lower=115.222389 upper=115.223907 Mbit, open=50, full_lp_priced
+Certificate node 54: lower=115.222389 upper=115.223907 Mbit, open=51, full_lp_priced
+Certificate node 55: lower=115.222389 upper=115.223854 Mbit, open=50, full_lp_priced
+Certificate node 100: lower=115.222389 upper=115.223854 Mbit, open=51, full_lp_priced
+Certificate node 101: lower=115.222389 upper=115.223854 Mbit, open=51, time_limit
+SB vs original_tabu: 20/20 available; W/T/L=0/0/20; mean delta -6.450525 Mbit, 95% CI [-6.722663, -6.177462].
+SB vs local_v8_blockwise: 20/20 available; W/T/L=8/5/7; mean delta 0.095273 Mbit, 95% CI [-0.135250, 0.319001].

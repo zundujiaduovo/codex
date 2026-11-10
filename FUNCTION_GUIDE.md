@@ -1415,3 +1415,11 @@ V5各求解器的阶段2只有在全员G>=q后运行，门槛固定为1；未达
 ## V6 复现与折线图
 
 `leo_stable_argmax`在数值并列时稳定选最小编号；`leo_export_scenario`导出码本、用户位置和候选域。主对比默认种子71669974、最多8人，randomSeed=true才抽新种子。原bar规格改为categorical_line，旧bar输入也按折线重画；无效/缺失点保留NaN，不连接跨缺失点的线段。理论界额外导出逐块和逐轮记录。
+# V11（基于 V10）新增入口
+
+`RUN_V11_PAIRED.m` / `run_leo_v11_paired` 创建固定模型和多搜索种子协议并执行完整实验；
+`run_leo_v11_pair` 保存一个种子的三方法原始配对；`run_leo_v11_summary` 复核、计算共同界并统计；
+`run_leo_v11_inner_control` 固定二次代理、权重和旧组比较 SB／Local 内层。
+`run_leo_v11_verify_exports` 从CSV还原二元日程，按原模型重新计算服务和QoS；不运行搜索或二次代理。
+`leo_v11_paired_options`、`leo_v11_paired_statistics`、`leo_v11_trace_data` 和 `leo_build_v11_paired_specs`
+分别提供协议校验、配对统计、V10 日志兼容提取和绘图规格。详情见 V11_FROM_V10.md。

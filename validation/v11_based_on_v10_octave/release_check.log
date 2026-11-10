@@ -1,0 +1,2 @@
+PASS: V11 paired bootstrap/sign/Holm, missing pairs, RNG, duplicate seeds, V10 trace equivalence and matched engine controls.
+PASS: 60 exported schedules re-evaluated by the original model; max total error 0 bit.

@@ -42,6 +42,12 @@ def vec(value):
 
 
 def color(name, index):
+    if name == 'SB':
+        return '#d92633'
+    if name == 'Local' or name == 'SB minus local_v8_blockwise':
+        return '#3373d9'
+    if name == 'SB minus original_tabu':
+        return '#00804d'
     if name == 'sb_v8_blockwise':
         return '#d92633'
     if name == 'local_v8_blockwise':

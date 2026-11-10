@@ -1,6 +1,11 @@
-# LEO QoS Comparison V10
+# LEO QoS Comparison V11 based on V10
 
-新分支leo-qos-v10-v8-search-metrics；唯一源码包LEO_QoS_Comparison_v10.zip。
+分支 `leo-qos-v11-from-v10-paired-sb-validation`，基于 V10 `26759eac9899da48b0e30da38c880e6d44a757da`。
+源码包 `LEO_QoS_Comparison_v11_based_on_v10.zip`。
+新增 20 搜索种子配对实验、Tabu／SB／配对 Local 的置信区间、达标次数、恢复保存和固定子问题内层对照。
+V10 已有用户 MATLAB 证据和 V11 云端实测分别记录，见 V11_FROM_V10.md 和 V11_VALIDATION.md。
+
+以下为继承的 V10 搜索和评价机制：
 
 恢复V8 cd4ba09的SB blockwise搜索，9个文件只做函数标识符命名空间替换，保留原初态/随机流、候选排序、修复/扫描、验收、恢复与刷新。V8_SEARCH_SNAPSHOT.json及check_v8_snapshot.py核对原文SHA。配对Local也使用同一冻结V8外层。
 
