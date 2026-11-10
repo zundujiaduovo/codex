@@ -1,9 +1,13 @@
 function [report,fig] = run_leo_comparison(outputDirectory,overrides,render)
-%RUN_LEO_COMPARISON 默认8项互补方法，原目标/上界差距曲线，完整 QoS 作为硬门槛。
+%RUN_LEO_COMPARISON 冻结V8搜索+V9对照/上界，增加共同质量时间指标与代理审计。
 % 默认固定参考用户、71669974种子及最多8人；所有方法共享同一场景。
 if nargin<1, outputDirectory = fullfile('results','comparison'); end
 if nargin<2, overrides = struct(); end
 if nargin<3, render = true; end
+performanceOptions=struct();
+if isfield(overrides,'performanceOptions')
+    performanceOptions=overrides.performanceOptions; overrides=rmfield(overrides,'performanceOptions');
+end
 % 图形 print 使用绝对路径，避免当前目录与 print 内部路径解析不一致。
 if isempty(regexp(outputDirectory,'^([A-Za-z]:[\\/]|[\\/])','once'))
     outputDirectory = fullfile(pwd,outputDirectory);
@@ -158,6 +162,8 @@ fprintf('Bound is for full-user QoS >= 100%% in the period certificate model; it
 leo_export_certificate_audit(report,outputDirectory);
 leo_export_benchmark(report,outputDirectory);
 leo_export_search_audit(report,outputDirectory);
+try, leo_export_proxy_audit(report,outputDirectory,24);
+catch err, warning('leo:proxyAuditUnavailable','Proxy diagnostics: %s',err.message); end
 fig=[];
 if render
     try, leo_plot_theory_bound(report,outputDirectory);
@@ -185,6 +191,18 @@ try
     end
 catch err
     warning('leo:sbConvergenceUnavailable','SB convergence export incomplete: %s',err.message);
+end
+try
+    [~,metricFiles]=run_leo_performance_metrics(fullfile(outputDirectory,'plot_data.mat'), ...
+        fullfile(outputDirectory,'performance_metrics'),performanceOptions,render);
+    if render && showConvergenceFigures
+        for k=1:numel(metricFiles)
+            [~,~,extension]=fileparts(metricFiles{k});
+            if strcmpi(extension,'.fig'), openfig(metricFiles{k},'new','visible'); end
+        end
+    end
+catch err
+    warning('leo:performanceMetricsUnavailable','Quality/time metrics: %s',err.message);
 end
 fprintf('Comparison results: %s\n',outputDirectory);
 fprintf('Demand per user: %.3f Mbit (first user); rank full-QoS methods by certified service and upper-bound gap.\n', ...

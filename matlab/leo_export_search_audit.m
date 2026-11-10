@@ -10,12 +10,15 @@ names={'resourcesSolved','sbSteps','uniqueCandidates','solverBetterCalls', ...
 for j=1:numel(report.records)
     record=report.records(j); r=struct('method',record.method,'seed',record.seed, ...
         'usesQuadraticProxy',record.usesQuadraticProxy,'initializationPolicy',record.initializationPolicy);
-    for f=names, r.(f{1})=0; end
+    for f=names, r.(f{1})=NaN; end % V8/旧日志未记录的细分指标保持未知。
     if strcmp(record.status,'completed')
         for phase=1:2
             stage=report.solutions{j}.(sprintf('stage%d',phase)); h=stage.history;
             for f=names
-                if isfield(h,f{1}), r.(f{1})=r.(f{1})+sum(h.(f{1})); end
+                if isfield(h,f{1})
+                    if isnan(r.(f{1})), r.(f{1})=0; end
+                    r.(f{1})=r.(f{1})+sum(h.(f{1}));
+                end
             end
             if isfield(stage,'checkpoints')
                 c=stage.checkpoints;

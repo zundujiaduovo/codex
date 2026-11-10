@@ -49,8 +49,9 @@ elseif any(strcmp(p.kind,{'bar','categorical_line'}))
     count = numel(p.series); styles={'-o','--s','-.^',':d'};
     for j = 1:count
         s = p.series(j); x = s.x;
-        color = colors(j,:);
-        h = plot(ax,x,s.y,styles{mod(j-1,numel(styles))+1},'Color',color,'LineWidth',1.4,'MarkerSize',4);
+        [color,lineStyle]=leo_plot_style(s.name,j); markers={'o','s','^','d'};
+        h = plot(ax,x,s.y,'LineStyle',lineStyle,'Marker',markers{mod(j-1,numel(markers))+1}, ...
+            'Color',color,'LineWidth',1.4,'MarkerSize',4);
         handles{end+1} = h; names{end+1} = s.name; %#ok<AGROW>
         if ~isempty(s.low)
             errorbar(ax,x,s.y,s.y-s.low,s.high-s.y,'k.','LineWidth',.7,'HandleVisibility','off');
@@ -68,7 +69,7 @@ else
             h = stairs(ax,s.x,s.y,'Color',color,'LineStyle',style,'LineWidth',1.4);
         else
             h = plot(ax,s.x,s.y,'Color',color,'LineStyle',style,'LineWidth',1.4);
-            if numel(s.x)<3, set(h,'Marker','o'); end
+            if sum(isfinite(s.x) & isfinite(s.y))<3, set(h,'Marker','o'); end
         end
         handles{end+1} = h; names{end+1} = s.name; %#ok<AGROW>
         hasValues = hasValues || any(isfinite(s.y));
@@ -80,7 +81,9 @@ else
     end
 end
 if ~hasValues
-    text(ax,.5,.5,'Not applicable / not reported','Units','normalized','HorizontalAlignment','center','Color',[.4,.4,.4]);
+    message='Not applicable / not reported';
+    if isfield(p,'emptyMessage') && ~isempty(p.emptyMessage), message=p.emptyMessage; end
+    text(ax,.5,.5,message,'Units','normalized','HorizontalAlignment','center','Color',[.4,.4,.4]);
     if any(strcmp(p.kind,{'bar','categorical_line'})), ylim(ax,[0,1]); set(ax,'YTick',[]); end
 elseif any(strcmp(p.kind,{'bar','categorical_line'})) && ~isempty(p.series)
     missing = true(size(p.series(1).y));
@@ -102,7 +105,7 @@ set(ax,'UserData',p.note); % 长说明留在 FIG 属性及 JSON，避免遮挡�
 xlabel(ax,p.xlabel,'Interpreter','none'); ylabel(ax,p.ylabel,'Interpreter','none');
 set(ax,'FontSize',9,'TickLabelInterpreter','none'); box(ax,'off');
 if ~strcmp(p.kind,'heatmap'), grid(ax,'on'); end
-if numel(handles)>1
+if numel(handles)>1 && hasValues
     legend(ax,[handles{:}],names,'Interpreter','none','Location','best','FontSize',7);
 end
 end

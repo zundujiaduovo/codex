@@ -1,65 +1,65 @@
-# LEO QoS V9：候选池、两块协调与原目标 Tabu 对照
+# LEO QoS V10：V8搜索＋V9对照与质量时间指标
 
-[下载 V9 纯源码包](LEO_QoS_Comparison_v9.zip)。新分支：`leo-qos-v9-candidate-coordination`。只含完整源码、测试代码和文档，无仿真输出、MAT、CSV、图片或旧ZIP。
+[下载V10纯源码包](LEO_QoS_Comparison_v10.zip)。分支`leo-qos-v10-v8-search-metrics`。只含完整源码、测试及说明，不含仿真结果、图片、MAT、CSV或旧ZIP。
 
-目标：**所有用户满足周期QoS，再最大化保证总服务**。封顶公平全为1是约束已经满足；主要性能指标改用保证总服务、距共同上界的差距及达到相同服务所需时间。数学逻辑、8项方法及实现边界见 [V9_METHOD.md](V9_METHOD.md)。
+恢复V8的SB blockwise搜索，保留V9的原目标Tabu、独立起点Tabu、Local对照、共同上界、绘图和独立衰落验证。冻结引擎来自V8提交cd4ba09，9个文件只替换函数标识符；不混入V9扰动、多候选或联合搜索。新增配对的V8 Local对照，区分SB内核贡献与外层机制。
 
-保持32用户、8×8天线、32波束、最多8人并发、种子71669974。候选池保留多个不同组按原目标筛选；增加停滞时两块候选组合；增加设置对应的Local对照与独立起点Tabu。原目标Tabu不接收或构建二次代理。合并重复默认对比，旧方法可显式选择；修正旧参考点消融未作用到吞吐阶段的问题。
+保持32用户、8×8天线、32波束、最多8人、主种子71669974和原概率证书。目标仍是全员QoS约束下最大化保证总服务。公平比例封顶为1是约束已满足。数学定义、默认8项方法、指标含义与缺失值规则见 [V10_METHOD.md](V10_METHOD.md)。
 
-## MATLAB 命令窗口完整运行
+## MATLAB命令窗口完整运行
 
-将源码包解压到D:\code\LEO_QoS_Comparison_v9，运行：
+解压至D:\code\LEO_QoS_Comparison_v10后执行：
 
 ```matlab
 clear functions
-comparisonRoot='D:\code\LEO_QoS_Comparison_v9';
+comparisonRoot='D:\code\LEO_QoS_Comparison_v10';
 cd(comparisonRoot)
 addpath(fullfile(comparisonRoot,'matlab'),'-begin')
 rehash
-opts=struct();
-opts.budgetSeconds=120;
-opts.seeds=71669974;
+opts=struct('budgetSeconds',120,'seeds',71669974);
 opts.theoryOptions=struct('maxSeconds',600,'relativeGap',1e-5);
 [report,fig]=run_leo_comparison(fullfile(comparisonRoot,'results','comparison_120s'),opts,true);
 winopen(report.options.outputDirectory);
 ```
 
-也可打开根目录RUN_COMPARISON.m点击运行，默认预算相同。运行结果按种子隔离目录，重复运行追加_run后缀。SB汇总及各SB收敛图自动保存并在MATLAB中打开；图包括保证服务、相对上界差距、前15秒放大和代表性固定Ising调用。
+也可打开RUN_COMPARISON.m运行，默认预算相同。SB方法名称为sb_v8_blockwise；local_v8_blockwise是相同V8外层的Local对照。V9实验性SB仍可显式选择，默认已移出。
 
-修改opts.budgetSeconds可延长每方法预算；opts.method=leo_method_options(struct('originalSearchRounds',20000,'fairnessRounds',20000,'throughputRounds',20000))可延长轮数。上界的maxSeconds、maxNodes和relativeGap通过opts.theoryOptions独立设置。达到目标、无改善或轮数到限可提前停止；time_limit不代表全局收敛。
+每次输出按seed_71669974及_run后缀隔离；自动保存并打开收敛图和performance_metrics四联图。每方法预算可改opts.budgetSeconds；上界通过opts.theoryOptions独立延长。重跑相同秒数的最终分数仍受机器速度和计时截断影响，不保证等于旧日志中的114.309。
 
-## 已有数据重画，不重新搜索
+## 新指标怎样看
+
+- time_to_quality.csv：达到距上界5%、2%、1%、0.5%的首次记录时间。NaN表示没达到或未知，不填成120秒。
+- quality_at_deadlines.csv：同样1、5、10、30、60、120秒时各方法已知解的质量；缺失区间留空。
+- performance_summary.csv：同一评价窗口的平均界差，以及已有Jain、QoS余量和独立验证指标。方法提前交付日程后，该日程在后续截止时仍可使用。
+- proxy_error_summary.csv：固定代理的非参考点误差；不把相切点必然近零的误差当作全域准确证明。
+
+新指标不保证SB占优：更快、最终更好、过程平均更好、代理更紧是不同结论，应依据数据分别判断。单种子只能描述该实例，不能证明稳定性或普遍优势。
+
+## 给已有V8/V9结果加指标，无需重新搜索
 
 ```matlab
-source='D:\code\LEO_QoS_Comparison_v9\results\comparison_120s\seed_71669974\benchmark.mat';
-out=fullfile(fileparts(source),'sb_convergence_redraw');
-[files,specs]=run_leo_sb_convergence(source,out,true);
+source='D:\code\LEO_QoS_Comparison_v8\results\comparison_120s\seed_71669974\benchmark.mat';
+metricDir=fullfile(fileparts(source),'performance_metrics_v10');
+[metrics,files]=run_leo_performance_metrics(source,metricDir,struct(),true);
 for k=1:numel(files)
     [~,~,ext]=fileparts(files{k});
     if strcmpi(ext,'.fig'), openfig(files{k},'new','visible'); end
 end
-winopen(out);
+winopen(metricDir);
 ```
 
-兼容V7/V8 benchmark.mat、raw_benchmark.mat和plot_data.mat。旧结果缺失共同上界时差距图留空，不伪造；原始日志未记录的中间改进不能事后恢复。PNG/PDF失败时可打开同目录FIG；长图注保留在FIG轴UserData和JSON中，避免遮挡曲线。
+这会读取已保存的共同上界和轨迹；旧数据没有的检查点不补造。若源文件没有上界，相关界差/达标时间指标留空。现有每SB收敛图仍可用run_leo_sb_convergence重画。
 
-## 保存的评价依据
+可预先覆盖共同门槛与截止时间：opts.performanceOptions=struct('gapTargetsPercent',[5,2,1,.5],'deadlinesSeconds',[1,5,10,30,60,120])。所有方法使用同一组设置，不按某个方法获胜与否选择指标。
 
-- runs.csv：是否全员达标、保证总服务、相对上界差距、初始化成绩及策略、是否使用二次代理、独立衰落指标与实际耗时。
-- theoretical_bound_summary.csv、theoretical_bound_by_run.csv：同一QoS门槛下的模型最优区间和差距。额外证书搜索的可行日程独立标注，不计入某个方法的成绩。
-- search_module_audit.csv、accepted_move_sources.csv：候选来源、非代理第一名的原目标验收、两块协调、SB/构建/后处理/恢复耗时与改进来源。
-- benchmark.mat、raw_benchmark.mat、plot_data.mat和sb_convergence下CSV/JSON：重画所需数值与真实时间轨迹。
-
-## 运行检查
+## 验证
 
 ```matlab
-test_leo_v9
-test_leo_polish_vectorized
+test_leo_v10
 test_leo_method
 test_leo_benchmark
 test_leo_sb_convergence
 test_leo_branch_price
-test_leo_pricing_oracle
 ```
 
-云端以Octave检查数值、原始约束、无二次Tabu、缓存等价性、消融模式、日志和文件导出；图形规格用Python渲染检查。未在Windows MATLAB桌面实机运行。性能应以你的相同场景、相同预算下实际结果为准，不保证新方法对每个实例都更好。概率证书和目标见FULL_QOS_MODEL.md，上界求解见CERTIFICATE_SEARCH.md。
+Python可用时，运行python tools/check_v8_snapshot.py可核对冻结文件仅做了标识符替换。冻结引擎的固定轮数轨迹、手算质量时间指标、晚达标和缺失数据、参考点以外的代理误差均有检查。云端数值使用Octave、图形规格使用Python验证，Windows MATLAB桌面未实机测试。上界定义及冻结概率模型分别见CERTIFICATE_SEARCH.md和FULL_QOS_MODEL.md。

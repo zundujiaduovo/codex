@@ -4,10 +4,10 @@ function [fig,values] = leo_plot_method_comparison(report,directory,render)
 if nargin<2, directory = fullfile('results','comparison'); end
 if nargin<3, render = true; end
 methods = report.options.methods; count = numel(methods); labels = methods;
-known = {'original_tabu_independent','price_local_blockwise','price_sb_joint','price_local_joint', ...
+known = {'sb_v8_blockwise','local_v8_blockwise','original_tabu_independent','price_local_blockwise','price_sb_joint','price_local_joint', ...
     'initial','original_greedy','original_exchange','original_tabu','price_sb','price_sb_blockwise','price_sb_adaptive','price_sb_light','price_local','price_local_adaptive', ...
     'price_miqp','proxy_milp','sb_zero','sb_minimax_fixed','sb_current_fixed','sb_reference_portfolio'};
-names = {'Tabu own start','Local pool','SB pool+pair','Local pool+pair', ...
+names = {'V8 SB','V8 Local matched','Tabu own start','V9 Local pool','SB pool+pair','V9 Local pool+pair', ...
     'Initial','Greedy','Exchange','Tabu common start','Price+SB','SB pool','SB adapt','SB light','Price+Local','Local adapt', ...
     'Price+MIQP','Proxy MILP','SB zero','SB minimax','SB current','SB portfolio'};
 for j = 1:count
@@ -77,7 +77,8 @@ for k = 1:5
 end
 subplot(2,3,6); hold on;
 for j = 1:count
-    plot(1:size(values.userRatio,1),values.userRatio(:,j),'LineWidth',1.1,'Color',colors(j,:));
+    [color,style]=leo_plot_style(methods{j},j);
+    plot(1:size(values.userRatio,1),values.userRatio(:,j),'LineWidth',1.1,'Color',color,'LineStyle',style);
 end
 legend(labels,'Location','best','Interpreter','none'); xlabel('User'); ylabel('Certified service / demand');
 title('Per-user QoS ratio (first requested seed)'); grid on;

@@ -10,4 +10,6 @@ color=palette(match,:); style='-';
 if ~isempty(strfind(name,'local')), style='--'; end
 if ~isempty(strfind(name,'independent')), style=':'; end
 if ~isempty(strfind(name,'Verified lower')), color=[.4,.4,.4]; style=':'; end
+if strcmp(name,'sb_v8_blockwise'), color=[.85,.15,.2]; style='-'; end
+if strcmp(name,'local_v8_blockwise'), color=[.2,.45,.85]; style='--'; end
 end

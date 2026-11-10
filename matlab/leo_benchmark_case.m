@@ -22,6 +22,7 @@ template = struct('method','','seed',0,'status','','solverStatus','','message','
     'endToEndSeconds',NaN,'budgetSeconds',options.budgetSeconds,'budgetOverrunSeconds',NaN);
 template.usesQuadraticProxy=false; template.initializationPolicy='common_original_candidates';
 template.gainOverInitialPercent=NaN; template.upperGapPercent=NaN; template.knownLowerGapPercent=NaN;
+template.searchEngine='original_objective';
 records = repmat(template,0,1); solutions = {};
 for seed = options.seeds(:).'
     for j = 1:numel(options.methods)
@@ -50,6 +51,8 @@ for seed = options.seeds(:).'
                 solverProxy=[]; if prebuiltProxy, solverProxy=model.surrogate; end
                 result = leo_run_benchmark_method(problem,solverProxy,providedSchedule,name,method);
                 row.usesQuadraticProxy=~any(strcmp(name,{'initial','original_greedy','original_exchange','original_tabu','original_tabu_independent'}));
+                if isfield(result,'searchEngine'), row.searchEngine=result.searchEngine;
+                elseif row.usesQuadraticProxy, row.searchEngine='V9 candidate coordinator'; end
                 if strcmp(name,'original_tabu_independent'), row.initializationPolicy='independent_original_candidates'; end
                 service = problem.evaluate(result.x); % 最后统一校验硬约束、原始服务
                 row.fullQosFeasible=all(service.userBits>=problem.data.qosTargetBits);

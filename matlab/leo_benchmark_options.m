@@ -2,7 +2,7 @@ function o = leo_benchmark_options(overrides)
 %LEO_BENCHMARK_OPTIONS 第 13.3 节统一实验设置：同输入、同种子、同端到端时间上限。
 % 输入：可选覆盖结构；输出：方法列表、重复种子、预算及结果目录等实验参数。
 o.methods = {'initial','original_exchange','original_tabu','original_tabu_independent', ...
-    'price_sb_blockwise','price_local_blockwise','price_sb_joint','price_local_joint'};
+    'sb_v8_blockwise','local_v8_blockwise','price_local_blockwise','price_local_joint'};
 % 默认固定一个复查种子；显式提供 seeds 时使用指定值。
 if nargin>0 && isfield(overrides,'seeds'), o.seeds = overrides.seeds;
 else, o.seeds = 71669974; end
@@ -21,6 +21,7 @@ if nargin>0
     end
 end
 valid = {'initial','original_greedy','original_exchange','original_tabu','original_tabu_independent', ...
+    'sb_v8_blockwise','local_v8_blockwise', ...
     'price_local_blockwise','price_sb_joint','price_local_joint','price_sb','price_sb_blockwise','price_sb_adaptive','price_sb_light','price_local','price_local_adaptive', ...
     'price_miqp','proxy_milp','sb_zero','sb_minimax_fixed','sb_current_fixed','sb_reference_portfolio'};
 assert(iscell(o.methods) && ~isempty(o.methods) && all(ismember(o.methods,valid)) && numel(unique(o.methods))==numel(o.methods));

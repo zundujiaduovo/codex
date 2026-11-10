@@ -1,4 +1,8 @@
 % LEO 固定块 QoS：建模、两阶段拉格朗日 SB、原始穷举与统一实验。
+% V10: 冻结V8引擎+V9对照；time-to-quality、定时质量、过程界差及非切点代理误差。
+%   leo_v8_solve_schedule             - V8 cd4ba09冻结搜索，不混入V9候选/扰动。
+%   run_leo_performance_metrics       - 从已有日志导出共同质量/时间指标。
+%   leo_export_proxy_audit            - 固定代理的原式/下界非参考点探针。
 % V9: 原目标候选池、两块协调、独立起点无二次Tabu；默认8项，预算120秒。
 %   leo_resource_candidate_archive    - 去重并保留代理质量及多样性候选。
 %   leo_accept_resource_candidates    - 原周期目标及完整QoS门槛下筛选候选。

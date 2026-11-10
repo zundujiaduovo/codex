@@ -42,6 +42,10 @@ def vec(value):
 
 
 def color(name, index):
+    if name == 'sb_v8_blockwise':
+        return '#d92633'
+    if name == 'local_v8_blockwise':
+        return '#3373d9'
     modern = ['initial', 'original_exchange', 'original_tabu', 'original_tabu_independent',
               'price_sb_blockwise', 'price_local_blockwise', 'price_sb_joint', 'price_local_joint']
     modern_colors = ['#737373', '#1f66bf', '#00804d', '#1aa6a6', '#d92633', '#e68c0d', '#8c33b3', '#996633']
@@ -80,8 +84,9 @@ def draw_panel(fig, ax, panel):
         styles = ["-o", "--s", "-.^", ":d"]
         for j, s in enumerate(series):
             x, y = vec(s["x"]), vec(s["y"])
-            c = COLORS[4] if len(series) == 1 else COLORS[(j+2) % len(COLORS)]
-            ax.plot(x, y, styles[j % len(styles)], color=c, linewidth=1.5, markersize=4,
+            c = color(s['name'], j)
+            style = ':' if 'independent' in s['name'] else '--' if 'local' in s['name'] else '-'
+            ax.plot(x, y, linestyle=style, marker=['o','s','^','d'][j % 4], color=c, linewidth=1.5, markersize=4,
                     label=FIELD_LABELS.get(s["name"], s["name"]), zorder=3)
             if np.asarray(s["low"]).size:
                 lo, hi = vec(s["low"]), vec(s["high"])
@@ -109,7 +114,7 @@ def draw_panel(fig, ax, panel):
             else:
                 options = {"drawstyle": "steps-post"} if kind == "step" else {}
                 ax.plot(x, y, color=c, linewidth=1.7 if s["name"] == "Price+SB" else 1.2,
-                        label=s["name"], marker="o" if x.size < 3 else None, markersize=4,
+                        label=s["name"], marker="o" if np.sum(np.isfinite(x) & np.isfinite(y)) < 3 else None, markersize=4,
                         linestyle=':' if ('independent' in s['name'] or 'Verified lower' in s['name'])
                         else '--' if 'local' in s['name'] else '-', **options)
             has_values |= bool(np.isfinite(y).any())
@@ -122,7 +127,7 @@ def draw_panel(fig, ax, panel):
             else:
                 ax.xaxis.set_major_locator(matplotlib.ticker.MaxNLocator(integer=True, nbins=8))
     if not has_values:
-        ax.text(.5, .5, "Not applicable / not reported", transform=ax.transAxes,
+        ax.text(.5, .5, panel.get('emptyMessage') or "Not applicable / not reported", transform=ax.transAxes,
                 ha="center", va="center", color="#738095", fontsize=10)
         if kind in {"bar", "categorical_line"}:
             ax.set_ylim(0, 1)
@@ -144,7 +149,7 @@ def draw_panel(fig, ax, panel):
         ax.spines[["top", "right"]].set_visible(False)
         ax.ticklabel_format(axis="y", style="sci", scilimits=(-3, 5))
     handles, labels = ax.get_legend_handles_labels()
-    if len(handles) > 1 or panel["referenceLabel"]:
+    if has_values and (len(handles) > 1 or panel["referenceLabel"]):
         ax.legend(fontsize=7, framealpha=.85, ncol=2 if len(handles) > 5 else 1)
     # Long methodological notes stay in the JSON and documentation; avoid covering data/titles.
 

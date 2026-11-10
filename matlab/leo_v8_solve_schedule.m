@@ -1,0 +1,76 @@
+function result = leo_v8_solve_schedule(problem,proxy,options,initialSchedule)
+%LEO_SOLVE_SCHEDULE 第 8-12 节配置 A，原始设计模型上的两阶段启发式搜索。
+% 接口标注：
+% 输入：problem：原问题；proxy：可选已有代理；options：方法参数；initialSchedule：可选日程。
+% 输出：result：两阶段日程、原始服务、严格公平门槛、有效差距与运行记录。
+% 不调用穷举、不缩小物理候选域；每资源单独存储 QUBO/Ising。
+% options.enabled 仅控制主入口；直接调用本函数始终执行。
+if nargin<2, proxy = []; end
+if nargin<3, options = struct(); end
+if nargin<4, initialSchedule = []; end
+options = leo_v8_method_options(options);
+previousRng = rng; cleanup = onCleanup(@() rng(previousRng)); %#ok<NASGU>
+rng(options.seed,'twister');
+budget.timer = tic; budget.seconds = options.maxSeconds;
+initial = leo_initial_schedules(problem,initialSchedule,options,budget);
+cache = leo_prepare_upper_bounds(problem.data);
+strict = leo_requires_full_qos(problem.data);
+needsFairnessSearch=~strict || initial.service.fairness<1;
+if ~needsFairnessSearch, proxy=[]; end
+if needsFairnessSearch && isempty(proxy) && ~leo_budget_expired(budget)
+    if strcmp(options.referenceMode,'current_schedule')
+        proxy = leo_v8_build_service_surrogates(problem,'current_schedule',initial.x);
+    else
+        proxy = leo_v8_build_service_surrogates(problem,options.referenceMode);
+    end
+end
+initialSeconds = toc(budget.timer);
+if options.verbose
+    fprintf('Lagrangian + %s, configuration A: %d users, %d resources, full physical candidates.\n', ...
+        options.innerSolver,problem.data.shape(1),problem.data.shape(2));
+    fprintf('  Initial (%s): fairness=%.9g, total=%.6g Mbit.\n', ...
+        initial.bestName,initial.service.fairness,initial.service.totalBits/1e6);
+end
+fairBudget = budget; fairBudget.seconds = options.maxSeconds*options.fairnessBudgetFraction;
+if strict, fairBudget.seconds = options.maxSeconds; end
+stage1 = leo_v8_run_price_phase(problem,proxy,cache,'fairness',initial,options,fairBudget);
+% 第二阶段在阶段 1 保留日程处相切；正公平时它也是代理可行点。
+% 周期模式 s0=0 时有符号代理可能更严格，仍保留原式可行日程验收。
+stage2Proxy = [];
+if (~strict || stage1.service.fairness==1) && ~leo_budget_expired(budget)
+    stage2Proxy = leo_v8_build_service_surrogates(problem,'current_schedule',stage1.x);
+end
+if strict && stage1.service.fairness<1
+    stopped=budget; stopped.seconds=0;
+    stage2=leo_v8_run_price_phase(problem,[],cache,'fairness',stage1,options,stopped);
+    stage2.status='not_started_full_qos_not_found'; stage2.fairnessFloor=1;
+    stage2.upperBound=leo_original_upper_bound(problem.data,cache,zeros(problem.data.shape(1),1),'throughput',1);
+    stage2.absoluteGap=NaN; stage2.certifiedWithinTolerance=false;
+else
+    stage2 = leo_v8_run_price_phase(problem,stage2Proxy,cache,'throughput',stage1,options,budget);
+    assert(all(stage2.service.demandRatio>=stage1.service.fairness));
+end
+assert(stage2.service.totalBits>=stage1.service.totalBits);
+result.kind = ['Configuration A: two-stage Lagrangian + ',options.innerSolver,' + original-service recovery'];
+result.options = options; result.initial = initial;
+result.stage1 = stage1; result.stage2 = stage2;
+result.x = stage2.x; result.service = stage2.service;
+result.fairnessFloor = stage1.service.fairness;
+if strict, result.fairnessFloor=1; end
+result.fairnessUpperBound = stage1.upperBound.value;
+result.fairnessGap = max(0,result.fairnessUpperBound-result.service.fairness);
+result.throughputUpperBoundBits = stage2.upperBound.value*problem.data.referenceBits;
+result.throughputGapBits = stage2.absoluteGap*problem.data.referenceBits;
+result.initializationSeconds = initialSeconds;
+result.elapsedSeconds = toc(budget.timer);
+result.optimal = false;             % 不用 SB 停滞/迭代次数冒充全局最优
+result.certificateScope = 'Fairness: original P_F. Throughput: original P_V at achieved fixed s0 only.';
+result.usesExhaustiveSolution = false;
+result.hardFeasible = true;         % 原始评价器已验证每个保存的二元日程
+if options.verbose
+    fprintf('  Final: fairness=%.9g, throughput=%.6g Mbit, time=%.3f s.\n', ...
+        result.service.fairness,result.service.totalBits/1e6,result.elapsedSeconds);
+    fprintf('  Original valid bounds: fairness<=%.9g; throughput(s0)<=%.6g Mbit.\n', ...
+        result.fairnessUpperBound,result.throughputUpperBoundBits/1e6);
+end
+end

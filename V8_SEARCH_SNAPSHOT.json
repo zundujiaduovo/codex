@@ -1,0 +1,61 @@
+{
+  "commit": "cd4ba09",
+  "renames": {
+    "leo_method_options": "leo_v8_method_options",
+    "leo_solve_schedule": "leo_v8_solve_schedule",
+    "leo_run_price_phase": "leo_v8_run_price_phase",
+    "leo_solve_resource": "leo_v8_solve_resource",
+    "leo_solve_resource_sb": "leo_v8_solve_resource_sb",
+    "leo_solve_resource_local": "leo_v8_solve_resource_local",
+    "leo_polish_group": "leo_v8_polish_group",
+    "leo_build_service_surrogates": "leo_v8_build_service_surrogates",
+    "leo_ballistic_sb": "leo_v8_ballistic_sb"
+  },
+  "files": [
+    {
+      "source": "leo_method_options.m",
+      "frozen": "leo_v8_method_options.m",
+      "originalSha256": "2141985e7071c2398fbf718721e824427a691cafaba767420e0a2bb5d527e267"
+    },
+    {
+      "source": "leo_solve_schedule.m",
+      "frozen": "leo_v8_solve_schedule.m",
+      "originalSha256": "a1606741acc4d31b6ec0d11c7603c9bdc43c33fa902c1f5837978fff340c4532"
+    },
+    {
+      "source": "leo_run_price_phase.m",
+      "frozen": "leo_v8_run_price_phase.m",
+      "originalSha256": "b4b4a5c2a84aadf9cc952a6fec0293d28f1457cfcd0e120320c41461641a8593"
+    },
+    {
+      "source": "leo_solve_resource.m",
+      "frozen": "leo_v8_solve_resource.m",
+      "originalSha256": "4f2b2251b956f35ade602cd863ad0149cf111bc16d489a9c34ead03030b3e6c3"
+    },
+    {
+      "source": "leo_solve_resource_sb.m",
+      "frozen": "leo_v8_solve_resource_sb.m",
+      "originalSha256": "f667c4d050afcdaaaa0cd8ef4fd7ea3d8f64092d8e6704a6063e2aee707ff444"
+    },
+    {
+      "source": "leo_solve_resource_local.m",
+      "frozen": "leo_v8_solve_resource_local.m",
+      "originalSha256": "4a88014888fd088868746e1330c0a9d4b5667adc7dacca75db3e9f0d8a511646"
+    },
+    {
+      "source": "leo_polish_group.m",
+      "frozen": "leo_v8_polish_group.m",
+      "originalSha256": "bebaa2ffca5fbabc79d3fdf34e087f80acefce27aeb1a4f6222b5277dccb412f"
+    },
+    {
+      "source": "leo_build_service_surrogates.m",
+      "frozen": "leo_v8_build_service_surrogates.m",
+      "originalSha256": "7374bcde20bdfc9523edfde1b189d4240b006e8468eb96d54ca67cc55f58a0fa"
+    },
+    {
+      "source": "leo_ballistic_sb.m",
+      "frozen": "leo_v8_ballistic_sb.m",
+      "originalSha256": "60ec3f204c8e1a4923d7b7680cd9537d79a727908dd98d71575622589c46a740"
+    }
+  ]
+}

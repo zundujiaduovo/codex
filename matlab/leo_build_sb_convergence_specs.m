@@ -1,6 +1,6 @@
 function specs = leo_build_sb_convergence_specs(data)
 %LEO_BUILD_SB_CONVERGENCE_SPECS 每种SB的真实日志曲线；不优化、不补造未记录轨迹。
-known={'price_sb','price_sb_blockwise','price_sb_joint','price_sb_adaptive','price_sb_light', ...
+known={'sb_v8_blockwise','price_sb','price_sb_blockwise','price_sb_joint','price_sb_adaptive','price_sb_light', ...
  'sb_zero','sb_minimax_fixed','sb_current_fixed','sb_reference_portfolio'};
 allMethods=data.methods(:).';
 methods=allMethods(ismember(allMethods,known)); seed=data.representativeSeed;
@@ -10,7 +10,7 @@ stamp=sprintf('Recorded search checkpoints | seed %.0f | K=%d, M=%d, L=%d', ...
  seed,data.shape(1),data.shape(2),data.maxStreams);
 % 按时间比较各SB，并保留同场景禁忌/局部搜索参照；不跨算法比较原生迭代号。
 overlay=[methods,allMethods(ismember(allMethods,{'original_exchange','original_tabu', ...
- 'original_tabu_independent','price_local_blockwise','price_local_joint','price_local_adaptive'}))];
+ 'original_tabu_independent','local_v8_blockwise','price_local_blockwise','price_local_joint','price_local_adaptive'}))];
 p=panel('step','Full-QoS certified service versus time','Accounted elapsed time (s)','Mbit/period');
 q=panel('step','Gap to common upper bound versus time','Accounted elapsed time (s)','100 (U - V) / U (%)');
 for j=1:numel(overlay)
