@@ -37,3 +37,6 @@ V6 目标状态单列：`full_qos_met` 表示所有用户 G_i>=q_i，`full_qos_n
 
 
 V7上界采用CERTIFICATE_SEARCH.md中的列生成/分支定价，证书整数下界可能来自额外certificate_search，不属于某一被测方法。默认价格方法的轮数上限提高到1000，仍受12秒软预算；日志Stop区分time_limit、iteration_limit和bound_gap。上界summary新增relativeGap、gapTargetMet、nodesProcessed、openNodeCount及rootRelaxationUpperBits。目标差距默认0.01%，未达到时不得宣称已精确最优。
+
+
+V8默认在结果目录的sb_convergence下导出每种SB独立收敛图与汇总时间对照；run_leo_sb_convergence也可读取已有V7文件。新日志记录逐块验收、价格日程验收、恢复返回和阶段结束的已保存值；不改变搜索规则。sb_convergence_time.csv保留实际核算时间，sb_convergence_rounds.csv保留阶段/成员局部轮数，sb_convergence_energy.csv保留各固定代表调用的能量，图不将不同Ising问题拼成一条能量曲线。

@@ -20,6 +20,7 @@ if isFairness && problem.precheck.forcedZeroFairness
 end
 bestUpper = upper;
 initialSeconds = toc(budget.timer); initialUpper = upper.value; firstSbTrace = [];
+checkpoints=record_checkpoint([],bestService,0,initialSeconds,0,'initial');
 history.lambda = zeros(K,rounds); history.lambdaNext = zeros(K,rounds);
 history.lowerUserBits = zeros(K,rounds);
 history.priceX = false(K,M,rounds);
@@ -64,6 +65,7 @@ for k = 1:rounds
                     exact = problem.evaluate(trialX);
                     if leo_service_is_better(exact,bestService,phase,s0)
                         bestX = trialX; bestService = exact; blockwiseAccepted = blockwiseAccepted+1;
+                        checkpoints=record_checkpoint(checkpoints,bestService,k,toc(budget.timer),m,'blockwise');
                     end
                 end
             end
@@ -77,6 +79,7 @@ for k = 1:rounds
     priceService = problem.evaluate(priceX);
     if leo_service_is_better(priceService,bestService,phase,s0)
         bestX = priceX; bestService = priceService;
+        checkpoints=record_checkpoint(checkpoints,bestService,k,toc(budget.timer),0,'price_schedule');
     end
     evaluations = 0; crossEvaluations = 0; acceptedMoves = 0;
     starts = {priceX,bestX};
@@ -89,6 +92,7 @@ for k = 1:rounds
         acceptedMoves = acceptedMoves+recovered.acceptedMoves;
         if leo_service_is_better(recovered.service,bestService,phase,s0)
             bestX = recovered.x; bestService = recovered.service;
+            checkpoints=record_checkpoint(checkpoints,bestService,k,toc(budget.timer),0,'recovery');
         end
     end
     if k>1
@@ -135,6 +139,8 @@ for j = 1:numel(names)
     if strcmp(name,'priceX'), history.(name) = history.(name)(:,:,1:completed);
     else, history.(name) = history.(name)(:,1:completed); end
 end
+checkpoints=record_checkpoint(checkpoints,bestService,completed,toc(budget.timer),0,'end');
+result.checkpoints=checkpoints;
 result.x = bestX; result.service = bestService; result.fairnessFloor = s0;
 result.rounds = completed; result.status = status; result.history = history;
 result.upperBound = bestUpper;
@@ -153,4 +159,11 @@ function gap = certified_gap(upper,service,isFairness)
 if isFairness, value = service.fairness; else, value = service.normalizedThroughput; end
 assert(upper>=value-1e-10*max(1,abs(value)),'有效上界小于原始可行值，请检查模型/上界。');
 gap = max(0,upper-value);           % 仅消除浮点量级负差距；不改动上界本身
+end
+
+function h=record_checkpoint(h,service,iteration,seconds,resource,kind)
+empty=isempty(h);
+h=leo_record_search_step(h,service,iteration,seconds,NaN);
+if empty, h.resource=[]; h.kind={}; end
+h.resource(end+1)=resource; h.kind{end+1}=kind;
 end

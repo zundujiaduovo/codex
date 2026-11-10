@@ -1,52 +1,41 @@
-# LEO QoS V7：更紧的最优区间与公平的搜索预算
+# LEO QoS V8：每种 SB 的收敛曲线
 
-[下载 V7 纯源码包](LEO_QoS_Comparison_v7.zip)。分支leo-qos-v7-certified-gap；包内只有源码、测试代码和必要说明，不包含验证数据、图片、MAT或旧版ZIP。
+[下载 V8 纯源码包](LEO_QoS_Comparison_v8.zip)。分支leo-qos-v8-sb-convergence；仅含源码、测试代码与说明，不含验证结果、图像、MAT或旧ZIP。
 
-配置延续V6：32用户、8×8阵元、32波束、最多8人、固定种子71669974、每用户1 Mbit、95%联合可靠性、每流10 W、80 W预算、1秒周期。G的定义和业务目标不变。
+V8增加每个SB方法/消融的独立收敛图，以及与禁忌、局部搜索的时间曲线对照。已有V7结果可以直接重画，不需重跑。新运行记录更细的原目标改进时刻。物理配置、算法搜索规则及V7证书求解器沿用原设置：32用户、8×8阵元、32波束、最多8人、固定种子71669974；默认14项方法，每方法12秒软预算。
 
-## 修改内容
+## 只给已有V7结果加收敛图
 
-1. 上界从有限轮价格迭代改为列生成与分支定价，并加入对原整数调度等价的截断服务表达和合法计数割。无需外部优化工具箱。默认争取把整数可行下界与全域上界的差距收至0.01%，最多180秒/128节点；未达到目标就显示真实剩余差距。
-2. 证书阶段找到的新整数日程另存，绝不算进SB/禁忌成绩。分数主问题值不当成真实整数下界。
-3. 对比默认仍是14项基础MATLAB方法/消融，每方法12秒软预算。价格+SB等方法的轮数上限由12/24提高到1000，避免在约2–3秒就因轮数结束，而禁忌继续跑满预算。日志打印停止原因；不保证SB排名领先。
-4. 保留折线对比、场景核对文件和固定默认种子。历史上界或场景的数值不直接套到当前模型。
-
-完整推导、证书精度和禁忌实现说明见 [CERTIFICATE_SEARCH.md](CERTIFICATE_SEARCH.md)。
-
-## 运行完整比较
-
-解压到新目录，例如D:\code\LEO_QoS_Comparison_v7，在MATLAB命令窗口运行：
+解压V8到D:\code\LEO_QoS_Comparison_v8，在MATLAB命令窗口运行：
 
 ```matlab
 clear functions
-cd('D:\code\LEO_QoS_Comparison_v7')
+cd('D:\code\LEO_QoS_Comparison_v8')
 addpath(fullfile(pwd,'matlab'),'-begin')
 rehash
-[report,fig]=run_leo_comparison();
+source='D:\code\LEO_QoS_Comparison_v7\results\comparison\seed_71669974\benchmark.mat';
+run_leo_sb_convergence(source);
 ```
 
-完整对比、1000周期独立验证及证书搜索可能需要数分钟。结果生成在results/comparison/seed_71669974，重复运行增加后缀，不覆盖。
+图保存在旧结果目录下sb_convergence。每种SB一张图，另有sb_convergence_comparison汇总比较。每张图含服务/时间、公平/时间、外层轮数和一个固定子问题的SB能量。详见 [SB_CONVERGENCE.md](SB_CONVERGENCE.md)。
 
-## 只重算已有V6结果的证书
-
-不必重跑14种算法：
+## 重新运行完整比较
 
 ```matlab
 clear functions
-cd('D:\code\LEO_QoS_Comparison_v7')
+cd('D:\code\LEO_QoS_Comparison_v8')
 addpath(fullfile(pwd,'matlab'),'-begin')
 rehash
-source='D:\code\LEO_QoS_Comparison_v6\results\comparison\seed_71669974\benchmark.mat';
-[theory,fig]=run_leo_theory_from_saved(source, ...
-    struct('maxSeconds',300,'relativeGap',1e-4));
+opts=struct('budgetSeconds',60);
+[report,fig]=run_leo_comparison(fullfile(pwd,'results','comparison_60s'),opts);
 ```
 
-默认另存到旧结果目录下certificate_v7。重点看lowerBits、upperBits、relativeGap和gapTargetMet。输出最优区间、各算法差距范围、分支过程及最好证书整数日程。更长预算仍不保证所有实例都达到目标。
+可把60改为所需的统一时间预算。省略opts则默认12秒。完整运行自动保存原有图组和新增SB收敛图；实际停止原因、时间预算、轮数上限都按日志记录。新增曲线不改变验收和优化目标，日志开销计入实际耗时。
 
-## 结果含义
+## 如何读收敛曲线
 
-goalStatus=full_qos_met表示通过当前充分证书的全员QoS门槛；full_qos_not_found保留诊断，不当作业务目标完成。证书搜索发生在方法比较结束后，单独计时；bestMethod=certificate_search时，该下界属于额外搜索，不是某个被测算法的成绩。比较方法质量使用各自返回的日程。
+时间曲线比较同场景同预算的真实保存值，不延伸停止后的轨迹。初始化公平已经为1时，重点看保证总服务的变化。外层曲线属于SB+价格协调+修复的整个流程；内层能量只属于图中注明的一个固定Ising调用，不能拼接不同轮的能量。未执行阶段和缺失日志留空。公平阶段的总服务可能下降，图保留原值。
 
-数学目标见FULL_QOS_MODEL.md；上界与新证书见THEORETICAL_BOUND.md和CERTIFICATE_SEARCH.md；方法字段见METHODS_AND_METRICS.md；种子/码本复现见REPRODUCIBILITY.md。所有图沿用折线或调度热图。
+禁忌使用原目标的增删、替换和跨块交换，短期记忆改动位置并允许可行域内暂时退步；细节和参数见SB_CONVERGENCE.md。证书阶段的新日程与被测方法成绩分别保存，最优区间规则见CERTIFICATE_SEARCH.md。
 
-数值验证在Octave完成；包含独立整数枚举与分数间隙反例，不把同一实现的输出当作唯一oracle。MATLAB桌面图形未实机运行。固定证书的最优区间不能解释为真实随机物理容量的最优区间。
+上界计算仍可通过run_leo_theory_from_saved读取已有结果重算，源结果旁的certificate_v7目录沿用V7命名。模型、目标与复现说明见FULL_QOS_MODEL.md、THEORETICAL_BOUND.md、REPRODUCIBILITY.md。数值/日志及旧结果重画在Octave验证，图形规格以Python渲染检查；MATLAB桌面图形未实机运行。

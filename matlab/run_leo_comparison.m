@@ -146,6 +146,11 @@ if render
         warning('leo:plotUnavailable','Detailed figures could not all be rendered: %s',err.message);
     end
 end
+try
+    run_leo_sb_convergence(fullfile(outputDirectory,'plot_data.mat'),fullfile(outputDirectory,'sb_convergence'),render);
+catch err
+    warning('leo:sbConvergenceUnavailable','SB convergence export incomplete: %s',err.message);
+end
 fprintf('Comparison results: %s\n',outputDirectory);
 fprintf('Demand per user: %.3f Mbit (first user); fairness and full-QoS rate may saturate.\n', ...
     report.problemData.qosTargetBits(1)/1e6);

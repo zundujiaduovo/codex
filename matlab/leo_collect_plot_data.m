@@ -17,6 +17,10 @@ data.referenceBits = report.problemData.referenceBits;
 data.available = report.problemData.available;
 data.beamIndex = report.problemData.beamIndex;
 data.reference = report.exhaustive;
+data.theoryBounds=struct([]);
+if isfield(report,'theory') && isfield(report.theory,'lowerBits') && isfield(report.theory,'upperBits')
+    data.theoryBounds=struct('lowerBits',report.theory.lowerBits,'upperBits',report.theory.upperBits);
+end
 data.counts = struct([]); data.events = struct([]); data.prices = struct([]);
 data.energy = struct([]); data.progress = struct([]); data.representatives = struct([]);
 for r = 1:numel(report.records)
@@ -64,6 +68,13 @@ for r = 1:numel(report.records)
         if isempty(data.representatives), data.representatives = rep; else, data.representatives(end+1,1) = orderfields(rep,data.representatives); end
     end
 end
+% 各方法内按真实时间稳定排序，保留同一时刻的原始记录顺序。
+if ~isempty(data.progress)
+    [~,mi]=ismember({data.progress.method},data.methods);
+    [~,si]=ismember([data.progress.seed],data.seeds);
+    keys=[mi(:),si(:),[data.progress.seconds].',(1:numel(data.progress)).'];
+    [~,order]=sortrows(keys,[1,2,3,4]); data.progress=data.progress(order);
+end
 % 诊断图一律在计时实验结束后计算；使用同一个固定 minimax 代理。
 problem.data = report.problemData;
 proxy = leo_build_service_surrogates(problem,'minimax');
@@ -100,7 +111,7 @@ data.notes = {'Counter NaN means not applicable or not reported, never zero iter
     'Service/SINR figures use the statistical-CSI design coefficients, not instantaneous fading.', ...
     'Postprocessing and plotting time is excluded from measured algorithm time.'};
 if any(strcmp(data.serviceModel,{'periodic_chernoff','periodic_multilevel'}))
-    data.notes{end+1} = 'Totals and QoS use period guaranteed service G; resource bars use additive A before the one-time risk margin. Nominal throughput is separate.';
+    data.notes{end+1} = 'Totals and QoS use period guaranteed service G; resource curves use additive A before the one-time risk margin. Nominal throughput is separate.';
 end
 end
 
@@ -200,6 +211,14 @@ for phase = 1:2
             energy.median = h.median(k); energy.maximum = h.maximum(k);
             energy.trajectories = trace.trajectories; energy.energyScale = trace.energyScale;
             if isempty(data.energy), data.energy = energy; else, data.energy(end+1,1) = orderfields(energy,data.energy); end
+        end
+    end
+    if addProgress && isfield(stage,'checkpoints') && ~isempty(stage.checkpoints)
+        cph=stage.checkpoints;
+        for k=1:numel(cph.elapsedSeconds)
+            service.fairness=cph.savedFairness(k); service.totalBits=cph.savedTotalBits(k);
+            data.progress=progress_point(data.progress,row,offset+cph.elapsedSeconds(k),service, ...
+                sprintf('phase%d_checkpoint_%s',phase,cph.kind{k}));
         end
     end
     if addProgress && isfield(stage,'elapsedAtEndSeconds')

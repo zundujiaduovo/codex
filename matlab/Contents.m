@@ -139,3 +139,8 @@
 %   leo_round_column_schedule          - Independently verified certificate-stage integer candidates.
 %   test_leo_branch_price              - Exact integer-gap and infeasibility counterexamples.
 %   test_leo_pricing_oracle            - Independent pricing/cut enumeration oracle.
+
+% V8 per-method convergence:
+%   run_leo_sb_convergence             - Replot every SB method from report/MAT without optimization.
+%   leo_build_sb_convergence_specs     - True time/round checkpoints and one fixed Ising call per SB.
+%   test_leo_sb_convergence            - Timing/values, missing phases, fixed energy scope and legacy logs.

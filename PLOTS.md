@@ -140,3 +140,8 @@ GNU Octave 9.4.0，OpenBLAS 单线程；每方法软预算 12 s，算法种子 2
 `sb_energy.csv` 是各阶段首个内层调用的能量轨迹。单位写在列名或本说明中。
 `plot_data.mat` 是 MATLAB 重画输入；`plot_specs.json` 是两个渲染器共用的数值规格。
 完整输入输出和调用关系见 [FUNCTION_GUIDE.md](FUNCTION_GUIDE.md)。
+
+
+## V8 每种 SB 的专用收敛图
+
+基本18图不变；run_leo_sb_convergence另输出每个SB一张2×2图和汇总时间对照图。已有benchmark.mat可直接读取重画；V8完整比较自动调用。外层只用原始保存检查点，时间包含共同准备与初始化，不把未知点插值成改进；内层能量只取一个明确标注的固定Ising调用，禁止跨价格轮/资源拼接。说明与禁忌参数见SB_CONVERGENCE.md。
