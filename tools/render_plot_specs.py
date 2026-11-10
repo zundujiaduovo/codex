@@ -42,6 +42,13 @@ def vec(value):
 
 
 def color(name, index):
+    modern = ['initial', 'original_exchange', 'original_tabu', 'original_tabu_independent',
+              'price_sb_blockwise', 'price_local_blockwise', 'price_sb_joint', 'price_local_joint']
+    modern_colors = ['#737373', '#1f66bf', '#00804d', '#1aa6a6', '#d92633', '#e68c0d', '#8c33b3', '#996633']
+    if 'Verified lower' in name:
+        return '#666666'
+    if name in modern:
+        return modern_colors[modern.index(name)]
     return COLORS[METHODS.index(name)] if name in METHODS else COLORS[index % len(COLORS)]
 
 
@@ -103,7 +110,8 @@ def draw_panel(fig, ax, panel):
                 options = {"drawstyle": "steps-post"} if kind == "step" else {}
                 ax.plot(x, y, color=c, linewidth=1.7 if s["name"] == "Price+SB" else 1.2,
                         label=s["name"], marker="o" if x.size < 3 else None, markersize=4,
-                        linestyle=["-", "--", "-.", ":"][j % 4], **options)
+                        linestyle=':' if ('independent' in s['name'] or 'Verified lower' in s['name'])
+                        else '--' if 'local' in s['name'] else '-', **options)
             has_values |= bool(np.isfinite(y).any())
         if panel["xlabels"]:
             ax.set_xticks(np.arange(1, len(panel["xlabels"])+1), panel["xlabels"], fontsize=8)
@@ -124,6 +132,8 @@ def draw_panel(fig, ax, panel):
                    label=panel["referenceLabel"] or "Reference")
     if panel["ylim"]:
         ax.set_ylim(panel["ylim"])
+    if panel.get('xlim'):
+        ax.set_xlim(panel['xlim'])
     ax.set_title(textwrap.fill(panel["title"], width=66), fontsize=11, loc="left", fontweight="semibold", pad=10)
     ax.set_xlabel(panel["xlabel"], fontsize=9)
     ax.set_ylabel(panel["ylabel"], fontsize=9)
@@ -136,9 +146,7 @@ def draw_panel(fig, ax, panel):
     handles, labels = ax.get_legend_handles_labels()
     if len(handles) > 1 or panel["referenceLabel"]:
         ax.legend(fontsize=7, framealpha=.85, ncol=2 if len(handles) > 5 else 1)
-    if panel["note"]:
-        ax.text(0, -.30, textwrap.fill(panel["note"], width=77), transform=ax.transAxes,
-                va="top", fontsize=7.5, color="#64748b")
+    # Long methodological notes stay in the JSON and documentation; avoid covering data/titles.
 
 
 def render(source: Path, directory: Path):

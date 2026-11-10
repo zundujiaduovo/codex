@@ -50,7 +50,7 @@ for phaseIndex = 1:2
     elseif ~strcmp(kind,'initial')
         current = best; tabuUntil = zeros(data.shape); stagnant = 0;
         iterationKind = [kind,'_round'];
-        for iteration = 1:1000
+        for iteration = 1:options.originalSearchRounds
             if leo_budget_expired(localBudget) || options.recoveryEvaluations==0, break; end
             if strict && phaseIndex==1 && best.service.fairness==1, break; end
             before = best.service;
@@ -92,7 +92,7 @@ for phaseIndex = 1:2
     elseif leo_budget_expired(localBudget), stage.status='time_limit';
     elseif strcmp(kind,'greedy'), stage.status='no_improving_addition';
     elseif strcmp(kind,'exchange'), stage.status='stagnation';
-    elseif phaseIterations>=1000, stage.status='iteration_limit'; end
+    elseif phaseIterations>=options.originalSearchRounds, stage.status='iteration_limit'; end
     if strict && phaseIndex==1 && phaseStart.fairness==1, stage.status='full_qos_already_met'; end
     if strict && phaseIndex==2 && best.service.fairness<1, stage.status='not_started_full_qos_not_found'; end
     if phaseIndex==1, result.stage1 = stage;
@@ -105,4 +105,6 @@ result.throughputGapBits = max(0,result.throughputUpperBoundBits-best.service.to
 if strict && best.service.fairness<1, result.throughputGapBits=NaN; end
 result.elapsedSeconds = toc(budget.timer); result.hardFeasible = true;
 result.usesExhaustiveSolution = false; result.optimal = false;
+result.usesQuadraticProxy=false;
+result.usesProvidedSchedule=~isempty(provided);
 end

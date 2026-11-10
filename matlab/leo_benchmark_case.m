@@ -20,12 +20,20 @@ template = struct('method','','seed',0,'status','','solverStatus','','message','
     'goalStatus','','fullQosFeasible',false,'feasibleTotalBits',NaN,'requiredFairnessFloor',NaN, ...
     'commonSeconds',commonSeconds,'proxyPreparationSeconds',0,'searchSeconds',NaN, ...
     'endToEndSeconds',NaN,'budgetSeconds',options.budgetSeconds,'budgetOverrunSeconds',NaN);
+template.usesQuadraticProxy=false; template.initializationPolicy='common_original_candidates';
+template.gainOverInitialPercent=NaN; template.upperGapPercent=NaN; template.knownLowerGapPercent=NaN;
 records = repmat(template,0,1); solutions = {};
 for seed = options.seeds(:).'
     for j = 1:numel(options.methods)
         name = options.methods{j}; row = template; row.method = name; row.seed = seed;
-        prebuiltProxy = any(strcmp(name,{'price_sb','price_sb_blockwise','price_sb_adaptive','price_sb_light','price_local','price_local_adaptive','price_miqp','proxy_milp','sb_minimax_fixed'}));
+        prebuiltProxy = any(strcmp(name,{'price_sb','price_sb_blockwise','price_sb_adaptive','price_sb_light', ...
+            'price_local','price_local_adaptive','price_local_blockwise','price_sb_joint','price_local_joint', ...
+            'price_miqp','proxy_milp','sb_minimax_fixed'}));
         if commonFullStart && ~strcmp(name,'proxy_milp'), prebuiltProxy=false; end
+        if prebuiltProxy && isempty(model.surrogate)
+            proxyTimer=tic; model.surrogate=leo_build_service_surrogates(problem);
+            model.timings.proxySeconds=toc(proxyTimer);
+        end
         if prebuiltProxy, row.proxyPreparationSeconds = model.timings.proxySeconds; end
         seconds = options.budgetSeconds-commonSeconds-row.proxyPreparationSeconds;
         result = [];
@@ -39,7 +47,10 @@ for seed = options.seeds(:).'
             method = options.method; method.seed = seed; method.maxSeconds = seconds; method.verbose = false;
             timer = tic;
             try
-                result = leo_run_benchmark_method(problem,model.surrogate,providedSchedule,name,method);
+                solverProxy=[]; if prebuiltProxy, solverProxy=model.surrogate; end
+                result = leo_run_benchmark_method(problem,solverProxy,providedSchedule,name,method);
+                row.usesQuadraticProxy=~any(strcmp(name,{'initial','original_greedy','original_exchange','original_tabu','original_tabu_independent'}));
+                if strcmp(name,'original_tabu_independent'), row.initializationPolicy='independent_original_candidates'; end
                 service = problem.evaluate(result.x); % 最后统一校验硬约束、原始服务
                 row.fullQosFeasible=all(service.userBits>=problem.data.qosTargetBits);
                 row.requiredFairnessFloor=result.fairnessFloor;
@@ -63,6 +74,9 @@ for seed = options.seeds(:).'
                 row.qosSatisfactionRate = mean(service.demandRatio>=1); row.totalBits = service.totalBits;
                 row.averageCompletion = mean(min(1,service.demandRatio));
                 row.initialFairness = result.initial.service.fairness; row.initialTotalBits = result.initial.service.totalBits;
+                if row.fullQosFeasible && row.initialFairness==1 && row.initialTotalBits>0
+                    row.gainOverInitialPercent=100*(service.totalBits/row.initialTotalBits-1);
+                end
                 row.fairnessFloor = result.fairnessFloor; row.fairnessUpperBound = result.fairnessUpperBound;
                 row.fairnessGap = result.fairnessGap; row.throughputUpperBoundBits = result.throughputUpperBoundBits;
                 row.throughputGapBits = result.throughputGapBits;

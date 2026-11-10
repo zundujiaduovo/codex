@@ -27,27 +27,43 @@ history.priceX = false(K,M,rounds);
 fields = {'sAux','step','priceFairness','priceTotalBits','savedFairness','savedTotalBits', ...
     'upperBound','proxyEpoch','innerImprovement','resourcesSolved','sbSteps', ...
     'repairedCandidates','recoveryEvaluations','crossEvaluations','acceptedMoves','elapsedSeconds', ...
-    'blockwiseEvaluations','blockwiseAccepted'};
+    'blockwiseEvaluations','blockwiseAccepted','nonProxyAccepted','solverPoolAccepted', ...
+    'polishPoolAccepted','warmPoolAccepted','uniqueCandidates','solverBetterCalls', ...
+    'jointEvaluations','jointAccepted','innerSeconds','originalSelectionSeconds', ...
+    'recoverySeconds','proxyRefreshSeconds','quboSetupSeconds','solverDynamicsSeconds', ...
+    'candidatePostprocessSeconds','rawCandidates','legalRawCandidates'};
 for j = 1:numel(fields), history.(fields{j}) = zeros(1,rounds); end
 history.completePriceRound = false(1,rounds);
 epoch = 1; errors = NaN; touchErrors = NaN;
 if ~isempty(proxy)
     errors = proxy.error.optimalFairnessGapBound; touchErrors = proxy.referenceTouchMaxAbsBits;
 end
-completed = 0; status = 'iteration_limit';
+completed = 0; status = 'iteration_limit'; banks=cell(1,M); stagnant=0; jointAttempt=0;
 for k = 1:rounds
     if certified_gap(bestUpper.value,bestService,isFairness)<=options.gapTolerance
         status = 'bound_gap'; break;
     end
     if leo_budget_expired(budget), status = 'time_limit'; break; end
     [weights,sAux] = leo_price_weights(data,lambda,phase,s0);
+    beforeRound=bestService; poolNonProxy=0; solverAccepted=0; polishAccepted=0; warmAccepted=0;
+    uniqueCandidates=0; solverBetter=0; innerSeconds=0; selectionSeconds=0;
+    innerTotals=zeros(1,5); diagnosticFields={'quboSetupSeconds','solverDynamicsSeconds', ...
+        'candidatePostprocessSeconds','rawCandidates','legalRawCandidates'};
     history.lambda(:,k) = lambda;
     improvement = 0; solved = 0; steps = 0; repairs = 0;
     blockwiseEvaluations = 0; blockwiseAccepted = 0;
     order = mod((0:M-1)+k-1,M)+1;
     for m = order
         if leo_budget_expired(budget), break; end
+        innerTimer=tic;
         inner = leo_solve_resource(data,proxy.lower,m,weights,priceX(:,m),options,budget);
+        innerSeconds=innerSeconds+toc(innerTimer);
+        if isfield(inner,'candidateGroups'), banks{m}=inner.candidateGroups; else, banks{m}=inner.x; end
+        if isfield(inner,'diagnostics')
+            uniqueCandidates=uniqueCandidates+inner.diagnostics.uniqueCandidates;
+            solverBetter=solverBetter+double(inner.diagnostics.solverBetterCandidates>0);
+            for d=1:numel(diagnosticFields), innerTotals(d)=innerTotals(d)+inner.diagnostics.(diagnosticFields{d}); end
+        end
         if isempty(firstSbTrace) && isfield(inner,'energyHistory')
             firstSbTrace.history = inner.energyHistory;
             firstSbTrace.resource = m; firstSbTrace.priceIteration = k;
@@ -56,19 +72,19 @@ for k = 1:rounds
         if options.blockwiseOriginalAccept && (isFairness || s0>0)
             % 单块 SB 候选也拼到最佳日程上按原目标评分；第二阶段严格保留 QoS 门槛。
             % 价格日程仍保留原有整轮候选，两个路径都参与最终验收。
-            if ~isequal(inner.x,bestX(:,m))
-                bits = bestService.resourceBits;
-                bits(:,m) = leo_resource_service(data,m,inner.x);
-                trial = leo_service_totals(data,bits); blockwiseEvaluations = blockwiseEvaluations+1;
-                if leo_service_is_better(trial,bestService,phase,s0)
-                    trialX = bestX; trialX(:,m) = inner.x;
-                    exact = problem.evaluate(trialX);
-                    if leo_service_is_better(exact,bestService,phase,s0)
-                        bestX = trialX; bestService = exact; blockwiseAccepted = blockwiseAccepted+1;
-                        checkpoints=record_checkpoint(checkpoints,bestService,k,toc(budget.timer),m,'blockwise');
-                    end
-                end
+            selectionTimer=tic;
+            accepted=leo_accept_resource_candidates(problem,bestX,bestService,m,inner,phase,s0,budget);
+            blockwiseEvaluations=blockwiseEvaluations+accepted.evaluations;
+            if accepted.accepted
+                bestX=accepted.x; bestService=accepted.service; blockwiseAccepted=blockwiseAccepted+1;
+                poolNonProxy=poolNonProxy+double(accepted.nonProxyWinner);
+                if ~isempty(strfind(accepted.source,'polish')), polishAccepted=polishAccepted+1;
+                elseif any(strcmp(accepted.source,{'sb','local'})), solverAccepted=solverAccepted+1;
+                else, warmAccepted=warmAccepted+1; end
+                checkpoints=record_checkpoint(checkpoints,bestService,k,toc(budget.timer),m, ...
+                    ['pool_',accepted.source]);
             end
+            selectionSeconds=selectionSeconds+toc(selectionTimer);
         end
         priceX(:,m) = inner.x;
         improvement = improvement+inner.score-inner.oldScore;
@@ -81,7 +97,7 @@ for k = 1:rounds
         bestX = priceX; bestService = priceService;
         checkpoints=record_checkpoint(checkpoints,bestService,k,toc(budget.timer),0,'price_schedule');
     end
-    evaluations = 0; crossEvaluations = 0; acceptedMoves = 0;
+    evaluations = 0; crossEvaluations = 0; acceptedMoves = 0; recoveryTimer=tic;
     starts = {priceX,bestX};
     for r = 1:2
         if r==2 && isequal(starts{1},starts{2}), continue; end
@@ -94,6 +110,20 @@ for k = 1:rounds
             bestX = recovered.x; bestService = recovered.service;
             checkpoints=record_checkpoint(checkpoints,bestService,k,toc(budget.timer),0,'recovery');
         end
+    end
+    recoverySeconds=toc(recoveryTimer);
+    if leo_service_is_better(bestService,beforeRound,phase,s0), stagnant=0; else, stagnant=stagnant+1; end
+    jointEvaluations=0; jointAccepted=0;
+    if options.jointCandidateSearch && stagnant>=options.jointStagnationRounds && ~leo_budget_expired(budget)
+        jointAttempt=jointAttempt+1; jointTimer=tic;
+        joint=leo_joint_candidate_search(problem,struct('x',bestX,'service',bestService), ...
+            banks,phase,s0,options,jointAttempt,budget);
+        jointEvaluations=joint.evaluations; jointAccepted=joint.accepted;
+        if joint.accepted>0
+            bestX=joint.x; bestService=joint.service;
+            checkpoints=record_checkpoint(checkpoints,bestService,k,toc(budget.timer),0,'joint_pool');
+        end
+        stagnant=0; selectionSeconds=selectionSeconds+toc(jointTimer);
     end
     if k>1
         upper = leo_original_upper_bound(data,cache,lambda,phase,s0);
@@ -113,6 +143,13 @@ for k = 1:rounds
     history.recoveryEvaluations(k) = evaluations; history.crossEvaluations(k) = crossEvaluations;
     history.acceptedMoves(k) = acceptedMoves; history.elapsedSeconds(k) = toc(budget.timer);
     history.blockwiseEvaluations(k) = blockwiseEvaluations; history.blockwiseAccepted(k) = blockwiseAccepted;
+    history.nonProxyAccepted(k)=poolNonProxy; history.solverPoolAccepted(k)=solverAccepted;
+    history.polishPoolAccepted(k)=polishAccepted; history.warmPoolAccepted(k)=warmAccepted;
+    history.uniqueCandidates(k)=uniqueCandidates; history.solverBetterCalls(k)=solverBetter;
+    history.jointEvaluations(k)=jointEvaluations; history.jointAccepted(k)=jointAccepted;
+    history.innerSeconds(k)=innerSeconds; history.originalSelectionSeconds(k)=selectionSeconds;
+    history.recoverySeconds(k)=recoverySeconds;
+    for d=1:numel(diagnosticFields), history.(diagnosticFields{d})(k)=innerTotals(d); end
     history.completePriceRound(k) = solved==M;
     completed = k; lambda = lambdaNext;
     if options.verbose && (k==1 || mod(k,5)==0 || k==rounds)
@@ -121,8 +158,11 @@ for k = 1:rounds
             certified_gap(bestUpper.value,bestService,isFairness));
     end
     if options.refreshEvery>0 && mod(k,options.refreshEvery)==0 && k<rounds && ...
-            ~leo_budget_expired(budget) && certified_gap(bestUpper.value,bestService,isFairness)>options.gapTolerance
-        proxy = leo_build_service_surrogates(problem,'current_schedule',bestX);
+            ~leo_budget_expired(budget) && certified_gap(bestUpper.value,bestService,isFairness)>options.gapTolerance && ...
+            ~isequal(proxy.referenceSchedule,bestX)
+        refreshTimer=tic;
+        proxy = leo_build_service_surrogates(problem,'current_schedule',bestX,proxy);
+        history.proxyRefreshSeconds(k)=toc(refreshTimer);
         epoch = epoch+1;
         errors(epoch) = proxy.error.optimalFairnessGapBound; %#ok<AGROW>
         touchErrors(epoch) = proxy.referenceTouchMaxAbsBits; %#ok<AGROW>
@@ -153,6 +193,8 @@ result.elapsedAtEndSeconds = toc(budget.timer);
 result.initialService = start.service; result.initialElapsedSeconds = initialSeconds;
 result.initialUpperBound = initialUpper; result.iterationKind = 'price_round';
 result.sbTrace = firstSbTrace;
+result.referenceMode='none';
+if ~isempty(proxy), result.referenceMode=proxy.referenceMode; end
 end
 
 function gap = certified_gap(upper,service,isFairness)

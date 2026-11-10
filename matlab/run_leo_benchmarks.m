@@ -13,7 +13,7 @@ else
     if strcmp(caseName,'small'), p.system.K = 8; p.time.nSlots = 15; end
 end
 p.method.enabled = false; p.exhaustive.enabled = false;
-model = run_leo_sinr(p);
+model = run_leo_sinr(p,false);
 report = leo_benchmark_case(model,options);
 report.caseName = caseName;
 directory = options.outputDirectory;

@@ -76,6 +76,9 @@ if ~isempty(data.progress)
     [~,order]=sortrows(keys,[1,2,3,4]); data.progress=data.progress(order);
 end
 % 诊断图一律在计时实验结束后计算；使用同一个固定 minimax 代理。
+data.approximation=struct(); data.serviceBounds=struct([]);
+diagnostics=~isfield(report.options,'diagnosticSurrogates') || report.options.diagnosticSurrogates;
+if diagnostics
 problem.data = report.problemData;
 proxy = leo_build_service_surrogates(problem,'minimax');
 data.approximation = struct();
@@ -103,6 +106,7 @@ for r = 1:numel(data.representatives)
     end
     bound.lowerErrorBoundBits = proxy.error.lowerUserBits;
     if isempty(data.serviceBounds), data.serviceBounds = bound; else, data.serviceBounds(end+1,1) = orderfields(bound,data.serviceBounds); end
+end
 end
 data.notes = {'Counter NaN means not applicable or not reported, never zero iterations.', ...
     'Iteration units differ by algorithm; price rounds, native search steps and SB integration steps are separate.', ...

@@ -8,6 +8,7 @@ o.enabled = false;
 o.seed = 20261105;
 o.innerSolver = 'sb';              % sb / local / miqp，同一价格与验收机制
 o.referenceMode = 'minimax';        % 未传入 proxy 时使用；zero/current_schedule 用于消融
+o.throughputReferenceMode = 'current_schedule'; % 吞吐阶段参考点独立设置，消融不再失效
 o.localRestarts = 16;
 o.fairnessRounds = 24;
 o.throughputRounds = 12;
@@ -23,6 +24,13 @@ o.sbTrajectories = 16;
 o.sbTimeStep = 0.15;
 o.sbCoupling = 1;
 o.sbCheckpoint = 10;
+o.sbPerturbedSeeds = 4;             % 旧组附近的扰动轨迹，其余轨迹仍随机
+o.candidatePoolSize = 6;            % 保留旧组、代理最佳和不同的合法候选
+o.jointStagnationRounds = 8;        % 连续无原目标改进后的两块候选组合触发门槛
+o.jointPairsPerTrigger = 3;
+o.jointMaxCombinations = 49;
+o.jointCandidateSearch = false;     % 组合候选验收；不是联合 Ising 动力学
+o.originalSearchRounds = 10000;     % Tabu/exchange 也可通过选项延长
 o.penaltyFactor = 1.1;             % 严格 > 1，随当前权重重新计算
 o.removeRedundantCapacity = true;
 o.polishMoves = 6;                 % 修复后的资源二次收益局部改进
@@ -42,13 +50,14 @@ if nargin>0
 end
 assert(ischar(o.innerSolver) && any(strcmp(o.innerSolver,{'sb','local','miqp'})));
 assert(ischar(o.referenceMode) && any(strcmp(o.referenceMode,{'minimax','zero','current_schedule'})));
-numericFields = setdiff(fieldnames(o),{'enabled','removeRedundantCapacity','verbose','innerSolver','referenceMode','blockwiseOriginalAccept'});
+assert(any(strcmp(o.throughputReferenceMode,{'minimax','zero','current_schedule'})));
+numericFields = setdiff(fieldnames(o),{'enabled','removeRedundantCapacity','verbose','innerSolver','referenceMode','throughputReferenceMode','blockwiseOriginalAccept','jointCandidateSearch'});
 for j = 1:numel(numericFields)
     v = o.(numericFields{j});
     assert(isnumeric(v) && isreal(v) && isscalar(v) && isfinite(v), ...
         ['方法参数须为有限实标量: ',numericFields{j}]);
 end
-flags = {'enabled','removeRedundantCapacity','verbose','blockwiseOriginalAccept'};
+flags = {'enabled','removeRedundantCapacity','verbose','blockwiseOriginalAccept','jointCandidateSearch'};
 for j = 1:numel(flags)
     v = o.(flags{j});
     assert(isscalar(v) && (islogical(v) || isnumeric(v)) && isfinite(v) && (v==0 || v==1));
@@ -56,10 +65,13 @@ for j = 1:numel(flags)
 end
 integers = [o.fairnessRounds,o.throughputRounds,o.refreshEvery,o.sbSteps, ...
     o.sbTrajectories,o.sbCheckpoint,o.polishMoves,o.randomInitialSchedules, ...
-    o.recoveryEvaluations,o.recoveryPasses,o.seed,o.localRestarts];
+    o.recoveryEvaluations,o.recoveryPasses,o.seed,o.localRestarts,o.sbPerturbedSeeds, ...
+    o.candidatePoolSize,o.jointStagnationRounds,o.jointPairsPerTrigger,o.jointMaxCombinations,o.originalSearchRounds];
 assert(all(isfinite(integers)) && all(integers>=0 & integers==fix(integers)));
 assert(o.sbSteps>=1 && o.sbTrajectories>=1 && o.sbCheckpoint>=1 && o.recoveryPasses>=1);
 assert(o.localRestarts>=1);
+assert(o.candidatePoolSize>=2 && o.jointStagnationRounds>=1 && o.jointPairsPerTrigger>=1 && ...
+    o.jointMaxCombinations>=1 && o.originalSearchRounds>=1);
 assert(o.seed<=2^32-1);
 positive = [o.maxSeconds,o.fairnessStep,o.throughputStep,o.sbTimeStep,o.sbCoupling];
 assert(all(isfinite(positive)) && all(positive>0));

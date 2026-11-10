@@ -1,4 +1,4 @@
-function model = run_leo_sinr(p)
+function model = run_leo_sinr(p,prepareProxy)
 %RUN_LEO_SINR 主入口：建模、代理；可选两阶段拉格朗日 SB 和原始问题穷举。
 % 接口标注：
 % 输入：p：可选完整参数；默认 32 波束、8 并发、50 ms 固定块。
@@ -6,6 +6,7 @@ function model = run_leo_sinr(p)
 % 保留原入口名称以兼容前一版，无附加 MATLAB 工具箱依赖。
 % 用法：model=run_leo_sinr(); 或修改 leo_default_parameters() 后传入。
 if nargin<1, p = leo_default_parameters(); end
+if nargin<2, prepareProxy=true; end
 modelTimer = tic;
 p = leo_validate_parameters(p);
 previousRng = rng;
@@ -32,6 +33,8 @@ model.exampleService = model.problem.evaluate(model.xExample);
 model.problem.stage2Example = model.problem.makeStage2(model.problem.precheck.witness);
 model.timings.physicalProblemSeconds = toc(modelTimer);
 proxyTimer = tic;
+model.surrogate=[]; model.exampleBounds=[];
+if prepareProxy
 if strcmp(p.surrogate.referenceMode,'current_schedule')
     model.surrogate = leo_build_service_surrogates(model.problem,'current_schedule',model.problem.precheck.witness);
 else
@@ -39,6 +42,9 @@ else
 end
 model.exampleBounds = leo_evaluate_service_bounds(model.problem,model.surrogate,model.xExample);
 model.timings.proxySeconds = toc(proxyTimer);
+else
+    model.timings.proxySeconds=0;
+end
 model.timings.totalBuildSeconds = toc(modelTimer);
 fprintf('K=%d, T=%d, M=%d, Na=%d, NB=%d, L=%d\n',p.system.K, ...
     p.time.nSlots,model.resources.nResources,p.array.nElements, ...
@@ -69,8 +75,12 @@ if leo_requires_full_qos(model.problem.data)
 else
     fprintf('Stage-2 template fairness floor from feasibility witness: %.6g (not optimized).\n',model.problem.stage2Example.s0);
 end
-fprintf('Tangent/chord built (%s); uniform proxy-optimum fairness-gap bound <= %.6g.\n', ...
-    model.surrogate.referenceMode,model.surrogate.error.optimalFairnessGapBound);
+if prepareProxy
+    fprintf('Tangent/chord built (%s); uniform proxy-optimum fairness-gap bound <= %.6g.\n', ...
+        model.surrogate.referenceMode,model.surrogate.error.optimalFairnessGapBound);
+else
+    fprintf('Quadratic proxy deferred: original-objective baselines receive no proxy.\n');
+end
 if p.method.enabled
     model.method = leo_solve_schedule(model.problem,model.surrogate,p.method,model.xExample);
 end

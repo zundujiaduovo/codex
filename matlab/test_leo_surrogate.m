@@ -143,12 +143,18 @@ failed=false;
 try,leo_evaluate_service_bounds(problem,proxy,.5*ones(4,2));catch,failed=true;end
 assert(failed);checks=checks+1;
 
-% 12. 真实 8 用户/3 块算例逐资源遍历全部 768 个组；加性覆盖所有完整日程。
+% 12. 真实8用户/3块逐资源遍历全部合法组；同波束用户不能同时选中。
 p=leo_default_parameters(); p.statistics.serviceModel = 'slot_union';p.system.K=8;p.time.nSlots=15;
 model=run_leo_sinr(p);
 report=leo_check_surrogate_groups(model.problem,model.surrogate);
-assert(report.allGroupsPassed && report.groupsChecked==768);
-assert(abs(report.coveredFullScheduleLog10-log10(16777216))<1e-12);
+expected=ones(1,model.resources.nResources);
+assert(p.system.K<=p.system.maxStreams); % 这里只需逐波束计数，无额外容量截断。
+for m=1:numel(expected)
+    beams=model.beams.index(model.beams.available(:,m),m);
+    for beam=unique(beams).', expected(m)=expected(m)*(1+sum(beams==beam)); end
+end
+assert(report.allGroupsPassed && report.groupsChecked==sum(expected));
+assert(abs(report.coveredFullScheduleLog10-sum(log10(expected)))<1e-12);
 checks=checks+1;
 fprintf('PASS: %d tangent/chord test groups.\n',checks);
 end

@@ -1,4 +1,5 @@
-% 直接打开本文件，点击 MATLAB 的“运行”（F5）即可得到完整方法对比图。
+% V9：默认8项、每方法120秒、上界独立600秒；自动保存并打开SB收敛图。
+clear functions
 comparisonRoot = fileparts(mfilename('fullpath'));
 addpath(fullfile(comparisonRoot,'matlab'),'-begin');
 rehash;

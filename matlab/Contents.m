@@ -1,4 +1,10 @@
 % LEO 固定块 QoS：建模、两阶段拉格朗日 SB、原始穷举与统一实验。
+% V9: 原目标候选池、两块协调、独立起点无二次Tabu；默认8项，预算120秒。
+%   leo_resource_candidate_archive    - 去重并保留代理质量及多样性候选。
+%   leo_accept_resource_candidates    - 原周期目标及完整QoS门槛下筛选候选。
+%   leo_joint_candidate_search        - 停滞后的两块候选组合共同验收。
+%   leo_export_search_audit           - 候选/模块来源与耗时审计。
+%   test_leo_v9                       - 候选筛选、联合补偿、无二次Tabu及消融。
 % 完整公式/输入输出/调用关系见 FUNCTION_GUIDE.md、PERIODIC_QOS.md 和 THEORETICAL_BOUND.md。
 %
 %   leo_theory_bound                   - 全 QoS 保证总服务的全域上界与可行下界。

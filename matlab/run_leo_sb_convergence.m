@@ -22,7 +22,8 @@ if isfield(source,'schemaVersion'), data=source; else, data=leo_collect_plot_dat
 specs=leo_build_sb_convergence_specs(data); files={};
 if ~exist(directory,'dir'), mkdir(directory); end
 methods=data.methods(ismember(data.methods,{'price_sb','price_sb_blockwise','price_sb_adaptive', ...
- 'price_sb_light','sb_zero','sb_minimax_fixed','sb_current_fixed','sb_reference_portfolio','original_tabu','price_local_adaptive'}));
+ 'price_sb_joint','price_sb_light','sb_zero','sb_minimax_fixed','sb_current_fixed','sb_reference_portfolio', ...
+ 'original_exchange','original_tabu','original_tabu_independent','price_local_blockwise','price_local_joint','price_local_adaptive'}));
 rows=data.progress;
 if ~isempty(rows), rows=rows(ismember({rows.method},methods) & [rows.seed]==data.representativeSeed); end
 leo_write_struct_csv(fullfile(directory,'sb_convergence_time.csv'),rows);

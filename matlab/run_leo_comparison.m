@@ -1,5 +1,5 @@
 function [report,fig] = run_leo_comparison(outputDirectory,overrides,render)
-%RUN_LEO_COMPARISON 同场景比较默认 14 项基础 MATLAB 方法/消融，输出完整图组。
+%RUN_LEO_COMPARISON 默认8项互补方法，原目标/上界差距曲线，完整 QoS 作为硬门槛。
 % 默认固定参考用户、71669974种子及最多8人；所有方法共享同一场景。
 if nargin<1, outputDirectory = fullfile('results','comparison'); end
 if nargin<2, overrides = struct(); end
@@ -8,11 +8,22 @@ if nargin<3, render = true; end
 if isempty(regexp(outputDirectory,'^([A-Za-z]:[\\/]|[\\/])','once'))
     outputDirectory = fullfile(pwd,outputDirectory);
 end
-theoryOptions = struct();
+theoryOptions = struct('maxSeconds',600,'maxNodes',1024,'maxIterations',500, ...
+    'maxSimplexPivots',30000,'relativeGap',1e-5);
 if isfield(overrides,'theoryOptions')
-    theoryOptions = overrides.theoryOptions;
+    supplied=overrides.theoryOptions; fields=fieldnames(supplied);
+    for k=1:numel(fields), theoryOptions.(fields{k})=supplied.(fields{k}); end
     overrides = rmfield(overrides,'theoryOptions');
 end
+detailedPlots=false; showConvergenceFigures=true;
+if isfield(overrides,'detailedPlots')
+    detailedPlots=overrides.detailedPlots; overrides=rmfield(overrides,'detailedPlots');
+end
+if isfield(overrides,'showConvergenceFigures')
+    showConvergenceFigures=overrides.showConvergenceFigures; overrides=rmfield(overrides,'showConvergenceFigures');
+end
+assert(isscalar(detailedPlots) && any(detailedPlots==[0,1]));
+assert(isscalar(showConvergenceFigures) && any(showConvergenceFigures==[0,1]));
 isolateRun = true;
 if isfield(overrides,'isolateRun')
     isolateRun = overrides.isolateRun;
@@ -66,6 +77,7 @@ if isfield(overrides,'qosTargetBits')
 end
 defaults = leo_benchmark_options(struct('seeds',runSeed));
 defaults.methods=defaults.methods(~ismember(defaults.methods,{'price_miqp','proxy_milp'}));
+defaults.diagnosticSurrogates=detailedPlots;
 names = fieldnames(overrides);
 for j = 1:numel(names), defaults.(names{j}) = overrides.(names{j}); end
 defaults.outputDirectory = outputDirectory;
@@ -74,6 +86,7 @@ validationSeed = mod(double(runSeed)+104729,2^32);
 fprintf('User layout: %s; base seed: %.0f; validation seed: %.0f\n',p.users.layout,runSeed,validationSeed);
 fprintf('Seed selection: %s; max concurrent users: %d.\n',seedSource,p.system.maxStreams);
 fprintf('Output directory: %s\n',outputDirectory);
+fprintf('Goal: maximize certified total service subject to every user meeting QoS. Capped fairness is a feasibility check.\n');
 runInfo = struct('runSeed',runSeed,'validationSeed',validationSeed,'userLayout',p.users.layout, ...
     'validationSamples',validationSamples,'seedSource',seedSource,'maxStreams',p.system.maxStreams);
 leo_write_struct_csv(fullfile(outputDirectory,'run_seed.csv'),runInfo);
@@ -119,6 +132,15 @@ catch err
     report.theory.pricingStatus = ['Full pricing failed; UB1 used: ',err.message];
 end
 leo_export_theory_bound(report,outputDirectory);
+for j=1:numel(report.records)
+    if report.theory.recordFeasible(j) && report.theory.upperBits>0
+        value=report.theory.recordServiceBits(j);
+        report.records(j).upperGapPercent=100*max(0,1-value/report.theory.upperBits);
+        if isfinite(report.theory.lowerBits) && report.theory.lowerBits>0
+            report.records(j).knownLowerGapPercent=100*max(0,1-value/report.theory.lowerBits);
+        end
+    end
+end
 fprintf('Full-QoS solutions found: %d/%d completed methods.\n',sum([report.records.fullQosFeasible]),sum(strcmp({report.records.status},'completed')));
 if isfinite(report.theory.lowerBits)
     fprintf('Theoretical upper bound: %.6f Mbit/period; best FULL-QOS feasible: %.6f Mbit/period.\n',report.theory.upperBits/1e6,report.theory.lowerBits/1e6);
@@ -135,9 +157,15 @@ end
 fprintf('Bound is for full-user QoS >= 100%% in the period certificate model; it may not be attainable.\n');
 leo_export_certificate_audit(report,outputDirectory);
 leo_export_benchmark(report,outputDirectory);
-if render, leo_plot_theory_bound(report,outputDirectory); end
-[fig,~] = leo_plot_method_comparison(report,outputDirectory,render);
+leo_export_search_audit(report,outputDirectory);
+fig=[];
 if render
+    try, leo_plot_theory_bound(report,outputDirectory);
+    catch err, warning('leo:plotUnavailable','Theory plot: %s',err.message); end
+end
+try, [fig,~] = leo_plot_method_comparison(report,outputDirectory,render);
+catch err, warning('leo:plotUnavailable','Method plot: %s',err.message); end
+if render && detailedPlots
     leo_plot_extra_metrics(report,outputDirectory);
     try
         run_leo_plot_results(report,outputDirectory,true);
@@ -147,12 +175,19 @@ if render
     end
 end
 try
-    run_leo_sb_convergence(fullfile(outputDirectory,'plot_data.mat'),fullfile(outputDirectory,'sb_convergence'),render);
+    [curveFiles,~]=run_leo_sb_convergence(fullfile(outputDirectory,'plot_data.mat'),fullfile(outputDirectory,'sb_convergence'),render);
+    if render && showConvergenceFigures
+        for k=1:numel(curveFiles)
+            [~,~,extension]=fileparts(curveFiles{k});
+            if strcmpi(extension,'.fig'), openfig(curveFiles{k},'new','visible'); end
+        end
+        drawnow;
+    end
 catch err
     warning('leo:sbConvergenceUnavailable','SB convergence export incomplete: %s',err.message);
 end
 fprintf('Comparison results: %s\n',outputDirectory);
-fprintf('Demand per user: %.3f Mbit (first user); fairness and full-QoS rate may saturate.\n', ...
+fprintf('Demand per user: %.3f Mbit (first user); rank full-QoS methods by certified service and upper-bound gap.\n', ...
     report.problemData.qosTargetBits(1)/1e6);
 end
 

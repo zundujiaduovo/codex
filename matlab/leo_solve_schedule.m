@@ -38,7 +38,11 @@ stage1 = leo_run_price_phase(problem,proxy,cache,'fairness',initial,options,fair
 % 周期模式 s0=0 时有符号代理可能更严格，仍保留原式可行日程验收。
 stage2Proxy = [];
 if (~strict || stage1.service.fairness==1) && ~leo_budget_expired(budget)
-    stage2Proxy = leo_build_service_surrogates(problem,'current_schedule',stage1.x);
+    if strcmp(options.throughputReferenceMode,'current_schedule')
+        stage2Proxy = leo_build_service_surrogates(problem,'current_schedule',stage1.x);
+    else
+        stage2Proxy = leo_build_service_surrogates(problem,options.throughputReferenceMode);
+    end
 end
 if strict && stage1.service.fairness<1
     stopped=budget; stopped.seconds=0;
@@ -66,6 +70,8 @@ result.elapsedSeconds = toc(budget.timer);
 result.optimal = false;             % 不用 SB 停滞/迭代次数冒充全局最优
 result.certificateScope = 'Fairness: original P_F. Throughput: original P_V at achieved fixed s0 only.';
 result.usesExhaustiveSolution = false;
+result.usesQuadraticProxy=true;
+result.usesProvidedSchedule=~isempty(initialSchedule);
 result.hardFeasible = true;         % 原始评价器已验证每个保存的二元日程
 if options.verbose
     fprintf('  Final: fairness=%.9g, throughput=%.6g Mbit, time=%.3f s.\n', ...

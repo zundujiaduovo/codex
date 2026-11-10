@@ -1,4 +1,4 @@
-function proxy = leo_build_service_surrogates(problem,mode,x0)
+function proxy = leo_build_service_surrogates(problem,mode,x0,previous)
 %LEO_BUILD_SERVICE_SURROGATES 第 7.1-7.5 节：切线下界、弦线上界、二次系数和误差。
 % 接口标注：
 % 输入：problem：原问题；mode：minimax/zero/current_schedule；x0：仅相切模式需要。
@@ -8,8 +8,15 @@ if nargin<2, mode = 'minimax'; end
 if nargin<3, x0 = []; end
 assert(any(strcmp(mode,{'minimax','zero','current_schedule'})));
 data = problem.data; K = data.shape(1); T = numel(data.slotToResource);
+reuse=nargin>=4 && ~isempty(previous);
+if reuse
+    assert(isfield(previous,'problemDataSnapshot') && isequaln(previous.problemDataSnapshot,data), ...
+        '代理静态缓存只能用于完全相同的模型。');
+    proxy=previous;
+end
 proxy.referenceMode = mode;
 proxy.referenceSchedule = x0;
+if ~reuse
 proxy.limits = leo_interference_limits(data);
 proxy.minimaxReferenceW = zeros(K,T);
 proxy.chord.alphaBps = zeros(K,T);
@@ -26,6 +33,7 @@ for t = 1:T
         proxy.rateError.upperMaxBps(i,t) = chord.maxGapBps;
         proxy.rateError.curvatureGapBoundBps(i,t) = chord.curvatureGapBoundBps;
     end
+end
 end
 proxy.referenceW = proxy.minimaxReferenceW;
 if strcmp(mode,'current_schedule')
@@ -54,7 +62,7 @@ gapEnd = atEnd-proxy.tangent.alphaBps+proxy.tangent.omegaBpsPerW.*proxy.limits.m
 proxy.rateError.lowerMaxBps = max(0,max(gapZero,gapEnd));
 proxy.rateError.lowerMaxBps(~proxy.limits.eventMask) = 0;
 proxy.lower = leo_assemble_quadratic_service(data,proxy.tangent.alphaBps,proxy.tangent.omegaBpsPerW);
-proxy.upper = leo_assemble_quadratic_service(data,proxy.chord.alphaBps,proxy.chord.omegaBpsPerW);
+if ~reuse, proxy.upper = leo_assemble_quadratic_service(data,proxy.chord.alphaBps,proxy.chord.omegaBpsPerW); end
 [scale,~] = leo_service_adjustment(data);
 proxy.error.lowerResourceBits = zeros(data.shape);
 proxy.error.upperResourceBits = zeros(data.shape);
@@ -69,6 +77,7 @@ proxy.error.lowerUserBits = sum(proxy.error.lowerResourceBits,2);
 proxy.error.upperUserBits = sum(proxy.error.upperResourceBits,2);
 proxy.error.optimalFairnessGapBound = min(1,max(proxy.error.lowerUserBits./data.qosTargetBits));
 proxy.scope = 'Service bounds only on feasible binary schedules; E3 fairness gap is for baseline O2 optima.';
+proxy.problemDataSnapshot=data;
 proxy.referenceTouchMaxAbsBits = NaN;
 if strcmp(mode,'current_schedule')
     original = problem.evaluate(x0);

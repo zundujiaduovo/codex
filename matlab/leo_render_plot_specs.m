@@ -6,24 +6,28 @@ if ~exist(directory,'dir'), mkdir(directory); end
 files = {};
 for j = 1:numel(specs)
     spec = specs(j);
-    fig = figure('Visible','off','Color','w','Position',[30,30,640*spec.cols,390*spec.rows+80]);
+    fig = figure('Visible','off','Color','w','Position',[30,30,650*spec.cols,420*spec.rows+80]);
     cleanup = onCleanup(@() close(fig));
     for k = 1:numel(spec.panels)
         ax = subplot(spec.rows,spec.cols,k,'Parent',fig);
+        position=get(ax,'Position'); position(4)=position(4)*.9; set(ax,'Position',position);
         draw_panel(ax,spec.panels(k));
     end
     annotation(fig,'textbox',[0,.96,1,.035],'String',spec.title,'EdgeColor','none', ...
         'HorizontalAlignment','center','FontWeight','bold','Interpreter','none');
     set(fig,'PaperPositionMode','auto');
     path = fullfile(directory,spec.name);
-    print(fig,[path,'.png'],'-dpng','-r160'); files{end+1} = [path,'.png']; %#ok<AGROW>
     set(fig,'PaperUnits','inches'); sizeInches = get(fig,'Position');
     sizeInches = sizeInches(3:4)/get(0,'ScreenPixelsPerInch');
     set(fig,'PaperSize',sizeInches,'PaperPosition',[0,0,sizeInches]);
-    print(fig,[path,'.pdf'],'-dpdf'); files{end+1} = [path,'.pdf']; %#ok<AGROW>
     if exist('savefig','file')~=0
-        savefig(fig,[path,'.fig']); files{end+1} = [path,'.fig']; %#ok<AGROW>
+        try, savefig(fig,[path,'.fig']); files{end+1} = [path,'.fig']; %#ok<AGROW>
+        catch err, warning('leo:figureSave','%s FIG: %s',spec.name,err.message); end
     end
+    try, print(fig,[path,'.png'],'-dpng','-r160'); files{end+1} = [path,'.png']; %#ok<AGROW>
+    catch err, warning('leo:figureSave','%s PNG: %s',spec.name,err.message); end
+    try, print(fig,[path,'.pdf'],'-dpdf'); files{end+1} = [path,'.pdf']; %#ok<AGROW>
+    catch err, warning('leo:figureSave','%s PDF: %s',spec.name,err.message); end
     clear cleanup;
 end
 end
@@ -57,13 +61,13 @@ elseif any(strcmp(p.kind,{'bar','categorical_line'}))
     if numel(p.labels)>1, xlim(ax,[.4,numel(p.labels)+.6]); end
 else
     for j = 1:numel(p.series)
-        s = p.series(j); color = line_color(s.name,colors(j,:));
+        s = p.series(j); [color,style]=leo_plot_style(s.name,j);
         if strcmp(p.kind,'scatter')
             h = scatter(ax,s.x,s.y,30,color,'filled');
         elseif strcmp(p.kind,'step')
-            h = stairs(ax,s.x,s.y,'Color',color,'LineWidth',1.4);
+            h = stairs(ax,s.x,s.y,'Color',color,'LineStyle',style,'LineWidth',1.4);
         else
-            h = plot(ax,s.x,s.y,'Color',color,'LineWidth',1.4);
+            h = plot(ax,s.x,s.y,'Color',color,'LineStyle',style,'LineWidth',1.4);
             if numel(s.x)<3, set(h,'Marker','o'); end
         end
         handles{end+1} = h; names{end+1} = s.name; %#ok<AGROW>
@@ -92,9 +96,9 @@ if ~isempty(p.reference)
     end
 end
 if ~isempty(p.ylim), ylim(ax,p.ylim); end
-heading = {p.title};
-if ~isempty(p.note), heading = [heading,wrap_note(p.note,72)]; end
-title(ax,heading,'Interpreter','none','FontSize',10);
+if isfield(p,'xlim') && ~isempty(p.xlim), xlim(ax,p.xlim); end
+title(ax,wrap_note(p.title,85),'Interpreter','none','FontSize',10);
+set(ax,'UserData',p.note); % 长说明留在 FIG 属性及 JSON，避免遮挡图题/数据。
 xlabel(ax,p.xlabel,'Interpreter','none'); ylabel(ax,p.ylabel,'Interpreter','none');
 set(ax,'FontSize',9,'TickLabelInterpreter','none'); box(ax,'off');
 if ~strcmp(p.kind,'heatmap'), grid(ax,'on'); end

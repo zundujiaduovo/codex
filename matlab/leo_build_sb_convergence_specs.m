@@ -1,6 +1,6 @@
 function specs = leo_build_sb_convergence_specs(data)
 %LEO_BUILD_SB_CONVERGENCE_SPECS 每种SB的真实日志曲线；不优化、不补造未记录轨迹。
-known={'price_sb','price_sb_blockwise','price_sb_adaptive','price_sb_light', ...
+known={'price_sb','price_sb_blockwise','price_sb_joint','price_sb_adaptive','price_sb_light', ...
  'sb_zero','sb_minimax_fixed','sb_current_fixed','sb_reference_portfolio'};
 allMethods=data.methods(:).';
 methods=allMethods(ismember(allMethods,known)); seed=data.representativeSeed;
@@ -9,28 +9,30 @@ strict=isfield(data,'requireFullQos') && data.requireFullQos;
 stamp=sprintf('Recorded search checkpoints | seed %.0f | K=%d, M=%d, L=%d', ...
  seed,data.shape(1),data.shape(2),data.maxStreams);
 % 按时间比较各SB，并保留同场景禁忌/局部搜索参照；不跨算法比较原生迭代号。
-overlay=[methods,allMethods(ismember(allMethods,{'original_tabu','price_local_adaptive'}))];
+overlay=[methods,allMethods(ismember(allMethods,{'original_exchange','original_tabu', ...
+ 'original_tabu_independent','price_local_blockwise','price_local_joint','price_local_adaptive'}))];
 p=panel('step','Full-QoS certified service versus time','Accounted elapsed time (s)','Mbit/period');
-q=panel('step','Saved minimum certified QoS ratio versus time','Accounted elapsed time (s)','Capped minimum ratio');
+q=panel('step','Gap to common upper bound versus time','Accounted elapsed time (s)','100 (U - V) / U (%)');
 for j=1:numel(overlay)
  rows=select(data.progress,overlay{j},seed);
  rows=time_order(rows);
  if isempty(rows), continue; end
  y=[rows.totalBits]/1e6; if strict, y([rows.fairness]<1)=NaN; end
  p=series(p,overlay{j},[rows.seconds],y);
- q=series(q,overlay{j},[rows.seconds],[rows.fairness]);
+ q=add_gap(q,overlay{j},[rows.seconds],y*1e6,data);
 end
 p=add_bounds(p,data,strict); p.note='Only logged checkpoints; curves end when that method stops. Missing full-QoS values stay missing.';
-q.ylim=[0,1.05];
-specs=figure_spec(specs,'sb_convergence_comparison',stamp,2,1,[p,q]);
+earlyP=p; earlyQ=q; earlyP.title='Early search: certified service'; earlyQ.title='Early search: upper-bound gap';
+earlyP.xlim=[0,15]; earlyQ.xlim=[0,15];
+specs=figure_spec(specs,'sb_convergence_comparison',stamp,2,2,[p,q,earlyP,earlyQ]);
 for j=1:numel(methods)
  method=methods{j}; rows=time_order(select(data.progress,method,seed));
  p=panel('step','Saved certified service versus time','Accounted elapsed time (s)','Mbit/period');
- p(2)=panel('step','Saved minimum certified QoS ratio','Accounted elapsed time (s)','Capped minimum ratio');
+ p(2)=panel('step','Gap to common upper bound','Accounted elapsed time (s)','100 (U - V) / U (%)');
  if ~isempty(rows)
   y=[rows.totalBits]/1e6; if strict, y([rows.fairness]<1)=NaN; end
   p(1)=series(p(1),method,[rows.seconds],y);
-  p(2)=series(p(2),method,[rows.seconds],[rows.fairness]);
+  p(2)=add_gap(p(2),method,[rows.seconds],y*1e6,data);
  end
  p(1)=add_bounds(p(1),data,strict);
  p(1).note='True logged incumbent values; no cumulative-max correction and no extension after stopping.';
@@ -38,7 +40,6 @@ for j=1:numel(methods)
  if strcmp(method,'sb_reference_portfolio')
   p(1).note=[p(1).note,' Portfolio outer checkpoints record completed members, not hidden intermediate results.'];
  end
- p(2).ylim=[0,1.05];
  p(3)=panel('step','Saved service by phase-local price round','Price round (restarts by phase/member)','Mbit/period');
  events=select(data.events,method,seed);
  if ~isempty(events)
@@ -58,7 +59,7 @@ for j=1:numel(methods)
  end
  if numel(p(3).series)==1, p(3).title=[p(3).title,' | ',p(3).series(1).name]; end
  p(3).note='Different members/phases have separate counters. Phase-1 service can decrease as fairness improves. No curve means no logged search in that phase.';
- p(4)=panel('line','One fixed Ising subproblem: best-so-far energy','SB integration step','Discrete Ising energy before repair');
+ p(4)=panel('line','One fixed Ising call: best-so-far energy','SB integration step','Discrete Ising energy before repair');
  energy=select(data.energy,method,seed);
  if ~isempty(energy)
   preferred=energy([energy.phase]==2); if isempty(preferred), preferred=energy; end
@@ -100,10 +101,19 @@ if isfinite(b.lowerBits) && ~isempty(p.series)
  end
 end
 end
+function p=add_gap(p,name,x,value,data)
+if isfield(data,'theoryBounds') && ~isempty(data.theoryBounds) && isfinite(data.theoryBounds.upperBits) && data.theoryBounds.upperBits>0
+ gap=100*(1-value/data.theoryBounds.upperBits); finite=isfinite(gap);
+ gap(finite)=max(0,gap(finite)); % max(0,NaN) 在部分运行时会吞掉缺失值。
+ p=series(p,name,x,gap);
+else
+ p.note='No common theoretical upper bound is present in the saved data; no gap is invented.';
+end
+end
 function p=panel(kind,titleText,xlabelText,ylabelText)
 p=struct('kind',kind,'title',titleText,'xlabel',xlabelText,'ylabel',ylabelText, ...
  'labels',{{}},'series',struct([]),'z',[],'zShape',[0,0],'clim',[], ...
- 'xlabels',{{}},'ylabels',{{}},'ylim',[],'reference',[],'referenceLabel','','note','');
+ 'xlabels',{{}},'ylabels',{{}},'ylim',[],'xlim',[],'reference',[],'referenceLabel','','note','');
 end
 function p=series(p,name,x,y)
 s=struct('name',name,'x',x(:).','y',y(:).','low',[],'high',[]);

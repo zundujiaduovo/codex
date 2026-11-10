@@ -18,6 +18,9 @@ if isfield(data,'serviceModel') && any(strcmp(data.serviceModel,{'periodic_chern
 end
 
 p = metric(records,good,'fairness',1,'Capped minimum QoS ratio','Fairness');
+if isfield(data,'requireFullQos') && data.requireFullQos && isfield(records,'upperGapPercent')
+    p=metric(records,good,'upperGapPercent',1,'Gap to common upper bound','Percent');
+end
 p(2) = metric(records,good,'totalBits',1e-6,'Diagnostic certified service (all returned schedules)','Mbit');
 if isfield(data,'requireFullQos') && data.requireFullQos
     p(2)=metric(records,good,'feasibleTotalBits',1e-6,'Certified service ONLY for full-QoS schedules','Mbit');
@@ -354,9 +357,11 @@ labels = arrayfun(@num2str,1:n,'UniformOutput',false);
 end
 
 function name = short_name(name)
-names = {'initial','original_greedy','original_exchange','original_tabu','price_sb','price_sb_blockwise','price_sb_adaptive','price_sb_light','price_local','price_local_adaptive', ...
+names = {'original_tabu_independent','price_local_blockwise','price_sb_joint','price_local_joint', ...
+    'initial','original_greedy','original_exchange','original_tabu','price_sb','price_sb_blockwise','price_sb_adaptive','price_sb_light','price_local','price_local_adaptive', ...
     'price_miqp','proxy_milp','sb_zero','sb_minimax_fixed','sb_current_fixed','sb_reference_portfolio'};
-labels = {'Initial','Greedy','Exchange','Tabu','Price+SB','SB: block','SB: adapt','SB: light','Price+Local','Local: adapt','Price+MIQP','Proxy MILP', ...
+labels = {'Tabu own start','Local pool','SB pool+pair','Local pool+pair', ...
+    'Initial','Greedy','Exchange','Tabu common start','Price+SB','SB: pool','SB: adapt','SB: light','Price+Local','Local: adapt','Price+MIQP','Proxy MILP', ...
     'SB: zero','SB: minimax','SB: current','SB: portfolio'};
 index = find(strcmp(names,name),1); if ~isempty(index), name = labels{index}; end
 end
