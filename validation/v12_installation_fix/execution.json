@@ -1,0 +1,18 @@
+{
+  "date": "2026-11-11",
+  "sourceParentCommit": "d03315cdb7f0c8dd3b8f3da6f7938b2fce9ae90a",
+  "archive": "V12_complete_source_update.zip",
+  "archiveSha256": "0c24f16aeee8c639ba82023140d6cb407e60228f8dac2d015efd219a9443d78e",
+  "sourceManifestSha256": "d6e6883bc1b19f75433292eea48f7a0da23b4f6228d6fe8032003fd08ac9c5dc",
+  "tests": [
+    "Complete install dependency and path checks",
+    "Missing diagnostics file",
+    "Current-folder function shadow",
+    "Flat update extraction with pre-existing results sentinel",
+    "All manifest hashes",
+    "Extracted install and visible figure opening mocks",
+    "Existing V12 validation regression"
+  ],
+  "runtime": "GNU Octave 9.4.0; Python ZIP/hash checks",
+  "scope": "Installation and entry points only; saved method results reused; Windows MATLAB desktop not executed"
+}

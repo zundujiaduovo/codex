@@ -16,3 +16,5 @@ SB/Local 使用 V10/V8 外层的 V12 适配版本；9 个历史 V8 冻结文件�
 定义见 [V12_LEXICOGRAPHIC.md](V12_LEXICOGRAPHIC.md)，验证见 [V12_VALIDATION.md](V12_VALIDATION.md)。
 
 V12 验证扩展：新增原生迭代/记录工作量与共同公平达标时间、只增补原式贪婪、固定代理下原式/代理精确块对照、K/M 经验规模实验；原优化目标和原三方法成绩保留。见 V12_PERFORMANCE_VALIDATION.md。
+
+安装修复：新增计算前依赖/路径检查及完整平铺源码更新包，避免只覆盖入口或多解压一层导致诊断函数缺失；`RUN_V12_ALL_FIGURES` 统一运行全部图。更新包不含 results，已有配对结果继续复用。见 INSTALL_V12_UPDATE.md。

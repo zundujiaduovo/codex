@@ -1,0 +1,3 @@
+PASS: all 248 complete source/document files extract directly into the project root; no nested outer folder.
+PASS: diagnostics and all dependencies present, all source manifest hashes match.
+PASS: update ZIP has no results/ or validation/ entries; pre-existing results remain byte-identical.

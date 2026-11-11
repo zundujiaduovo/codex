@@ -2,6 +2,8 @@
 
 [下载 V12 纯源码包](LEO_QoS_Comparison_v12_uncapped_lexicographic.zip)。分支 `leo-qos-v12-uncapped-lexicographic-fairness`，从 V11 提交 `37bbe3d72cbb13b26fa1e6a5384391afddd64020` 继续开发。
 
+已有项目需要更新时，使用 [V12 完整平铺更新包](V12_complete_source_update.zip)，直接解压到项目根目录，保留 `results/`。遇到新函数缺失或路径混用，按 [安装修复说明](INSTALL_V12_UPDATE.md) 操作；`CHECK_V12_INSTALLATION` 会在计算前核对依赖和实际加载路径。
+
 **V12 改变了优化目标。** 先最大化跨全部时隙累计后的最差用户需求满足比例 `s=min_i G_i(x)/q_i`，允许 `s>1`；随后在每个用户的比例都不低于第一阶段所得 `s0` 的条件下，提高总保证服务 `sum_i G_i(x)`。
 `s=1` 仅表示全员 QoS 达标，不再结束公平阶段。数学定义、代码变化和证书范围见 [V12_LEXICOGRAPHIC.md](V12_LEXICOGRAPHIC.md)，执行证据见 [V12_VALIDATION.md](V12_VALIDATION.md)。
 
@@ -12,6 +14,8 @@
 ```matlab
 RUN_V12_LEXICOGRAPHIC
 ```
+
+全部图可执行 `RUN_V12_ALL_FIGURES`，依次复用原三方法结果、补贪婪、运行代理诊断和规模实验。规模实验的默认预算见下文验证说明。
 
 `RUN_COMPARISON` 也运行 V12。默认同一个物理场景、一个搜索种子，比较原目标 Tabu、SB 和配对 Local；每方法 120 秒，另给公平上界 180 秒及各公平门槛的条件吞吐上界各 30 秒。搜索预算合计约 6 分钟，证书和独立衰落验证另计。
 
