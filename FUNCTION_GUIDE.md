@@ -1421,5 +1421,6 @@ V5各求解器的阶段2只有在全员G>=q后运行，门槛固定为1；未达
 `run_leo_v11_pair` 保存一个种子的三方法原始配对；`run_leo_v11_summary` 复核、计算共同界并统计；
 `run_leo_v11_inner_control` 固定二次代理、权重和旧组比较 SB／Local 内层。
 `run_leo_v11_verify_exports` 从CSV还原二元日程，按原模型重新计算服务和QoS；不运行搜索或二次代理。
+`SHOW_V11_RESULTS.m` / `run_leo_v11_show_results` 可见打开已有结果图，必要时只按JSON重画，不重新运行实验。
 `leo_v11_paired_options`、`leo_v11_paired_statistics`、`leo_v11_trace_data` 和 `leo_build_v11_paired_specs`
 分别提供协议校验、配对统计、V10 日志兼容提取和绘图规格。详情见 V11_FROM_V10.md。

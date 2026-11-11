@@ -95,6 +95,9 @@ SB 调用二次代理求候选，再以 `problem.evaluate` 的原服务验收。
 ## 运行、恢复和版本命名
 
 `RUN_V11_PAIRED.m` 串行执行完整配对、统计和内层对照。
+完成后打开结果文件夹并以可见窗口打开两张汇总图。
+`SHOW_V11_RESULTS.m` / `run_leo_v11_show_results(out)` 只打开已有FIG/PNG，缺图时读取已有JSON重画，
+不重跑任何搜索或内层对照。底层批量导图函数仍在后台保存并关闭图窗，由交互入口负责显示。
 `run_leo_v11_paired(out,struct('prepareOnly',true),false)` 只创建模型和不可混用的协议。
 可对不同种子分别调用 `run_leo_v11_pair(out,seed)`，最后 `run_leo_v11_summary(out,false)`。
 并行时每个种子只分配给一个进程，避免重叠写入；控制 BLAS 线程和 CPU 配额。

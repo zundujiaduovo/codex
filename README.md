@@ -20,11 +20,14 @@ out=fullfile(comparisonRoot,'results','v11_based_on_v10_paired');
 experiment=run_leo_v11_paired(out,struct(),true);
 innerAudit=run_leo_v11_inner_control(out,struct(),true);
 winopen(out);
+pairedFigures=run_leo_v11_show_results(out);
 ```
 
 默认在同一 V10 模型上比较 20 个搜索种子，每种子运行 Tabu、SB、配对 Local，各给 120 秒；
 串行搜索预算约 2 小时，另有一次最多 600 秒的共同上界、独立衰落验证和内层对照。
 已保存的完整配对可恢复，协议不同使用新目录。原 `RUN_COMPARISON.m` 仍运行 V10 的单次比较。
+`RUN_V11_PAIRED.m` 结束后自动打开两张结果图。已有数据只想查看图时执行 `SHOW_V11_RESULTS`，
+或 `run_leo_v11_show_results(out)`；图缺失时从已保存JSON重画，不重新运行配对实验或内层对照。
 
 `paired_statistics.csv` 给出配对差值、置信区间、胜／平／负和检验；
 `target_success_summary.csv` 给出达到共同质量门槛的次数；
