@@ -42,6 +42,9 @@ o.blockwiseOriginalAccept = false;  % 按原周期目标逐块验收，阶段 2 
 o.verbose = true;
 if nargin>0
     assert(isstruct(overrides) && isscalar(overrides));
+    if isfield(overrides,'stopping')
+        stopping=leo_stopping_options(overrides.stopping); overrides=rmfield(overrides,'stopping');
+    end
     names = fieldnames(overrides);
     for j = 1:numel(names)
         assert(isfield(o,names{j}),['未知方法参数: ',names{j}]);
@@ -80,4 +83,5 @@ assert(isfinite(o.fairnessBudgetFraction) && o.fairnessBudgetFraction>0 && o.fai
 assert(isfinite(o.stepExponent) && o.stepExponent>0.5 && o.stepExponent<=1);
 assert(isfinite(o.gapTolerance) && o.gapTolerance>=0);
 assert(isfinite(o.crossResourceFraction) && o.crossResourceFraction>=0 && o.crossResourceFraction<=1);
+if exist('stopping','var'), o.stopping=stopping; end
 end

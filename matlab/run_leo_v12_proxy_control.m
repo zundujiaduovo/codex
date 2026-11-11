@@ -18,7 +18,8 @@ assert(isscalar(o.callBudgetSeconds) && isfinite(o.callBudgetSeconds) && o.callB
 assert(isnumeric(o.seeds) && isvector(o.seeds) && ~isempty(o.seeds) && all(isfinite(o.seeds) & o.seeds>=0 & o.seeds<=2^32-1 & o.seeds==fix(o.seeds)) && numel(unique(o.seeds))==numel(o.seeds));
 directory=o.outputDirectory; if ~exist(directory,'dir'), mkdir(directory); end
 before=rng; cleanup=onCleanup(@() rng(before)); %#ok<NASGU>
-at=find(strcmp({report.records.method},'sb_v12_lexicographic') & [report.records.seed]==report.options.seeds(1) & strcmp({report.records.status},'completed'),1);
+ids=cellfun(@leo_method_id,{report.records.method},'UniformOutput',false);
+at=find(strcmp(ids,'sb_v12_lexicographic') & [report.records.seed]==report.options.seeds(1) & strcmp({report.records.status},'completed'),1);
 assert(~isempty(at),'A completed SB V12 run for the first requested seed is required.');
 refs={report.solutions{at}.initial.x,report.solutions{at}.stage1.x}; refNames={'common_initial','sb_stage1'};
 problem=struct('data',data,'evaluate',@(x) leo_evaluate_service(data,x));

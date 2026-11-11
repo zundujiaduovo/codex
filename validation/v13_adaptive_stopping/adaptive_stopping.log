@@ -1,0 +1,2 @@
+PASS: adaptive original-bound near-optimal stopping, cumulative plateau clock, phase-specific objective, disabled compatibility, four plain method aliases, independent integer oracle and heuristic stagnation without false certification.
+error: ignoring const execution_exception& while preparing to exit

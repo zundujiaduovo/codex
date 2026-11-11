@@ -20,6 +20,7 @@ if isFairness && problem.precheck.forcedZeroFairness
 end
 bestUpper = upper;
 initialSeconds = toc(budget.timer); initialUpper = upper.value; firstSbTrace = [];
+[stopping,~]=leo_search_stopping(options,phase,bestService,bestUpper.value,initialSeconds,0);
 checkpoints=record_checkpoint([],bestService,0,initialSeconds,0,'initial');
 history.lambda = zeros(K,rounds); history.lambdaNext = zeros(K,rounds);
 history.lowerUserBits = zeros(K,rounds);
@@ -40,6 +41,8 @@ for k = 1:rounds
     if certified_gap(bestUpper.value,bestService,isFairness)<=options.gapTolerance
         status = 'bound_gap'; break;
     end
+    [stopping,stopStatus]=leo_search_stopping(options,phase,bestService,bestUpper.value,toc(budget.timer),completed,stopping);
+    if ~isempty(stopStatus), status=stopStatus; break; end
     if leo_budget_expired(budget), status = 'time_limit'; break; end
     [weights,sAux] = leo_price_weights(data,lambda,phase,s0);
     history.lambda(:,k) = lambda;
@@ -136,6 +139,8 @@ for k = 1:rounds
             phase,k,bestService.fairness,bestService.totalBits/1e6, ...
             certified_gap(bestUpper.value,bestService,isFairness));
     end
+    [stopping,stopStatus]=leo_search_stopping(options,phase,bestService,bestUpper.value,toc(budget.timer),completed,stopping);
+    if ~isempty(stopStatus), status=stopStatus; break; end
     if options.refreshEvery>0 && mod(k,options.refreshEvery)==0 && k<rounds && ...
             ~leo_budget_expired(budget) && certified_gap(bestUpper.value,bestService,isFairness)>options.gapTolerance
         proxyTimer=tic;
@@ -148,7 +153,7 @@ for k = 1:rounds
 end
 if certified_gap(bestUpper.value,bestService,isFairness)<=options.gapTolerance
     status = 'bound_gap';
-elseif leo_budget_expired(budget)
+elseif leo_budget_expired(budget) && ~strcmp(status,'target_gap')
     status = 'time_limit';
 end
 names = fieldnames(history);
@@ -164,6 +169,8 @@ result.rounds = completed; result.status = status; result.history = history;
 result.upperBound = bestUpper;
 result.absoluteGap = certified_gap(bestUpper.value,bestService,isFairness);
 result.certifiedWithinTolerance = result.absoluteGap<=options.gapTolerance;
+[stopping,~]=leo_search_stopping(options,phase,bestService,bestUpper.value,toc(budget.timer),completed,stopping);
+stopping.reason=status; result.stopping=stopping;
 result.lambda = lambda; result.proxy = proxy;
 result.proxyEpochFairnessErrorBounds = errors;
 result.proxyEpochTouchErrorsBits = touchErrors;

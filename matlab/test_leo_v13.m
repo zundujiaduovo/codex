@@ -1,4 +1,4 @@
-function test_leo_v13()
+function report = test_leo_v13()
 %TEST_LEO_V13 实际64用户模型：1/4准入、16流可行、17流拒绝、版本隔离和导出。
 root=fileparts(fileparts(mfilename('fullpath'))); CHECK_V13_INSTALLATION(root);
 p=leo_validate_parameters(leo_v13_parameters());
@@ -23,7 +23,7 @@ options=struct('prepareOnly',true,'validationSamples',0,'budgetSeconds',20, ...
     'throughputCertificateOptions',struct('maxSeconds',0,'maxNodes',1,'verbose',false));
 [experiment,~]=run_leo_v13_comparison(directory,options,false);
 assert(strcmp(experiment.version,'V13 based on V12: 64 users, 64 beams, 16 streams'));
-assert(numel(experiment.methods)==4 && any(strcmp(experiment.methods,'original_greedy')));
+assert(isequal(experiment.methods,{'Tabu','SB','Local','Greedy'}));
 data=experiment.problemData; assert(isequal(data.shape,[64,20]) && data.maxStreams==16);
 assert(all(any(data.available,2)),'The fixed V13 layout must offer every user a resource.');
 % 用实际波束冲突约束选17个不同波束的可用用户，分别验证16和17并发。
@@ -56,6 +56,25 @@ spec=jsondecode(fileread(fullfile(directory,'v13_specs.json')));
 assert(strcmp(spec.name,'v13_uncapped_lexicographic') && ~isempty(strfind(spec.title,'K=64, NB=64, L=16')));
 spec=jsondecode(fileread(fullfile(directory,'v13_diagnostic_specs.json')));
 assert(numel(spec)==2 && strcmp(spec(1).name,'v13_iteration_convergence'));
+assert(isequal({report.records.method},{'Tabu','SB','Local','Greedy'}));
+assert(exist(fullfile(directory,'stopping_summary.csv'),'file')==2);
+% 旧方法ID和未记录停止信息的已有成绩可只重画；原始benchmark字节不变。
+legacy=report; legacy.options.methods=cellfun(@leo_method_id,legacy.options.methods,'UniformOutput',false);
+for j=1:numel(legacy.records)
+    legacy.records(j).method=leo_method_id(legacy.records(j).method);
+    for phase=1:2
+        field=sprintf('stage%d',phase); legacy.solutions{j}.(field)=rmfield(legacy.solutions{j}.(field),'stopping');
+    end
+end
+oldDirectory=fullfile(directory,'legacy_names'); mkdir(oldDirectory);
+original=report; report=legacy; save(fullfile(oldDirectory,'benchmark.mat'),'report','-v7'); report=original;
+oldBytes=fileread_bytes(fullfile(oldDirectory,'benchmark.mat'));
+run_leo_v13_replot(oldDirectory,false);
+assert(isequal(oldBytes,fileread_bytes(fullfile(oldDirectory,'benchmark.mat'))));
+oldSpec=jsondecode(fileread(fullfile(oldDirectory,'v13_specs.json')));
+assert(isequal(oldSpec.panels(1).labels(:).',{'Tabu','SB','Local','Greedy'}));
+assert(isequal({oldSpec.panels(3).series.name},{'Tabu','SB','Local','Greedy'}));
+stops=leo_stopping_rows(legacy); assert(all(isnan([stops.validRelativeGap])));
 path=fullfile(directory,'pairs','seed_71669974.mat'); marker=fileread_bytes(path);
 [again,~]=run_leo_v13_comparison(directory,options,false);
 assert(isequaln(again.records,report.records) && isequal(marker,fileread_bytes(path)));

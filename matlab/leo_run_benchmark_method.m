@@ -1,12 +1,14 @@
 function result = leo_run_benchmark_method(problem,proxy,provided,name,options)
 %LEO_RUN_BENCHMARK_METHOD 第 13.3 节实验分派；所有求解均只收到同一模型/初始化。
 % 输入：原问题、minimax 代理、提供日程、方法名、方法预算；输出方法的原始可行结果。
+name=leo_method_id(name);
 switch name
     case {'sb_v12_lexicographic','local_v12_lexicographic'}
-        legacy=leo_v8_method_options(); fields=fieldnames(legacy);
+        legacy=leo_v12_method_options(); fields=fieldnames(legacy);
         for j=1:numel(fields)
             if isfield(options,fields{j}), legacy.(fields{j})=options.(fields{j}); end
         end
+        if isfield(options,'stopping'), legacy.stopping=options.stopping; end
         legacy.blockwiseOriginalAccept=true;
         if strcmp(name,'sb_v12_lexicographic'), legacy.innerSolver='sb'; else, legacy.innerSolver='local'; end
         result=leo_v12_solve_schedule(problem,[],legacy,provided);

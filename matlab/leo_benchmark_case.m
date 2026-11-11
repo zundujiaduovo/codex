@@ -27,10 +27,13 @@ template.objectiveMode='full_qos_sum';
 if leo_is_lexicographic(problem.data), template.objectiveMode='lexicographic_max_min'; end
 template.stage1Fairness=NaN; template.stage2Fairness=NaN; template.stage1FairnessGap=NaN;
 template.stage1Certified=false; template.fairnessPreserved=false;
+template.stage1StopReason=''; template.stage2StopReason='';
+template.stage1StopRelativeGap=NaN; template.stage2StopRelativeGap=NaN;
+template.stage1NearOptimal=false; template.stage2NearOptimal=false;
 records = repmat(template,0,1); solutions = {};
 for seed = options.seeds(:).'
     for j = 1:numel(options.methods)
-        name = options.methods{j}; row = template; row.method = name; row.seed = seed;
+        row = template; row.method=options.methods{j}; row.seed = seed; name=leo_method_id(row.method);
         prebuiltProxy = any(strcmp(name,{'price_sb','price_sb_blockwise','price_sb_adaptive','price_sb_light', ...
             'price_local','price_local_adaptive','price_local_blockwise','price_sb_joint','price_local_joint', ...
             'price_miqp','proxy_milp','sb_minimax_fixed'}));
@@ -66,6 +69,14 @@ for seed = options.seeds(:).'
                 row.stage1FairnessGap=max(0,result.fairnessUpperBound-row.stage1Fairness);
                 row.stage1Certified=row.stage1FairnessGap<=method.gapTolerance;
                 row.fairnessPreserved=all(service.demandRatio>=result.fairnessFloor);
+                for phase=1:2
+                    stage=result.(sprintf('stage%d',phase));
+                    if isfield(stage,'stopping')
+                        row.(sprintf('stage%dStopReason',phase))=stage.stopping.reason;
+                        row.(sprintf('stage%dStopRelativeGap',phase))=stage.stopping.relativeGap;
+                        row.(sprintf('stage%dNearOptimal',phase))=stage.stopping.nearOptimalCertified;
+                    end
+                end
                 if row.fullQosFeasible
                     row.goalStatus='full_qos_met'; row.feasibleTotalBits=service.totalBits;
                 else
@@ -119,8 +130,15 @@ for seed = options.seeds(:).'
         records(end+1,1) = row; solutions{end+1,1} = result; %#ok<AGROW>
         if options.verbose
             fprintf('%-23s seed=%d %-12s s=%.9g V=%.6g Mbit wall=%.3f s\n', ...
-                name,seed,row.status,row.fairness,row.totalBits/1e6,row.endToEndSeconds);
+                leo_method_name(row.method),seed,row.status,row.fairness,row.totalBits/1e6,row.endToEndSeconds);
             if ~isempty(row.solverStatus), fprintf('  Stop: %s\n',row.solverStatus); end
+            if isfield(options.method,'stopping') && options.method.stopping.enabled && strcmp(row.status,'completed')
+                fprintf('  Stage 1: %s; valid upper gap %.4g%%. Stage 2: %s; conditional upper gap %.4g%%.\n', ...
+                    row.stage1StopReason,100*row.stage1StopRelativeGap,row.stage2StopReason,100*row.stage2StopRelativeGap);
+                if any(strcmp({row.stage1StopReason,row.stage2StopReason},'stagnation'))
+                    fprintf('  Stagnation means no meaningful improvement; it does not certify near-optimality.\n');
+                end
+            end
             if ~isempty(row.goalStatus)
                 if leo_is_lexicographic(problem.data)
                     fprintf('  Goal: uncapped max-min first; stage-1 s=%.9g, preserved floor=%.9g, final s=%.9g.\n',row.stage1Fairness,row.requiredFairnessFloor,row.stage2Fairness);

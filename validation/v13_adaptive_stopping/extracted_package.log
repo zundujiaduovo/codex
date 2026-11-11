@@ -1,0 +1,18 @@
+PASS: V13 installation complete; K=64, NB=64, L=16 profile and analysis dependencies resolve locally.
+PASS: adaptive original-bound near-optimal stopping, cumulative plateau clock, phase-specific objective, disabled compatibility, four plain method aliases, independent integer oracle and heuristic stagnation without false certification.
+warning: function /tmp/oct-tKvGyB/mocks/openfig.m shadows a core library function
+warning: called from
+    test_leo_v12_show_results at line 10 column 1
+
+V12 result figure opened: /tmp/oct-tKvGyB/v12_uncapped_lexicographic.fig
+V12 result figure opened: /tmp/oct-tKvGyB/v12_uncapped_lexicographic.fig
+V12 result figure opened: /tmp/oct-tKvGyB/v12_iteration_convergence.fig
+V12 result figure opened: /tmp/oct-tKvGyB/v12_workload_quality.fig
+V12 result figure opened: /tmp/oct-tKvGyB/v12_uncapped_lexicographic.fig
+V12 result figure opened: /tmp/oct-tKvGyB/v12_iteration_convergence.fig
+V12 result figure opened: /tmp/oct-tKvGyB/v12_workload_quality.fig
+V13 result figure opened: /tmp/oct-tKvGyB/v13_uncapped_lexicographic.fig
+V13 result figure opened: /tmp/oct-tKvGyB/v13_iteration_convergence.fig
+V13 result figure opened: /tmp/oct-tKvGyB/v13_workload_quality.fig
+PASS: V12 legacy figure opening, array-spec redraw, three visible windows and no experiment rerun (mock GUI).
+error: ignoring const execution_exception& while preparing to exit

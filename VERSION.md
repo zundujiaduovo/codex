@@ -8,6 +8,8 @@
 
 优化目标、SB/Local内层、外层验收和原式Tabu/贪婪保持V12逻辑。默认四方法同场景配对；独立V13版本标识、目录、数据和图，旧V12配对继续兼容。`RUN_V13_64_USERS`或`RUN_COMPARISON`运行新场景。见[V13_FROM_V12.md](V13_FROM_V12.md)。
 
+V13更新：默认启用按原模型有效界差距/停滞的提前停止，120秒保留为最长预算；阈值集中在`V13_SETTINGS.m`。新运行方法名统一为Tabu、SB、Local、Greedy，旧结果可只重画标签。自适应实验独立写入`_adaptive`目录，分阶段停止原因和有效差距导出CSV。见[V13_ADAPTIVE_STOPPING.md](V13_ADAPTIVE_STOPPING.md)。
+
 ## V12历史版本
 
 分支：`leo-qos-v12-uncapped-lexicographic-fairness`。

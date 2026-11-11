@@ -108,7 +108,7 @@ s=study.summary;
 for M=study.protocol.options.resourceCounts(:).'
     for method=study.protocol.methods
         r=s([s.M]==M & strcmp({s.method},method{1})); [~,order]=sort([r.K]); r=r(order);
-        label=sprintf('%s / M=%d',method{1},M);
+        label=sprintf('%s / M=%d',leo_method_name(method{1}),M);
         p(1)=add(p(1),label,[r.K],[r.medianUncensoredElapsedSeconds]);
         p(2)=add(p(2),label,[r.K],[r.medianFairness]);
         p(3)=add(p(3),label,[r.K],[r.medianUncensoredOriginalCandidateScores]);

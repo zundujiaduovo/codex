@@ -69,6 +69,7 @@ report.options.outputDirectory=directory;
 leo_write_struct_csv(fullfile(directory,'runs.csv'),report.records);
 leo_write_struct_csv(fullfile(directory,'method_summary.csv'),report.summary);
 leo_write_struct_csv(fullfile(directory,'conditional_throughput_bounds.csv'),conditional);
+leo_write_struct_csv(fullfile(directory,'stopping_summary.csv'),leo_stopping_rows(report));
 stages=struct([]); users=struct([]); schedules=struct([]); primaryUsers=struct([]); primarySchedules=struct([]);
 for j=1:numel(report.records)
     r=report.records(j); if ~strcmp(r.status,'completed'), continue; end
@@ -126,7 +127,7 @@ write_summary(report,directory);
 for j=1:numel(report.records)
     r=report.records(j);
     fprintf('%s %-24s seed %.0f: s1=%.9g, s2=%.9g, floor=%.9g, total=%.6g Mbit, preserved=%d.\n', ...
-        release.tag,r.method,r.seed,r.stage1Fairness,r.stage2Fairness,r.requiredFairnessFloor,r.totalBits/1e6,r.fairnessPreserved);
+        release.tag,leo_method_name(r.method),r.seed,r.stage1Fairness,r.stage2Fairness,r.requiredFairnessFloor,r.totalBits/1e6,r.fairnessPreserved);
 end
 fprintf('GLOBAL FAIRNESS optimum in [%.9g, %.9g]; %s. Secondary throughput bounds are conditional on each stated floor.\n',certificate.lower,certificate.upper,certificate.status);
 end
@@ -138,9 +139,10 @@ fprintf(fid,'Primary: maximize min_i G_i/q_i with no cap at 1. Secondary: maximi
 fprintf(fid,'Global original-model fairness interval: [%.12g, %.12g]; status %s; gap target met %d. Extra certificate schedules are separate from method scores.\n\n',c.lower,c.upper,c.status,c.gapTargetMet);
 fprintf(fid,'| Method | Search seed | Stage-1 fairness | Final fairness | Preserved floor | Final service (Mbit/period) | Stage-1 confirmed within certificate tolerance |\n|---|---:|---:|---:|---:|---:|---:|\n');
 for j=1:numel(report.records)
-    r=report.records(j); fprintf(fid,'| %s | %.0f | %.9g | %.9g | %.9g | %.9g | %d |\n',r.method,r.seed,r.stage1Fairness,r.stage2Fairness,r.requiredFairnessFloor,r.totalBits/1e6,r.stage1CertificateConfirmed);
+    r=report.records(j); fprintf(fid,'| %s | %.0f | %.9g | %.9g | %.9g | %.9g | %d |\n',leo_method_name(r.method),r.seed,r.stage1Fairness,r.stage2Fairness,r.requiredFairnessFloor,r.totalBits/1e6,r.stage1CertificateConfirmed);
 end
 fprintf(fid,'\nFairness is the primary comparison. Total service at different attained floors solves different conditional problems; do not rank it as one common throughput objective.\n');
 fprintf(fid,'A time-limited stage-1 result is an attained feasible fairness value, not a proven global maximum unless the fairness certificate closes its gap to the stated tolerance.\n');
+fprintf(fid,'Per-stage search stopping details are in stopping_summary.csv. target_gap uses a valid original-model upper bound; stagnation only reports a lack of meaningful improvement.\n');
 fprintf(fid,'V10/V11 optimized full-QoS-then-sum service and their scores/bounds are not reused as V12 lexicographic optimality evidence.\n');
 end

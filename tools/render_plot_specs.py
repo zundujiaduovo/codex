@@ -42,6 +42,10 @@ def vec(value):
 
 
 def color(name, index):
+    if name == 'Tabu':
+        return '#00804d'
+    if name == 'Greedy':
+        return '#1aa6a6'
     if name == 'SB':
         return '#d92633'
     if name == 'Local' or name == 'SB minus local_v8_blockwise':
@@ -91,7 +95,7 @@ def draw_panel(fig, ax, panel):
         for j, s in enumerate(series):
             x, y = vec(s["x"]), vec(s["y"])
             c = color(s['name'], j)
-            style = ':' if 'independent' in s['name'] else '--' if 'local' in s['name'] else '-'
+            style = ':' if 'independent' in s['name'] else '--' if 'local' in s['name'].lower() else '-'
             ax.plot(x, y, linestyle=style, marker=['o','s','^','d'][j % 4], color=c, linewidth=1.5, markersize=4,
                     label=FIELD_LABELS.get(s["name"], s["name"]), zorder=3)
             if np.asarray(s["low"]).size:
@@ -122,7 +126,7 @@ def draw_panel(fig, ax, panel):
                 ax.plot(x, y, color=c, linewidth=1.7 if s["name"] == "Price+SB" else 1.2,
                         label=s["name"], marker="o" if np.sum(np.isfinite(x) & np.isfinite(y)) < 3 else None, markersize=4,
                         linestyle=':' if ('independent' in s['name'] or 'Verified lower' in s['name'])
-                        else '--' if 'local' in s['name'] else '-', **options)
+                        else '--' if 'local' in s['name'].lower() else '-', **options)
             has_values |= bool(np.isfinite(y).any())
         if panel["xlabels"]:
             ax.set_xticks(np.arange(1, len(panel["xlabels"])+1), panel["xlabels"], fontsize=8)

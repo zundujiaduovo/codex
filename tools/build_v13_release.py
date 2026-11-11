@@ -10,7 +10,7 @@ NAME = "LEO_QoS_Comparison_v13_from_v12_64users_16streams"
 
 
 def build():
-    sources = [ROOT / name for name in DOCS | {"V13_FROM_V12.md"}]
+    sources = [ROOT / name for name in DOCS | {"V13_FROM_V12.md", "V13_ADAPTIVE_STOPPING.md"}]
     for pattern in ("*.m", "matlab/*.m", "tools/*.py"):
         sources.extend(ROOT.glob(pattern))
     sources.append(ROOT / ".gitignore")
@@ -33,9 +33,10 @@ def build():
         for line in manifest.splitlines():
             digest, relative = line.split("  ", 1)
             assert hashlib.sha256(bundle.read(NAME + "/" + relative)).hexdigest() == digest
-        for name in ("RUN_V13_64_USERS.m", "CHECK_V13_INSTALLATION.m", "matlab/leo_v13_parameters.m",
+        for name in ("RUN_V13_64_USERS.m", "V13_SETTINGS.m", "CHECK_V13_INSTALLATION.m", "matlab/leo_v13_parameters.m",
                      "matlab/run_leo_v13_comparison.m", "matlab/leo_reference_users_64.m",
-                     "matlab/run_leo_v12_diagnostics.m", "matlab/leo_lexicographic_release.m"):
+                     "matlab/run_leo_v12_diagnostics.m", "matlab/leo_lexicographic_release.m",
+                     "matlab/leo_search_stopping.m", "matlab/leo_method_name.m"):
             assert NAME + "/" + name in bundle.namelist()
     print(f"{archive.name}: {len(sources)} source/document files, {archive.stat().st_size} bytes; no results.")
 

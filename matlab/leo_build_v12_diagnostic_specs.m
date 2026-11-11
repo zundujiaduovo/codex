@@ -1,6 +1,7 @@
 function specs = leo_build_v12_diagnostic_specs(report,data)
 %LEO_BUILD_V12_DIAGNOSTIC_SPECS 原生外层迭代、原式候选评价和共同质量达标时间。
 seed=report.options.seeds(1); methods=report.options.methods;
+methodNames=cellfun(@leo_method_name,methods,'UniformOutput',false);
 release=leo_lexicographic_release(report);
 p=panel('Stage 1: saved uncapped fairness','Native outer iteration (method-specific units)','min_i G_i/q_i');
 p(2)=panel('Stage 1: sum service while fairness is prioritized','Native outer iteration (method-specific units)','Mbit/period');
@@ -8,15 +9,15 @@ p(3)=panel('Stage 2: fairness retained at each method''s s0','Native outer itera
 p(4)=panel('Stage 2: sum service at each attained floor','Native outer iteration (method-specific units)','Mbit/period');
 q=p; q(1).xlabel='Recorded original candidate scores in this phase'; q(2).xlabel=q(1).xlabel;
 q(2).title='Stage 2: sum service versus recorded original candidate scores';
-q(3)=panel('Time to a common original-model fairness target','Method','First recorded attainment (s)'); q(3).kind='categorical_line'; q(3).labels=methods;
-q(4)=panel('Actual end-to-end runtime, including early stopping','Method','Seconds'); q(4).kind='categorical_line'; q(4).labels=methods;
+q(3)=panel('Time to a common original-model fairness target','Method','First recorded attainment (s)'); q(3).kind='categorical_line'; q(3).labels=methodNames;
+q(4)=panel('Actual end-to-end runtime, including early stopping','Method','Seconds'); q(4).kind='categorical_line'; q(4).labels=methodNames;
 for j=1:numel(methods)
     for phase=1:2
         rows=data.iterations(strcmp({data.iterations.method},methods{j}) & [data.iterations.seed]==seed & [data.iterations.phase]==phase);
-        p(2*phase-1)=add(p(2*phase-1),methods{j},[rows.nativeIteration],[rows.fairness]);
-        p(2*phase)=add(p(2*phase),methods{j},[rows.nativeIteration],[rows.totalBits]/1e6);
-        if phase==1, q(1)=add(q(1),methods{j},[rows.recordedOriginalCandidateScores],[rows.fairness]);
-        else, q(2)=add(q(2),methods{j},[rows.recordedOriginalCandidateScores],[rows.totalBits]/1e6); end
+        p(2*phase-1)=add(p(2*phase-1),methodNames{j},[rows.nativeIteration],[rows.fairness]);
+        p(2*phase)=add(p(2*phase),methodNames{j},[rows.nativeIteration],[rows.totalBits]/1e6);
+        if phase==1, q(1)=add(q(1),methodNames{j},[rows.recordedOriginalCandidateScores],[rows.fairness]);
+        else, q(2)=add(q(2),methodNames{j},[rows.recordedOriginalCandidateScores],[rows.totalBits]/1e6); end
     end
 end
 for fraction=[.90,.95,.99]

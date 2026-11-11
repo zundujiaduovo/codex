@@ -22,15 +22,20 @@ for phaseIndex = 1:2
         upperV = leo_original_upper_bound(data,cache,zeros(data.shape(1),1),'throughput',s0);
     end
     phaseStart = best.service; phaseIterations = 0;
+    bound=upperF.value; if phaseIndex==2, bound=upperV.value; end
+    [stopping,stopStatus]=leo_search_stopping(options,phase,best.service,bound,toc(budget.timer),0);
     history = leo_record_search_step([],best.service,0,toc(budget.timer),evaluations);
     iterationKind = 'none';
     skipPhase = strict && ((phaseIndex==1 && best.service.fairness==1) || (phaseIndex==2 && best.service.fairness<1));
-    if skipPhase
+    if skipPhase || ~isempty(stopStatus)
         % 尚未达标时禁止按降低后的门槛优化吞吐。
     elseif strcmp(kind,'greedy')
         start = best;
         if phaseIndex==1, start.x = false(data.shape); start.service = problem.evaluate(start.x); end
-        candidate = leo_original_greedy(problem,start,phase,s0,localBudget);
+        context=[];
+        if stopping.options.enabled, context=struct('options',options,'upper',bound,'incumbent',phaseStart); end
+        candidate = leo_original_greedy(problem,start,phase,s0,localBudget,context);
+        stopStatus=candidate.stopStatus;
         % 构造轨迹与共同初始化择优，记录当时已知可行日程的成绩。
         construction = candidate.history; incumbent = phaseStart;
         for h = 2:numel(construction.iteration)
@@ -80,6 +85,8 @@ for phaseIndex = 1:2
             if leo_service_is_better(current.service,best.service,phase,s0), best = current; end
             phaseIterations = iteration;
             history = leo_record_search_step(history,best.service,iteration,toc(budget.timer),evaluations);
+            [stopping,stopStatus]=leo_search_stopping(options,phase,best.service,bound,toc(budget.timer),iteration,stopping);
+            if ~isempty(stopStatus), break; end
             if leo_service_is_better(best.service,before,phase,s0), stagnant = 0;
             else, stagnant = stagnant+1; end
             if strcmp(kind,'exchange') && stagnant>=max(2,data.shape(2)), break; end
@@ -95,8 +102,11 @@ for phaseIndex = 1:2
     elseif strcmp(kind,'greedy'), stage.status='no_improving_addition';
     elseif strcmp(kind,'exchange'), stage.status='stagnation';
     elseif phaseIterations>=options.originalSearchRounds, stage.status='iteration_limit'; end
+    if ~isempty(stopStatus), stage.status=stopStatus; end
     if strict && phaseIndex==1 && phaseStart.fairness==1, stage.status='full_qos_already_met'; end
     if strict && phaseIndex==2 && best.service.fairness<1, stage.status='not_started_full_qos_not_found'; end
+    [stopping,~]=leo_search_stopping(options,phase,best.service,bound,toc(budget.timer),phaseIterations,stopping);
+    stopping.reason=stage.status; stage.stopping=stopping;
     if phaseIndex==1, result.stage1 = stage;
     else, result.stage2 = stage; result.fairnessFloor = s0; end
 end

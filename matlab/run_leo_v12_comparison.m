@@ -29,7 +29,12 @@ fprintf('K=%d, NB=%d, L=%d; admission %.0f%%; nRF=%d, p0=%.3g W, Pmax=%.3g W.\n'
     o.parameters.system.K,o.parameters.array.nBeams,o.parameters.system.maxStreams, ...
     100*o.parameters.system.maxStreams/o.parameters.array.nBeams,o.parameters.system.nRF, ...
     o.parameters.system.streamPowerW,o.parameters.system.maxPowerW);
-fprintf('%d search seed(s), %d methods, %.0f s/method; fairness phase fraction %.2f.\n',numel(o.seeds),numel(experiment.methods),o.budgetSeconds,o.method.fairnessBudgetFraction);
+fprintf('%d search seed(s), %d methods, at most %.0f s/method; fairness phase fraction %.2f.\n',numel(o.seeds),numel(experiment.methods),o.budgetSeconds,o.method.fairnessBudgetFraction);
+if isfield(o.method,'stopping') && o.method.stopping.enabled
+    s=o.method.stopping;
+    fprintf('Auto stop: valid original-model gap <= %.3g%%; or %.3g s without %.3g%% cumulative improvement (min %.3g s and %d native iterations/phase).\n', ...
+        100*s.relativeGap,s.patienceSeconds,100*s.relativeImprovement,s.minPhaseSeconds,s.minIterations);
+end
 fprintf('Output: %s\n',directory);
 originalModel=struct('problemData',experiment.problemData,'parameters',experiment.modelSnapshot.parameters,'protocol',protocol,'version',experiment.version);
 save(fullfile(directory,'original_model.mat'),'originalModel','-v7');

@@ -8,7 +8,7 @@ function result = leo_v12_solve_schedule(problem,proxy,options,initialSchedule)
 if nargin<2, proxy = []; end
 if nargin<3, options = struct(); end
 if nargin<4, initialSchedule = []; end
-options = leo_v8_method_options(options);
+options = leo_v12_method_options(options);
 assert(leo_is_lexicographic(problem.data),'V12 solver requires the uncapped lexicographic objective.');
 previousRng = rng; cleanup = onCleanup(@() rng(previousRng)); %#ok<NASGU>
 rng(options.seed,'twister');

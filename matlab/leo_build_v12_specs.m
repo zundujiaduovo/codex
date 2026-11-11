@@ -1,9 +1,10 @@
 function specs = leo_build_v12_specs(report,data)
 %LEO_BUILD_V12_SPECS 明确区分未封顶公平主指标、固定公平门槛下的吞吐和QoS辅助项。
 methods=report.options.methods; seed=report.options.seeds(1); n=numel(methods);
+methodNames=cellfun(@leo_method_name,methods,'UniformOutput',false);
 release=leo_lexicographic_release(report);
 first=NaN(1,n); final=first; before=first; after=first; floors=first; conditional=first;
-p=panel('categorical_line',[release.tag,' primary: uncapped minimum cumulative service ratio'],'Method','min_i G_i/q_i (uncapped)'); p.labels=methods;
+p=panel('categorical_line',[release.tag,' primary: uncapped minimum cumulative service ratio'],'Method','min_i G_i/q_i (uncapped)'); p.labels=methodNames;
 p(2)=panel('categorical_line','Secondary service at each method''s attained floor','Method and attained floor','Mbit/period');
 p(3)=panel('line','Primary fairness versus recorded elapsed time','Accounted elapsed time (s)','Uncapped min_i G_i/q_i');
 p(4)=panel('line','Total service versus time: fairness phase may reduce sum','Accounted elapsed time (s)','Mbit/period');
@@ -16,25 +17,25 @@ for j=1:n
     first(j)=r.stage1Fairness; final(j)=r.fairness; floors(j)=r.requiredFairnessFloor;
     before(j)=solution.stage1.service.totalBits/1e6; after(j)=r.totalBits/1e6; conditional(j)=r.conditionalThroughputUpperBits/1e6;
     rows=data.progress(strcmp({data.progress.method},methods{j}) & [data.progress.seed]==seed);
-    p(3)=series(p(3),methods{j},[rows.seconds],[rows.fairness]);
-    p(4)=series(p(4),methods{j},[rows.seconds],[rows.totalBits]/1e6);
-    p(5)=series(p(5),methods{j},1:report.problemData.shape(1),solution.service.demandRatio);
+    p(3)=series(p(3),methodNames{j},[rows.seconds],[rows.fairness]);
+    p(4)=series(p(4),methodNames{j},[rows.seconds],[rows.totalBits]/1e6);
+    p(5)=series(p(5),methodNames{j},1:report.problemData.shape(1),solution.service.demandRatio);
 end
 p(1)=series(p(1),'Attained stage-1 fairness',1:n,first); p(1)=series(p(1),'Final fairness',1:n,final);
 p(1).reference=report.fairnessCertificate.upper; p(1).referenceLabel='Global fairness upper (original model)';
 p(2)=series(p(2),'Stage 1 service',1:n,before); p(2)=series(p(2),'Stage 2 service',1:n,after);
-labels=cell(1,n); for j=1:n, labels{j}=sprintf('%s (s0=%.5g)',methods{j},floors(j)); end
+labels=cell(1,n); for j=1:n, labels{j}=sprintf('%s (s0=%.5g)',methodNames{j},floors(j)); end
 p(2).labels=labels; p(6).labels=labels;
 p(6)=series(p(6),'Final original-model service',1:n,after); p(6)=series(p(6),'Conditional upper at this s0',1:n,conditional);
 p(5).reference=1; p(5).referenceLabel='QoS demand reference (auxiliary, not fairness cap)';
-p(1).note='V12 changed the objective. s=1 is not a stopping target. A certified global interval and attained method fairness are distinct.';
+p(1).note='Uncapped fairness: s=1 is not a stopping target. A certified global interval and attained method fairness are distinct.';
 p(2).note='Each method holds its own attained s0. Compare secondary service as the same problem only when the floors are the same.';
 p(3).note='Real saved checkpoints. No cap at 1, no fabricated plateau or extension after stopping.';
 p(4).note='During stage 1 fairness has priority over total service. Stage 2 preserves the attained stage-1 floor.';
 p(5).note='Services are accumulated over all slots before taking user ratios. Instantaneous per-slot fairness is not the objective.';
 p(6).note='Conditional original-model sum-service bounds; these are not certificates for the primary max-min objective.';
 titleText=sprintf('%s | uncapped max-min first, sum service second | seed %.0f',release.tag,seed);
-if strcmp(release.tag,'V13'), titleText=sprintf('V13 based on V12 | K=64, NB=64, L=16 | uncapped max-min first, sum second | seed %.0f',seed); end
+if strcmp(release.tag,'V13'), titleText=sprintf('V13 | K=64, NB=64, L=16 | uncapped max-min first, sum second | seed %.0f',seed); end
 specs=struct('name',[release.prefix,'_uncapped_lexicographic'],'title',titleText, ...
     'rows',3,'cols',2,'panels',p);
 end
