@@ -44,6 +44,11 @@ if isfield(o.method,'stopping') && o.method.stopping.enabled
         100*s.relativeGap,s.patienceSeconds,100*s.relativeImprovement,s.minPhaseSeconds,s.minIterations);
 end
 if strcmp(release.tag,'V13')
+    if isfield(o.method,'refinement')
+        r=o.method.refinement;
+        fprintf('Proxy refinement: pool=%d (max %d per call), bottleneck candidates=%d (band %.4g), candidate tangent refresh=%d (gap trigger %.4g demand ratio).\n', ...
+            r.candidatePool,r.poolSize,r.bottleneckCandidates,r.bottleneckBand,r.candidateRefresh,r.gapTrigger);
+    end
     fprintf('Search profile: SB %d steps x %d trajectories; Local %d restarts; polish %d moves; refresh every %d rounds.\n', ...
         o.method.sbSteps,o.method.sbTrajectories,o.method.localRestarts,o.method.polishMoves,o.method.refreshEvery);
     if isfield(o.method,'proxyTabuIterations')

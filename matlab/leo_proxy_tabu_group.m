@@ -8,6 +8,8 @@ if isfield(options,'proxyTabuRestarts'), restarts=options.proxyTabuRestarts; end
 if isfield(options,'proxyTabuTenure'), tenure=options.proxyTabuTenure; end
 score=@(x) q.A.'*double(x)-double(x).'*q.B*double(x)/2;
 best=logical(old(:)); bestScore=score(best); completed=0; candidates=0; repaired=0;
+retain=isfield(options,'refinement') && options.refinement.candidatePool;
+groups=best;
 for restart=1:restarts
     if leo_budget_expired(budget), break; end
     if restart==1, x=best; elseif restart==2, x=false(q.nUsers,1);
@@ -15,6 +17,7 @@ for restart=1:restarts
         raw=rand(q.nUsers,1)<.5; x=leo_repair_group(q,raw); repaired=repaired+any(raw~=x);
     end
     value=score(x); tabuUntil=zeros(q.nUsers,1);
+    if retain, groups(:,end+1)=x; end %#ok<AGROW>
     if value>bestScore, best=x; bestScore=value; end
     for iteration=1:rounds
         if leo_budget_expired(budget), break; end
@@ -35,8 +38,10 @@ for restart=1:restarts
         if drops(at)>0, x(drops(at))=false; tabuUntil(drops(at))=iteration+tenure; end
         if adds(at)>0, x(adds(at))=true; tabuUntil(adds(at))=iteration+tenure; end
         value=score(x);
+        if retain, groups(:,end+1)=x; end %#ok<AGROW>
         if value>bestScore, best=x; bestScore=value; end
     end
 end
 result=struct('x',best,'score',bestScore,'iterations',completed,'candidates',candidates,'repaired',repaired);
+if retain, result.candidateGroups=groups; end
 end

@@ -143,6 +143,7 @@ for j=1:numel(report.records)
         release.tag,leo_method_name(r.method),r.seed,r.stage1Fairness,r.stage2Fairness,r.requiredFairnessFloor,r.totalBits/1e6,r.fairnessPreserved);
 end
 fprintf('GLOBAL FAIRNESS optimum in [%.9g, %.9g]; %s. Secondary throughput bounds are conditional on each stated floor.\n',certificate.lower,certificate.upper,certificate.status);
+fprintf('已找到的可行公平值=%.9g；有效上界=%.9g。上界的可达性尚未证明，区间宽度不是算法已知损失。\n',certificate.lower,certificate.upper);
 if isfield(certificate,'cardinalityRelaxation')
     b=certificate.cardinalityRelaxation;
     fprintf('Standard fairness bound: coarse %.9g, uniform cardinality %.9g, configuration LP dual %.9g (%s).\n', ...

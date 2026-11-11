@@ -22,14 +22,14 @@ for j=1:n
     p(5)=series(p(5),methodNames{j},1:report.problemData.shape(1),solution.service.demandRatio);
 end
 p(1)=series(p(1),'Attained stage-1 fairness',1:n,first); p(1)=series(p(1),'Final fairness',1:n,final);
-p(1).reference=report.fairnessCertificate.upper; p(1).referenceLabel='Global fairness upper (original model)';
+p(1).reference=report.fairnessCertificate.upper; p(1).referenceLabel='Certified upper; attainability unproved';
 if isfield(report.fairnessCertificate,'cardinalityRelaxation')
-    p(1).referenceLabel='Global upper: configuration LP / integer refinement';
+    p(1).referenceLabel='Relaxation/refined upper; not an attained optimum';
 end
 p(2)=series(p(2),'Stage 1 service',1:n,before); p(2)=series(p(2),'Stage 2 service',1:n,after);
 labels=cell(1,n); for j=1:n, labels{j}=sprintf('%s (s0=%.5g)',methodNames{j},floors(j)); end
 p(2).labels=labels; p(6).labels=labels;
-p(6)=series(p(6),'Final original-model service',1:n,after); p(6)=series(p(6),'Conditional upper at this s0',1:n,conditional);
+p(6)=series(p(6),'Final original-model service',1:n,after); p(6)=series(p(6),'Conditional upper; attainability unproved',1:n,conditional);
 p(5).reference=1; p(5).referenceLabel='QoS demand reference (auxiliary, not fairness cap)';
 p(1).note='Uncapped fairness: s=1 is not a stopping target. A certified global interval and attained method fairness are distinct.';
 p(2).note='Each method holds its own attained s0. Compare secondary service as the same problem only when the floors are the same.';

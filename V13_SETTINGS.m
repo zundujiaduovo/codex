@@ -1,5 +1,8 @@
-function [options,resultFolder] = V13_SETTINGS()
+function [options,resultFolder] = V13_SETTINGS(profile)
 %V13_SETTINGS 128阵元版：按最大迭代次数运行，不按时间/停滞/近优差距停止。
+% baseline / iterations / refresh / candidates / combined，分别开关三项改进。
+if nargin<1, profile='combined'; end
+assert(any(strcmp(profile,{'baseline','iterations','refresh','candidates','combined'})));
 options.method.iterationOnly=true;
 options.method.fairnessRounds=60;
 options.method.throughputRounds=30;
@@ -20,5 +23,16 @@ options.method.stopping=struct('enabled',false);
 options.fairnessCertificateOptions=struct('maxSeconds',Inf,'relaxationMaxSeconds',Inf, ...
     'relaxationMaxIterations',300,'maxNodes',128,'maxIterations',150,'recoverySeconds',0);
 options.throughputCertificateOptions=struct('maxSeconds',Inf,'maxNodes',128,'maxIterations',150,'recoverySeconds',0);
-resultFolder='v13_64users_128ant_iterations';
+options.method.refinement=struct('candidatePool',false,'bottleneckCandidates',false,'candidateRefresh',false, ...
+    'poolSize',8,'bottleneckBand',.03,'gapTrigger',.01);
+if any(strcmp(profile,{'iterations','combined'}))
+    options.method.fairnessRounds=120; options.method.throughputRounds=60;
+end
+if any(strcmp(profile,{'refresh','combined'}))
+    options.method.refreshEvery=1; options.method.refinement.candidateRefresh=true;
+end
+if any(strcmp(profile,{'candidates','combined'}))
+    options.method.refinement.candidatePool=true; options.method.refinement.bottleneckCandidates=true;
+end
+resultFolder=['v13_proxy_refinement_',profile];
 end

@@ -23,6 +23,8 @@ fprintf('4) At positive fixed floor s0, throughput bound: V*<=sum_m H_m(w)-sum_i
 fprintf('   w_i=1+mu_i, mu>=0; H_m(w)=max_legal_g sum_i w_i*1{i in g}*u_i,m,|g|.\n');
 fprintf('   Each method has its own stated s0. At zero floor, the code uses a safe bound respecting clipping at zero.\n');
 fprintf('All S/N/interference/u coefficients are rebuilt from this array/channel. An upper bound may remain loose; it is not an attained optimum.\n');
+fprintf('注意：不同用户分别采用最小干扰，这些有利条件未必能同时实现；LP还允许组的分数混合。\n');
+fprintf('因此LP上界即使算到最优，也不代表原问题能达到该值；区间剩余差距同时包含松弛误差和搜索不足。\n');
 if isfield(report,'fairnessCertificate')
     cert=report.fairnessCertificate;
     if isfield(cert,'cardinalityRelaxation')

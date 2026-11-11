@@ -1,11 +1,14 @@
 function o = leo_v13_options(overrides)
-%LEO_V13_OPTIONS 64用户/128阵元/64波束/16并发，默认只受迭代次数限制。
+%LEO_V13_OPTIONS 128阵元，默认合并三项代理框架改进，按最大迭代次数运行。
 if nargin<1, overrides=struct(); end
 if ~isfield(overrides,'parameters'), overrides.parameters=leo_v13_parameters(); end
 if ~isfield(overrides,'method'), overrides.method=struct(); end
 defaults=struct('sbSteps',500,'sbTrajectories',32,'localRestarts',32,'polishMoves',12, ...
-    'refreshEvery',2,'fastPolish',true,'iterationOnly',true,'fairnessRounds',60, ...
-    'throughputRounds',30,'proxyTabuIterations',80,'proxyTabuRestarts',4,'proxyTabuTenure',7);
+    'refreshEvery',1,'fastPolish',true,'iterationOnly',true,'fairnessRounds',120, ...
+    'throughputRounds',60,'proxyTabuIterations',80,'proxyTabuRestarts',4,'proxyTabuTenure',7);
+if ~isfield(overrides.method,'refinement')
+    overrides.method.refinement=struct('candidatePool',true,'bottleneckCandidates',true,'candidateRefresh',true);
+end
 originalCap=2000;
 if isfield(overrides.method,'originalSearchRounds'), originalCap=overrides.method.originalSearchRounds; end
 defaults.originalFairnessRounds=originalCap;

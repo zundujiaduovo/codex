@@ -5,6 +5,8 @@ function result = leo_v12_run_price_phase(problem,proxy,cache,phase,start,option
 % 输出：result：阶段日程、价格/迭代/工作量轨迹、上界、停止状态及首次内层 sbTrace。
 data = problem.data; K = data.shape(1); M = data.shape(2);
 iterationOnly=leo_iteration_only(options);
+ref=leo_proxy_refinement_options(); if isfield(options,'refinement'), ref=options.refinement; end
+refine=ref.candidatePool || ref.candidateRefresh || ref.bottleneckCandidates;
 bestX = start.x; bestService = start.service; priceX = bestX;
 isFairness = strcmp(phase,'fairness');
 if isFairness
@@ -30,7 +32,10 @@ fields = {'sAux','step','priceFairness','priceTotalBits','savedFairness','savedT
     'upperBound','proxyEpoch','innerImprovement','resourcesSolved','sbSteps', ...
     'repairedCandidates','recoveryEvaluations','crossEvaluations','acceptedMoves','elapsedSeconds', ...
     'blockwiseEvaluations','blockwiseAccepted','innerSeconds','innerTabuIterations','innerTabuCandidates','originalSelectionSeconds', ...
-    'recoverySeconds','proxyRefreshSeconds','maxQuboBits','sbTrajectorySteps','denseDynamicsTerms'};
+    'recoverySeconds','proxyRefreshSeconds','maxQuboBits','sbTrajectorySteps','denseDynamicsTerms', ...
+    'extraInnerCalls','candidateGapEvaluations','candidateCutRefreshes','candidateCutSeconds', ...
+    'maxCandidateGapBefore','maxCandidateGapAfter','poolAccepted','bottleneckAccepted','retangentAccepted', ...
+    'priceScheduleAccepted','recoveryAccepted','lambdaSum'};
 for j = 1:numel(fields), history.(fields{j}) = zeros(1,rounds); end
 history.completePriceRound = false(1,rounds);
 epoch = 1; errors = NaN; touchErrors = NaN;
@@ -55,14 +60,22 @@ for k = 1:rounds
     improvement = 0; solved = 0; steps = 0; repairs = 0;
     blockwiseEvaluations = 0; blockwiseAccepted = 0;
     innerSeconds=0; originalSeconds=0; maxBits=0; trajectorySteps=0; denseTerms=0; tabuIterations=0; tabuCandidates=0;
+    extraCalls=0; gapEvaluations=0; cutRefreshes=0; cutSeconds=0; gapBefore=0; gapAfter=0;
+    poolAccepted=0; bottleneckAccepted=0; retangentAccepted=0; priceAccepted=0; recoveryAccepted=0;
     order = mod((0:M-1)+k-1,M)+1;
     for m = order
         if leo_budget_expired(budget), break; end
         innerTimer=tic;
-        if strcmp(options.innerSolver,'tabu') || (isfield(options,'fastPolish') && options.fastPolish)
+        if refine || strcmp(options.innerSolver,'tabu') || (isfield(options,'fastPolish') && options.fastPolish)
             inner=leo_v13_solve_resource(data,proxy.lower,m,weights,priceX(:,m),options,budget);
         else
             inner = leo_v8_solve_resource(data,proxy.lower,m,weights,priceX(:,m),options,budget);
+        end
+        if refine
+            inner=leo_v13_extra_candidates(data,proxy,m,weights,inner,options,budget,bestX,bestService,phase,s0);
+            extraCalls=extraCalls+inner.extraInnerCalls; gapEvaluations=gapEvaluations+inner.gapEvaluations;
+            cutRefreshes=cutRefreshes+inner.cutRefreshes; cutSeconds=cutSeconds+inner.cutSeconds;
+            gapBefore=max(gapBefore,inner.gapBefore); gapAfter=max(gapAfter,inner.gapAfter);
         end
         innerSeconds=innerSeconds+toc(innerTimer);
         if isfield(inner,'tabuIterations'), tabuIterations=tabuIterations+inner.tabuIterations; tabuCandidates=tabuCandidates+inner.tabuCandidates; end
@@ -76,20 +89,14 @@ for k = 1:rounds
             firstSbTrace.trajectories = inner.trajectories; firstSbTrace.energyScale = inner.energyScale;
         end
         if options.blockwiseOriginalAccept && (isFairness || s0>0)
-            % 单块 SB 候选也拼到最佳日程上按原目标评分；第二阶段严格保留 QoS 门槛。
-            % 价格日程仍保留原有整轮候选，两个路径都参与最终验收。
-            if ~isequal(inner.x,bestX(:,m))
-                bits = bestService.resourceBits;
-                bits(:,m) = leo_resource_service(data,m,inner.x);
-                trial = leo_service_totals(data,bits); blockwiseEvaluations = blockwiseEvaluations+1;
-                if leo_service_is_better(trial,bestService,phase,s0)
-                    trialX = bestX; trialX(:,m) = inner.x;
-                    exact = problem.evaluate(trialX);
-                    if leo_service_is_better(exact,bestService,phase,s0)
-                        bestX = trialX; bestService = exact; blockwiseAccepted = blockwiseAccepted+1;
-                        checkpoints=record_checkpoint(checkpoints,bestService,k,toc(budget.timer),m,'blockwise');
-                    end
-                end
+            accepted=leo_accept_resource_candidates(problem,bestX,bestService,m,inner,phase,s0,budget);
+            blockwiseEvaluations=blockwiseEvaluations+accepted.evaluations;
+            if accepted.accepted
+                bestX=accepted.x; bestService=accepted.service; blockwiseAccepted=blockwiseAccepted+1;
+                poolAccepted=poolAccepted+accepted.nonProxyWinner;
+                bottleneckAccepted=bottleneckAccepted+strcmp(accepted.source,'bottleneck');
+                retangentAccepted=retangentAccepted+strcmp(accepted.source,'retangent');
+                checkpoints=record_checkpoint(checkpoints,bestService,k,toc(budget.timer),m,['blockwise:',accepted.source]);
             end
         end
         priceX(:,m) = inner.x;
@@ -104,6 +111,7 @@ for k = 1:rounds
     priceService = problem.evaluate(priceX);
     if leo_service_is_better(priceService,bestService,phase,s0)
         bestX = priceX; bestService = priceService;
+        priceAccepted=1;
         checkpoints=record_checkpoint(checkpoints,bestService,k,toc(budget.timer),0,'price_schedule');
     end
     originalSeconds=originalSeconds+toc(originalTimer);
@@ -119,6 +127,7 @@ for k = 1:rounds
         acceptedMoves = acceptedMoves+recovered.acceptedMoves;
         if leo_service_is_better(recovered.service,bestService,phase,s0)
             bestX = recovered.x; bestService = recovered.service;
+            recoveryAccepted=recoveryAccepted+1;
             checkpoints=record_checkpoint(checkpoints,bestService,k,toc(budget.timer),0,'recovery');
         end
     end
@@ -145,6 +154,13 @@ for k = 1:rounds
     history.recoverySeconds(k)=recoverySeconds; history.maxQuboBits(k)=maxBits;
     history.sbTrajectorySteps(k)=trajectorySteps; history.denseDynamicsTerms(k)=denseTerms;
     history.completePriceRound(k) = solved==M;
+    history.extraInnerCalls(k)=extraCalls; history.candidateGapEvaluations(k)=gapEvaluations;
+    history.candidateCutRefreshes(k)=cutRefreshes; history.candidateCutSeconds(k)=cutSeconds;
+    history.maxCandidateGapBefore(k)=gapBefore; history.maxCandidateGapAfter(k)=gapAfter;
+    history.poolAccepted(k)=poolAccepted; history.bottleneckAccepted(k)=bottleneckAccepted;
+    history.retangentAccepted(k)=retangentAccepted; history.priceScheduleAccepted(k)=priceAccepted;
+    history.recoveryAccepted(k)=recoveryAccepted; history.lambdaSum(k)=sum(lambda);
+    history.innerTabuIterations(k)=tabuIterations; history.innerTabuCandidates(k)=tabuCandidates;
     completed = k; lambda = lambdaNext;
     if auditEnabled
         snapshot.proposed=priceX; auditSnapshots{end+1}=snapshot;
@@ -157,7 +173,6 @@ for k = 1:rounds
     end
     [stopping,stopStatus]=leo_search_stopping(options,phase,bestService,bestUpper.value,toc(budget.timer),completed,stopping);
     if ~isempty(stopStatus), status=stopStatus; break; end
-    history.innerTabuIterations(k)=tabuIterations; history.innerTabuCandidates(k)=tabuCandidates;
     if options.refreshEvery>0 && mod(k,options.refreshEvery)==0 && k<rounds && ...
             ~leo_budget_expired(budget) && (iterationOnly || certified_gap(bestUpper.value,bestService,isFairness)>options.gapTolerance)
         proxyTimer=tic;
