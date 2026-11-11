@@ -1,0 +1,2 @@
+V12 proxy control: 16 exact block/weight cases, 16 paired SB/Local calls; restricted domains explicitly marked.
+error: ignoring const execution_exception& while preparing to exit

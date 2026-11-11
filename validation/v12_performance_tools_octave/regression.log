@@ -1,0 +1,31 @@
+V12 diagnostics: 22 native history points, 3 completed runs; no optimization rerun. Missing old instrumentation remains NaN.
+original_greedy         seed=11 completed    s=3.2372084 V=6.57511 Mbit wall=0.028 s
+  Stop: no_improving_addition / no_improving_addition
+  Goal: uncapped max-min first; stage-1 s=3.2372084, preserved floor=3.2372084, final s=3.2372084.
+V12 diagnostics: 30 native history points, 4 completed runs; no optimization rerun. Missing old instrumentation remains NaN.
+V12 four-method supplement saved: /tmp/oct-WbGUN3/greedy_control. Original three methods were not re-run.
+V12 greedy seed 11 retained.
+V12 diagnostics: 30 native history points, 4 completed runs; no optimization rerun. Missing old instrumentation remains NaN.
+V12 four-method supplement saved: /tmp/oct-WbGUN3/greedy_control. Original three methods were not re-run.
+V12 proxy control: 4 exact block/weight cases, 8 paired SB/Local calls; restricted domains explicitly marked.
+PASS: V12 native iterations, exact recorded work, unknown legacy metrics, original greedy supplement/cache, RNG, restricted-domain independent proxy/original enumeration and solver-loss bounds.
+warning: function /tmp/oct-ZOAilh/mocks/openfig.m shadows a core library function
+warning: called from
+    test_leo_v12_show_results at line 10 column 1
+
+V12 result figure opened: /tmp/oct-ZOAilh/v12_uncapped_lexicographic.fig
+V12 result figure opened: /tmp/oct-ZOAilh/v12_uncapped_lexicographic.fig
+V12 result figure opened: /tmp/oct-ZOAilh/v12_iteration_convergence.fig
+V12 result figure opened: /tmp/oct-ZOAilh/v12_workload_quality.fig
+V12 result figure opened: /tmp/oct-ZOAilh/v12_uncapped_lexicographic.fig
+V12 result figure opened: /tmp/oct-ZOAilh/v12_iteration_convergence.fig
+V12 result figure opened: /tmp/oct-ZOAilh/v12_workload_quality.fig
+PASS: V12 legacy figure opening, array-spec redraw, three visible windows and no experiment rerun (mock GUI).
+PASS: 17 Lagrangian/SB method test groups.
+PASS: 7 benchmark test groups; SKIP: 0 (MILP backend present: 1).
+PASS: 9 plotting data and iteration logging test groups (no graphics backend required).
+PASS: V12 uncapped lexicographic counterexample, >1 phase search, strict stage-2 floor, MILP cap removal, original-model bounds, risk margins and zero-fairness branching.
+Quality/time metrics saved in /tmp/oct-kL5sZ2; no algorithm rerun.
+PASS: frozen V8 dispatch/RNG, paired controls, hand-calculated quality/time metrics, missing and late targets, held returns and off-reference proxy audit.
+PASS: V11 paired bootstrap/sign/Holm, missing pairs, RNG, duplicate seeds, V10 trace equivalence and matched engine controls.
+error: ignoring const execution_exception& while preparing to exit

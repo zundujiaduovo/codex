@@ -27,7 +27,8 @@ history.priceX = false(K,M,rounds);
 fields = {'sAux','step','priceFairness','priceTotalBits','savedFairness','savedTotalBits', ...
     'upperBound','proxyEpoch','innerImprovement','resourcesSolved','sbSteps', ...
     'repairedCandidates','recoveryEvaluations','crossEvaluations','acceptedMoves','elapsedSeconds', ...
-    'blockwiseEvaluations','blockwiseAccepted'};
+    'blockwiseEvaluations','blockwiseAccepted','innerSeconds','originalSelectionSeconds', ...
+    'recoverySeconds','proxyRefreshSeconds','maxQuboBits','sbTrajectorySteps','denseDynamicsTerms'};
 for j = 1:numel(fields), history.(fields{j}) = zeros(1,rounds); end
 history.completePriceRound = false(1,rounds);
 epoch = 1; errors = NaN; touchErrors = NaN;
@@ -44,10 +45,17 @@ for k = 1:rounds
     history.lambda(:,k) = lambda;
     improvement = 0; solved = 0; steps = 0; repairs = 0;
     blockwiseEvaluations = 0; blockwiseAccepted = 0;
+    innerSeconds=0; originalSeconds=0; maxBits=0; trajectorySteps=0; denseTerms=0;
     order = mod((0:M-1)+k-1,M)+1;
     for m = order
         if leo_budget_expired(budget), break; end
+        innerTimer=tic;
         inner = leo_v8_solve_resource(data,proxy.lower,m,weights,priceX(:,m),options,budget);
+        innerSeconds=innerSeconds+toc(innerTimer);
+        maxBits=max(maxBits,inner.nBits);
+        trajectorySteps=trajectorySteps+inner.sbSteps*options.sbTrajectories;
+        denseTerms=denseTerms+inner.nBits^2*inner.sbSteps*options.sbTrajectories;
+        originalTimer=tic;
         if isempty(firstSbTrace) && isfield(inner,'energyHistory')
             firstSbTrace.history = inner.energyHistory;
             firstSbTrace.resource = m; firstSbTrace.priceIteration = k;
@@ -73,16 +81,20 @@ for k = 1:rounds
         priceX(:,m) = inner.x;
         improvement = improvement+inner.score-inner.oldScore;
         solved = solved+1; steps = steps+inner.sbSteps; repairs = repairs+inner.nRepaired;
+        originalSeconds=originalSeconds+toc(originalTimer);
     end
     % 下面三者分别是价格反馈、原始评价、完整日程恢复，禁止互相替代。
+    originalTimer=tic;
     priceLower = leo_evaluate_quadratic_service(data,proxy.lower,priceX);
     priceService = problem.evaluate(priceX);
     if leo_service_is_better(priceService,bestService,phase,s0)
         bestX = priceX; bestService = priceService;
         checkpoints=record_checkpoint(checkpoints,bestService,k,toc(budget.timer),0,'price_schedule');
     end
+    originalSeconds=originalSeconds+toc(originalTimer);
     evaluations = 0; crossEvaluations = 0; acceptedMoves = 0;
     starts = {priceX,bestX};
+    recoveryTimer=tic;
     for r = 1:2
         if r==2 && isequal(starts{1},starts{2}), continue; end
         if leo_budget_expired(budget), break; end
@@ -95,6 +107,7 @@ for k = 1:rounds
             checkpoints=record_checkpoint(checkpoints,bestService,k,toc(budget.timer),0,'recovery');
         end
     end
+    recoverySeconds=toc(recoveryTimer);
     if k>1
         upper = leo_original_upper_bound(data,cache,lambda,phase,s0);
         if upper.value<bestUpper.value, bestUpper = upper; end
@@ -113,6 +126,9 @@ for k = 1:rounds
     history.recoveryEvaluations(k) = evaluations; history.crossEvaluations(k) = crossEvaluations;
     history.acceptedMoves(k) = acceptedMoves; history.elapsedSeconds(k) = toc(budget.timer);
     history.blockwiseEvaluations(k) = blockwiseEvaluations; history.blockwiseAccepted(k) = blockwiseAccepted;
+    history.innerSeconds(k)=innerSeconds; history.originalSelectionSeconds(k)=originalSeconds;
+    history.recoverySeconds(k)=recoverySeconds; history.maxQuboBits(k)=maxBits;
+    history.sbTrajectorySteps(k)=trajectorySteps; history.denseDynamicsTerms(k)=denseTerms;
     history.completePriceRound(k) = solved==M;
     completed = k; lambda = lambdaNext;
     if options.verbose && (k==1 || mod(k,5)==0 || k==rounds)
@@ -122,7 +138,9 @@ for k = 1:rounds
     end
     if options.refreshEvery>0 && mod(k,options.refreshEvery)==0 && k<rounds && ...
             ~leo_budget_expired(budget) && certified_gap(bestUpper.value,bestService,isFairness)>options.gapTolerance
+        proxyTimer=tic;
         proxy = leo_v12_build_service_surrogates(problem,'current_schedule',bestX);
+        history.proxyRefreshSeconds(k)=toc(proxyTimer);
         epoch = epoch+1;
         errors(epoch) = proxy.error.optimalFairnessGapBound; %#ok<AGROW>
         touchErrors(epoch) = proxy.referenceTouchMaxAbsBits; %#ok<AGROW>

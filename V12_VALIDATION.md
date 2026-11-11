@@ -48,3 +48,5 @@ SB 此次公平阶段未超过公共初值，吞吐阶段偶然提高了公平�
 `python tools/check_v8_snapshot.py` 确认 9 个冻结 V8 文件保持 cd4ba09 原文语义。
 
 源码包不含运行数据。仓库 [validation/v12_uncapped_lexicographic_octave](validation/v12_uncapped_lexicographic_octave) 保存该次独立执行的协议、原模型、日程、逐用户服务、两阶段轨迹、证书和图，便于不重新搜索直接复核。
+
+新增性能验证工具及后续补测另见 [V12_PERFORMANCE_VALIDATION.md](V12_PERFORMANCE_VALIDATION.md)。原三方法成绩不变；贪婪、原生迭代、受限块精确代理对照和小规模经验复杂度冒烟记录分别保存，不混作原实验的重新运行。

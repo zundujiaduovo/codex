@@ -5,6 +5,10 @@ if nargin<1, directory=fullfile('results','v12_uncapped_lexicographic'); end
 assert(exist(directory,'dir')==7,['Result directory not found: ',directory]);
 names={'v12_uncapped_lexicographic'};
 specNames={'v12_specs.json'};
+if exist(fullfile(directory,'v12_diagnostic_specs.json'),'file')==2
+    names=[names,{'v12_iteration_convergence','v12_workload_quality'}];
+    specNames=[specNames,{'v12_diagnostic_specs.json','v12_diagnostic_specs.json'}];
+end
 figures={}; files={};
 for j=1:numel(names)
     figPath=locate(directory,[names{j},'.fig']);
@@ -14,7 +18,7 @@ for j=1:numel(names)
         if exist(specPath,'file')==2
             try
                 spec=jsondecode(fileread(specPath));
-                assert(isscalar(spec) && strcmp(spec.name,names{j}),'Unexpected figure specification.');
+                spec=spec(strcmp({spec.name},names{j})); assert(isscalar(spec),'Unexpected figure specification.');
                 leo_render_plot_specs(spec,directory);
             catch err
                 warning('leo:v12FigureRedraw','Cannot redraw %s: %s',names{j},err.message);

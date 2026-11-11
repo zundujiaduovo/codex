@@ -1,0 +1,29 @@
+V12 scaling K4_M3_seed17 retained.
+V12 diagnostics: 23 native history points, 4 completed runs; no optimization rerun. Missing old instrumentation remains NaN.
+V12 scaling K8_M3_seed17 retained.
+V12 diagnostics: 32 native history points, 4 completed runs; no optimization rerun. Missing old instrumentation remains NaN.
+V12 scaling: 8 runs; 0 time-censored. Empirical results and fixed configuration exported.
+V12 diagnostics: 22 native history points, 3 completed runs; no optimization rerun. Missing old instrumentation remains NaN.
+original_greedy         seed=11 completed    s=3.2372084 V=6.57511 Mbit wall=0.031 s
+  Stop: no_improving_addition / no_improving_addition
+  Goal: uncapped max-min first; stage-1 s=3.2372084, preserved floor=3.2372084, final s=3.2372084.
+V12 diagnostics: 30 native history points, 4 completed runs; no optimization rerun. Missing old instrumentation remains NaN.
+V12 four-method supplement saved: /tmp/oct-cXiZyF/greedy_control. Original three methods were not re-run.
+V12 greedy seed 11 retained.
+V12 diagnostics: 30 native history points, 4 completed runs; no optimization rerun. Missing old instrumentation remains NaN.
+V12 four-method supplement saved: /tmp/oct-cXiZyF/greedy_control. Original three methods were not re-run.
+V12 proxy control: 4 exact block/weight cases, 8 paired SB/Local calls; restricted domains explicitly marked.
+PASS: V12 native iterations, exact recorded work, unknown legacy metrics, original greedy supplement/cache, RNG, restricted-domain independent proxy/original enumeration and solver-loss bounds.
+warning: function /tmp/oct-BboLB3/mocks/openfig.m shadows a core library function
+warning: called from
+    test_leo_v12_show_results at line 10 column 1
+
+V12 result figure opened: /tmp/oct-BboLB3/v12_uncapped_lexicographic.fig
+V12 result figure opened: /tmp/oct-BboLB3/v12_uncapped_lexicographic.fig
+V12 result figure opened: /tmp/oct-BboLB3/v12_iteration_convergence.fig
+V12 result figure opened: /tmp/oct-BboLB3/v12_workload_quality.fig
+V12 result figure opened: /tmp/oct-BboLB3/v12_uncapped_lexicographic.fig
+V12 result figure opened: /tmp/oct-BboLB3/v12_iteration_convergence.fig
+V12 result figure opened: /tmp/oct-BboLB3/v12_workload_quality.fig
+PASS: V12 legacy figure opening, array-spec redraw, three visible windows and no experiment rerun (mock GUI).
+error: ignoring const execution_exception& while preparing to exit

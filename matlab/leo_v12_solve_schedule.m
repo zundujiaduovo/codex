@@ -14,13 +14,17 @@ previousRng = rng; cleanup = onCleanup(@() rng(previousRng)); %#ok<NASGU>
 rng(options.seed,'twister');
 budget.timer = tic; budget.seconds = options.maxSeconds;
 initial = leo_initial_schedules(problem,initialSchedule,options,budget);
+cacheTimer=tic;
 cache = leo_prepare_upper_bounds(problem.data);
+upperSetupSeconds=toc(cacheTimer); initialProxySeconds=0;
 if isempty(proxy) && ~leo_budget_expired(budget)
+    proxyTimer=tic;
     if strcmp(options.referenceMode,'current_schedule')
         proxy = leo_v12_build_service_surrogates(problem,'current_schedule',initial.x);
     else
         proxy = leo_v12_build_service_surrogates(problem,options.referenceMode);
     end
+    initialProxySeconds=toc(proxyTimer);
 end
 initialSeconds = toc(budget.timer);
 if options.verbose
@@ -34,8 +38,11 @@ stage1 = leo_v12_run_price_phase(problem,proxy,cache,'fairness',initial,options,
 % 第二阶段在阶段 1 保留日程处相切；正公平时它也是代理可行点。
 % 周期模式 s0=0 时有符号代理可能更严格，仍保留原式可行日程验收。
 stage2Proxy = [];
+stage2ProxySeconds=0;
 if ~leo_budget_expired(budget)
+    proxyTimer=tic;
     stage2Proxy = leo_v12_build_service_surrogates(problem,'current_schedule',stage1.x);
+    stage2ProxySeconds=toc(proxyTimer);
 end
 stage2 = leo_v12_run_price_phase(problem,stage2Proxy,cache,'throughput',stage1,options,budget);
 assert(all(stage2.service.demandRatio>=stage1.service.fairness));
@@ -54,6 +61,9 @@ result.fairnessGap = max(0,result.fairnessUpperBound-result.service.fairness);
 result.throughputUpperBoundBits = stage2.upperBound.value*problem.data.referenceBits;
 result.throughputGapBits = stage2.absoluteGap*problem.data.referenceBits;
 result.initializationSeconds = initialSeconds;
+result.workloadSchemaVersion=1;
+result.initialProxySeconds=initialProxySeconds; result.stage2ProxySeconds=stage2ProxySeconds;
+result.upperBoundPreparationSeconds=upperSetupSeconds;
 result.elapsedSeconds = toc(budget.timer);
 result.optimal = false;             % 不用 SB 停滞/迭代次数冒充全局最优
 result.certificateScope = 'Fairness: original P_F. Throughput: original P_V at achieved fixed s0 only.';

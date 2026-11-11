@@ -120,6 +120,7 @@ save(fullfile(directory,'benchmark.mat'),'report','-v7');
 specs=leo_build_v12_specs(report,data); fid=fopen(fullfile(directory,'v12_specs.json'),'w','n','UTF-8'); assert(fid>=0);
 fprintf(fid,'%s',jsonencode(specs)); fclose(fid);
 files={}; if render, files=leo_render_plot_specs(specs,directory); end
+[~,diagnosticFiles]=run_leo_v12_diagnostics(report,directory,render); files=[files,diagnosticFiles];
 write_summary(report,directory);
 for j=1:numel(report.records)
     r=report.records(j);

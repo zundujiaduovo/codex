@@ -1,0 +1,6 @@
+V12 scaling K4_M3_seed17 retained.
+V12 diagnostics: 23 native history points, 4 completed runs; no optimization rerun. Missing old instrumentation remains NaN.
+V12 scaling K8_M3_seed17 retained.
+V12 diagnostics: 32 native history points, 4 completed runs; no optimization rerun. Missing old instrumentation remains NaN.
+V12 scaling: 8 runs; 0 time-censored. Empirical results and fixed configuration exported.
+error: ignoring const execution_exception& while preparing to exit

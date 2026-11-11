@@ -1,0 +1,9 @@
+method,seed,phase,iterationKind,nativeIterations,completePriceRounds,recordedOriginalCandidateScores,resourceSolves,sbIntegrationSteps,sbTrajectorySteps,denseDynamicsTerms,maxQuboBits,innerSeconds,originalSelectionSeconds,recoverySeconds,proxyRefreshSeconds,proxyRefreshes,fixedFairnessFloor,status
+"original_tabu",71669974,1,"tabu_round",230,NaN,36800,0,0,0,0,0,0,NaN,NaN,0,0,0,"time_limit"
+"original_tabu",71669974,2,"tabu_round",92,NaN,14720,0,0,0,0,0,0,NaN,NaN,0,0,1.8111631759686624,"time_limit"
+"sb_v12_lexicographic",71669974,1,"price_round_attempt",12,12,4049,240,60000,960000,NaN,NaN,NaN,NaN,NaN,NaN,2,0,"time_limit"
+"sb_v12_lexicographic",71669974,2,"price_round_attempt",6,6,1082,120,30000,480000,NaN,NaN,NaN,NaN,NaN,NaN,1,1.4384594901133267,"time_limit"
+"local_v12_lexicographic",71669974,1,"price_round_attempt",12,12,3919,240,0,0,0,NaN,NaN,NaN,NaN,NaN,1,0,"time_limit"
+"local_v12_lexicographic",71669974,2,"price_round_attempt",7,6,1085,122,0,0,0,NaN,NaN,NaN,NaN,NaN,1,1.6012652100474849,"time_limit"
+"original_greedy",71669974,1,"accepted_addition",153,NaN,2560,0,0,0,0,0,0,NaN,NaN,0,0,0,"no_improving_addition"
+"original_greedy",71669974,2,"accepted_addition",0,NaN,0,0,0,0,0,0,0,NaN,NaN,0,0,1.4384594901133267,"no_improving_addition"

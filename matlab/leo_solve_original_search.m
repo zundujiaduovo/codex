@@ -11,6 +11,7 @@ data = problem.data; evaluations = 0; strict = leo_requires_full_qos(data);
 cache = leo_prepare_upper_bounds(data);
 upperF = leo_original_upper_bound(data,cache,ones(data.shape(1),1)/data.shape(1),'fairness');
 for phaseIndex = 1:2
+    phaseEvaluationStart=evaluations;
     localBudget = budget;
     if phaseIndex==1
         phase = 'fairness'; s0 = 0; localBudget.seconds = options.maxSeconds*options.fairnessBudgetFraction;
@@ -86,6 +87,7 @@ for phaseIndex = 1:2
     end
     stage.x = best.x; stage.service = best.service; stage.initialService = phaseStart;
     stage.history = history; stage.iterations = phaseIterations; stage.iterationKind = iterationKind;
+    stage.evaluations=evaluations-phaseEvaluationStart;
     stage.elapsedAtEndSeconds = toc(budget.timer);
     stage.status='search_finished';
     if strcmp(kind,'initial'), stage.status='initialization_only';

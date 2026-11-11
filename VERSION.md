@@ -14,3 +14,5 @@ SB/Local 使用 V10/V8 外层的 V12 适配版本；9 个历史 V8 冻结文件�
 算法达到的公平值与已认证的全局最大公平值分开报告；是否证明第一阶段接近最优由原模型公平证书决定。
 
 定义见 [V12_LEXICOGRAPHIC.md](V12_LEXICOGRAPHIC.md)，验证见 [V12_VALIDATION.md](V12_VALIDATION.md)。
+
+V12 验证扩展：新增原生迭代/记录工作量与共同公平达标时间、只增补原式贪婪、固定代理下原式/代理精确块对照、K/M 经验规模实验；原优化目标和原三方法成绩保留。见 V12_PERFORMANCE_VALIDATION.md。

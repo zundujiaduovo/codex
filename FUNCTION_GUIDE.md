@@ -1435,3 +1435,11 @@ V5各求解器的阶段2只有在全员G>=q后运行，门槛固定为1；未达
 `leo_fairness_from_ratios`、`leo_fairness_limit` 统一未封顶评分和有效有限界；`leo_fairness_certificate` / `leo_refine_fairness_node` 对原模型 max-min 作独立完整定价及二元分支。
 `run_leo_v12_verify_exports` 从 CSV 日程原式复核未封顶公平、总服务及阶段一门槛保持；`SHOW_V12_RESULTS` / `run_leo_v12_show_results` 只读打开或重画已有图。
 `leo_v12_options` 保存独立协议，`leo_v12_trace_data` / `leo_build_v12_specs` 保存实际两阶段轨迹及六联图数据。详细定义见 V12_LEXICOGRAPHIC.md。
+
+## V12 性能验证扩展
+
+`PLOT_V12_ITERATIONS` / `run_leo_v12_diagnostics` 从已有MAT输出两阶段原生迭代、记录工作量和共同质量到达时间。
+`ADD_V12_GREEDY` / `run_leo_v12_greedy_control` 只增加原式贪婪，原三方法及协议不变，四方法另存并输出两阶段日程。
+`RUN_V12_PROXY_CONTROL` / `run_leo_v12_proxy_control` 固定代理、价格和旧组，在明确限制的块候选域内枚举原式及代理精确最优，再比较SB/Local并导出权重/参考日程。
+`RUN_V12_SCALING` / `run_leo_v12_scaling` 固定每算法配置作K/M规模重复，标记时间截断、保留案例缓存和真实计数，不拟合复杂度阶。
+`leo_v12_diagnostic_data`、`leo_build_v12_diagnostic_specs` 和 `leo_v12_load_report` 分别提供纯数据、图形规格和无优化读取；`test_leo_v12_validation` 验证计数、旧日志缺失、Greedy缓存和独立精确对照。

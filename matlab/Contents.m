@@ -9,6 +9,11 @@
 %   leo_theory_bound                 - V12必须指定fairnessFloor的条件吞吐证书。
 %   run_leo_full_qos_comparison      - 显式保留V10/V11全员达标后追求总服务的旧目标。
 %   test_leo_v12                     - 精确枚举反例、>1搜索、门槛保持和两类原界。
+%   run_leo_v12_diagnostics          - 从已有MAT画原生迭代和工作量/共同质量时间。
+%   run_leo_v12_greedy_control       - 保留三方法成绩，仅补原式贪婪及四方法图。
+%   run_leo_v12_proxy_control        - 固定代理和权重，以受限块精确枚举拆分损失。
+%   run_leo_v12_scaling              - 固定每算法配置的K/M经验规模实验及时间截断标记。
+%   test_leo_v12_validation          - 迭代单位、计数、未知旧日志、贪婪缓存及独立代理枚举。
 % V10: 冻结V8引擎+V9对照；time-to-quality、定时质量、过程界差及非切点代理误差。
 %   leo_v8_solve_schedule             - V8 cd4ba09冻结搜索，不混入V9候选/扰动。
 %   run_leo_performance_metrics       - 从已有日志导出共同质量/时间指标。

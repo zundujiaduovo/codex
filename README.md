@@ -15,7 +15,7 @@ RUN_V12_LEXICOGRAPHIC
 
 `RUN_COMPARISON` 也运行 V12。默认同一个物理场景、一个搜索种子，比较原目标 Tabu、SB 和配对 Local；每方法 120 秒，另给公平上界 180 秒及各公平门槛的条件吞吐上界各 30 秒。搜索预算合计约 6 分钟，证书和独立衰落验证另计。
 
-结果保存到 `results/v12_uncapped_lexicographic`，包含 MAT、CSV、JSON，以及 PNG/PDF/可编辑 FIG。根目录脚本结束时自动打开结果文件夹和六联图。只查看已有图，执行 `SHOW_V12_RESULTS`，不重新搜索。
+结果保存到 `results/v12_uncapped_lexicographic`，包含 MAT、CSV、JSON，以及 PNG/PDF/可编辑 FIG。根目录脚本结束时自动打开结果文件夹、六联图、原生迭代四联图和工作量/共同质量时间图。只查看已有图，执行 `SHOW_V12_RESULTS`，不重新搜索。
 
 自定义目录或运行多个配对搜索种子：
 
@@ -49,6 +49,19 @@ test_leo_v12
 ```
 
 SB/Local 仍用二次代理产生内层候选，全部最终日程、验收成绩和公平门槛均按原保证服务公式计算。Tabu 直接评价原模型邻域，不使用二次服务代理。独立衰落平均吞吐与保证服务分别保存。
+
+## 追加贪婪、迭代和计算量验证
+
+已有 V12 结果可直接使用以下入口，详见 [V12_PERFORMANCE_VALIDATION.md](V12_PERFORMANCE_VALIDATION.md)：
+
+```matlab
+PLOT_V12_ITERATIONS      % 从已有MAT画各阶段原生迭代，不重新搜索
+ADD_V12_GREEDY           % 只补原式贪婪，四方法另存greedy_control
+RUN_V12_PROXY_CONTROL   % 固定代理/权重，在声明的受限块域内作精确对照
+RUN_V12_SCALING         % 固定算法配置，测K/M规模、实际工作量及时间截断
+```
+
+SB/Local 的价格轮、Tabu 的邻域轮和贪婪的增量动作分别标注，迭代数不作为同等成本。新运行另记录内层耗时、代理构建/刷新、实际 `sum(N^2*R*steps)`；旧数据没有的细分指标保持未知。原方法的已存成绩保留，补贪婪不要求重跑三方法。
 
 ## V10/V11 的历史结果
 

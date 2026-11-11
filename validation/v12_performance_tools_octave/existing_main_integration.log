@@ -1,0 +1,10 @@
+V12 CHANGED OBJECTIVE: maximize UNCAPPED s=min_i G_i/q_i; then maximize sum(G_i) with every ratio >= attained stage-1 s.
+1 search seed(s), 3 methods, 120 s/method; fairness phase fraction 0.70.
+Output: /workspace/codex/results/v12_120s_octave
+V12 pair 71669974 already saved; retained.
+V12 diagnostics: 365 native history points, 3 completed runs; no optimization rerun. Missing old instrumentation remains NaN.
+V12 original_tabu            seed 71669974: s1=1.81116318, s2=1.81116318, floor=1.81116318, total=102.564 Mbit, preserved=1.
+V12 sb_v12_lexicographic     seed 71669974: s1=1.43845949, s2=1.44769627, floor=1.43845949, total=100.998 Mbit, preserved=1.
+V12 local_v12_lexicographic  seed 71669974: s1=1.60126521, s2=1.60126521, floor=1.60126521, total=100.073 Mbit, preserved=1.
+GLOBAL FAIRNESS optimum in [1.81116318, 1.82034651]; time_limit. Secondary throughput bounds are conditional on each stated floor.
+error: ignoring const execution_exception& while preparing to exit
