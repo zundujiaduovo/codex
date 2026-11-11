@@ -1,0 +1,135 @@
+K=32, T=100, M=20, Na=64, NB=32, L=8
+Available user-resource pairs: 623/640; codebook sampled holes: 0.48%
+Fixed block: 5 slots (50.0 ms); candidate slots=3115; opportunity max-flow=32/32
+Service model: periodic_multilevel. Multilevel fading-floor certificate; independent slots per user; fixed common parameters; joint risk budget is totalRisk.
+Example active SINR [min, median, max] = [-6.74, -1.39, 5.13] dB
+Problem formed, unsolved: 640 binary variables + s; example design fairness=0.
+Stage-2 template fairness floor from feasibility witness: 0.166285 (not optimized).
+Quadratic proxy deferred: original-objective baselines receive no proxy.
+V12 CHANGED OBJECTIVE: maximize UNCAPPED s=min_i G_i/q_i; then maximize sum(G_i) with every ratio >= attained stage-1 s.
+1 search seed(s), 3 methods, 120 s/method; fairness phase fraction 0.70.
+Output: /workspace/codex/results/v12_120s_octave
+original_tabu           seed=71669974 completed    s=1.81116318 V=102.564 Mbit wall=120.257 s
+  Stop: time_limit / time_limit
+  Goal: uncapped max-min first; stage-1 s=1.81116318, preserved floor=1.81116318, final s=1.81116318.
+sb_v12_lexicographic    seed=71669974 completed    s=1.44769627 V=100.998 Mbit wall=121.894 s
+  Stop: time_limit / time_limit
+  Goal: uncapped max-min first; stage-1 s=1.43845949, preserved floor=1.43845949, final s=1.44769627.
+local_v12_lexicographic seed=71669974 completed    s=1.60126521 V=100.073 Mbit wall=120.652 s
+  Stop: time_limit / time_limit
+  Goal: uncapped max-min first; stage-1 s=1.60126521, preserved floor=1.60126521, final s=1.60126521.
+V12_PAIR_SAVED seed=71669974 (1/1).
+Theory pricing cache: block 1/20, 16 beams, 39203 subsets
+Theory pricing cache: block 2/20, 16 beams, 39203 subsets
+Theory pricing cache: block 3/20, 16 beams, 39203 subsets
+Theory pricing cache: block 4/20, 16 beams, 39203 subsets
+Theory pricing cache: block 5/20, 16 beams, 39203 subsets
+Theory pricing cache: block 6/20, 16 beams, 39203 subsets
+Theory pricing cache: block 7/20, 16 beams, 39203 subsets
+Theory pricing cache: block 8/20, 16 beams, 39203 subsets
+Theory pricing cache: block 9/20, 16 beams, 39203 subsets
+Theory pricing cache: block 10/20, 16 beams, 39203 subsets
+Theory pricing cache: block 11/20, 16 beams, 39203 subsets
+Theory pricing cache: block 12/20, 16 beams, 39203 subsets
+Theory pricing cache: block 13/20, 16 beams, 39203 subsets
+Theory pricing cache: block 14/20, 17 beams, 65536 subsets
+Theory pricing cache: block 15/20, 17 beams, 65536 subsets
+Theory pricing cache: block 16/20, 17 beams, 65536 subsets
+Theory pricing cache: block 17/20, 17 beams, 65536 subsets
+Theory pricing cache: block 18/20, 17 beams, 65536 subsets
+Theory pricing cache: block 19/20, 17 beams, 65536 subsets
+Theory pricing cache: block 20/20, 17 beams, 65536 subsets
+V12 fairness node 1: s in [1.81116318, 1.82034651], open=2, full_lp_priced
+V12 fairness node 2: s in [1.81116318, 1.82034651], open=3, full_lp_priced
+V12 fairness node 3: s in [1.81116318, 1.82034651], open=4, full_lp_priced
+V12 fairness node 4: s in [1.81116318, 1.82034651], open=5, full_lp_priced
+V12 fairness node 5: s in [1.81116318, 1.82034651], open=6, full_lp_priced
+V12 fairness node 6: s in [1.81116318, 1.82034651], open=7, full_lp_priced
+V12 fairness node 7: s in [1.81116318, 1.82034651], open=8, full_lp_priced
+V12 fairness node 8: s in [1.81116318, 1.82034651], open=9, full_lp_priced
+V12 fairness node 9: s in [1.81116318, 1.82034651], open=10, full_lp_priced
+V12 fairness node 10: s in [1.81116318, 1.82034651], open=11, full_lp_priced
+V12 fairness node 11: s in [1.81116318, 1.82034651], open=12, full_lp_priced
+V12 fairness node 12: s in [1.81116318, 1.82034651], open=13, full_lp_priced
+V12 fairness node 13: s in [1.81116318, 1.82034651], open=14, full_lp_priced
+V12 fairness node 14: s in [1.81116318, 1.82034651], open=15, full_lp_priced
+V12 fairness node 15: s in [1.81116318, 1.82034651], open=16, full_lp_priced
+V12 fairness node 16: s in [1.81116318, 1.82034651], open=17, full_lp_priced
+V12 fairness node 17: s in [1.81116318, 1.82034651], open=18, full_lp_priced
+V12 fairness node 18: s in [1.81116318, 1.82034651], open=19, full_lp_priced
+V12 fairness node 19: s in [1.81116318, 1.82034651], open=20, full_lp_priced
+V12 fairness node 20: s in [1.81116318, 1.82034651], open=21, full_lp_priced
+V12 fairness node 21: s in [1.81116318, 1.82034651], open=22, full_lp_priced
+V12 fairness node 22: s in [1.81116318, 1.82034651], open=23, full_lp_priced
+V12 fairness node 23: s in [1.81116318, 1.82034651], open=24, full_lp_priced
+V12 fairness node 24: s in [1.81116318, 1.82034651], open=25, full_lp_priced
+V12 fairness node 25: s in [1.81116318, 1.82034651], open=26, full_lp_priced
+V12 fairness node 26: s in [1.81116318, 1.82034651], open=27, full_lp_priced
+V12 fairness node 27: s in [1.81116318, 1.82034651], open=27, full_lp_priced
+Theory pricing cache: block 1/20, 16 beams, 39203 subsets
+Theory pricing cache: block 2/20, 16 beams, 39203 subsets
+Theory pricing cache: block 3/20, 16 beams, 39203 subsets
+Theory pricing cache: block 4/20, 16 beams, 39203 subsets
+Theory pricing cache: block 5/20, 16 beams, 39203 subsets
+Theory pricing cache: block 6/20, 16 beams, 39203 subsets
+Theory pricing cache: block 7/20, 16 beams, 39203 subsets
+Theory pricing cache: block 8/20, 16 beams, 39203 subsets
+Theory pricing cache: block 9/20, 16 beams, 39203 subsets
+Theory pricing cache: block 10/20, 16 beams, 39203 subsets
+Theory pricing cache: block 11/20, 16 beams, 39203 subsets
+Theory pricing cache: block 12/20, 16 beams, 39203 subsets
+Theory pricing cache: block 13/20, 16 beams, 39203 subsets
+Theory pricing cache: block 14/20, 17 beams, 65536 subsets
+Theory pricing cache: block 15/20, 17 beams, 65536 subsets
+Theory pricing cache: block 16/20, 17 beams, 65536 subsets
+Theory pricing cache: block 17/20, 17 beams, 65536 subsets
+Theory pricing cache: block 18/20, 17 beams, 65536 subsets
+Theory pricing cache: block 19/20, 17 beams, 65536 subsets
+Theory pricing cache: block 20/20, 17 beams, 65536 subsets
+Certificate node 1: lower=102.563908 upper=109.020465 Mbit, open=1, time_limit
+Theory pricing cache: block 1/20, 16 beams, 39203 subsets
+Theory pricing cache: block 2/20, 16 beams, 39203 subsets
+Theory pricing cache: block 3/20, 16 beams, 39203 subsets
+Theory pricing cache: block 4/20, 16 beams, 39203 subsets
+Theory pricing cache: block 5/20, 16 beams, 39203 subsets
+Theory pricing cache: block 6/20, 16 beams, 39203 subsets
+Theory pricing cache: block 7/20, 16 beams, 39203 subsets
+Theory pricing cache: block 8/20, 16 beams, 39203 subsets
+Theory pricing cache: block 9/20, 16 beams, 39203 subsets
+Theory pricing cache: block 10/20, 16 beams, 39203 subsets
+Theory pricing cache: block 11/20, 16 beams, 39203 subsets
+Theory pricing cache: block 12/20, 16 beams, 39203 subsets
+Theory pricing cache: block 13/20, 16 beams, 39203 subsets
+Theory pricing cache: block 14/20, 17 beams, 65536 subsets
+Theory pricing cache: block 15/20, 17 beams, 65536 subsets
+Theory pricing cache: block 16/20, 17 beams, 65536 subsets
+Theory pricing cache: block 17/20, 17 beams, 65536 subsets
+Theory pricing cache: block 18/20, 17 beams, 65536 subsets
+Theory pricing cache: block 19/20, 17 beams, 65536 subsets
+Theory pricing cache: block 20/20, 17 beams, 65536 subsets
+Certificate node 1: lower=102.563908 upper=115.577106 Mbit, open=1, time_limit
+Theory pricing cache: block 1/20, 16 beams, 39203 subsets
+Theory pricing cache: block 2/20, 16 beams, 39203 subsets
+Theory pricing cache: block 3/20, 16 beams, 39203 subsets
+Theory pricing cache: block 4/20, 16 beams, 39203 subsets
+Theory pricing cache: block 5/20, 16 beams, 39203 subsets
+Theory pricing cache: block 6/20, 16 beams, 39203 subsets
+Theory pricing cache: block 7/20, 16 beams, 39203 subsets
+Theory pricing cache: block 8/20, 16 beams, 39203 subsets
+Theory pricing cache: block 9/20, 16 beams, 39203 subsets
+Theory pricing cache: block 10/20, 16 beams, 39203 subsets
+Theory pricing cache: block 11/20, 16 beams, 39203 subsets
+Theory pricing cache: block 12/20, 16 beams, 39203 subsets
+Theory pricing cache: block 13/20, 16 beams, 39203 subsets
+Theory pricing cache: block 14/20, 17 beams, 65536 subsets
+Theory pricing cache: block 15/20, 17 beams, 65536 subsets
+Theory pricing cache: block 16/20, 17 beams, 65536 subsets
+Theory pricing cache: block 17/20, 17 beams, 65536 subsets
+Theory pricing cache: block 18/20, 17 beams, 65536 subsets
+Theory pricing cache: block 19/20, 17 beams, 65536 subsets
+Theory pricing cache: block 20/20, 17 beams, 65536 subsets
+Certificate node 1: lower=102.563908 upper=114.612171 Mbit, open=1, time_limit
+V12 original_tabu            seed 71669974: s1=1.81116318, s2=1.81116318, floor=1.81116318, total=102.564 Mbit, preserved=1.
+V12 sb_v12_lexicographic     seed 71669974: s1=1.43845949, s2=1.44769627, floor=1.43845949, total=100.998 Mbit, preserved=1.
+V12 local_v12_lexicographic  seed 71669974: s1=1.60126521, s2=1.60126521, floor=1.60126521, total=100.073 Mbit, preserved=1.
+GLOBAL FAIRNESS optimum in [1.81116318, 1.82034651]; time_limit. Secondary throughput bounds are conditional on each stated floor.

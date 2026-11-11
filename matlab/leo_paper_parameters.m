@@ -12,6 +12,7 @@ p.users.layout = 'reference32';
 p.system.maxStreams = 8;              % 最多 8 人，恢复原并发上限
 p.seed = 71669974;                    % V6 默认固定复查种子
 p.problem.requireFullQos = true;
+p.problem.objectiveMode = 'full_qos_sum'; % V10/V11历史入口；V12使用leo_v12_parameters
 p.statistics.serviceModel = 'periodic_multilevel';
 p.statistics.fadingLevels = 64;
 p.statistics.referenceFadeGrid = [.25,.5,.75,1,1.5,2];

@@ -1,3 +1,5 @@
+> **V12 当前入口：** 默认 `run_leo_comparison` 已改为未封顶公平优先目标；旧单次比较名为 `run_leo_full_qos_comparison`。两阶段定义、证书与入口见 [V12_LEXICOGRAPHIC.md](V12_LEXICOGRAPHIC.md)。以下 V10/V11 及更早说明仅适用于历史目标。
+
 > **V10 当前实现：** 默认采用冻结V8 SB搜索及配对V8 Local，保留V9其他对照；新增共同质量时间指标与非参考点代理误差。详见 [V10_METHOD.md](V10_METHOD.md)。以下版本说明保留作历史接口背景。
 
 > **V9 当前实现：** 默认8项、每方法120秒；主指标为全员QoS约束下的保证总服务和相对上界差距。候选池、两块协调、无二次Tabu、真正生效的参考点消融及新日志见 [V9_METHOD.md](V9_METHOD.md)。下文版本标注的旧预算、方法数量和图组说明保留作历史接口背景。
@@ -1424,3 +1426,12 @@ V5各求解器的阶段2只有在全员G>=q后运行，门槛固定为1；未达
 `SHOW_V11_RESULTS.m` / `run_leo_v11_show_results` 可见打开已有结果图，必要时只按JSON重画，不重新运行实验。
 `leo_v11_paired_options`、`leo_v11_paired_statistics`、`leo_v11_trace_data` 和 `leo_build_v11_paired_specs`
 分别提供协议校验、配对统计、V10 日志兼容提取和绘图规格。详情见 V11_FROM_V10.md。
+
+## V12 未封顶公平优先入口
+
+`RUN_V12_LEXICOGRAPHIC` / `run_leo_v12_comparison` 执行新目标三方法配对，保存完整协议、原模型和日程。
+`run_leo_v12_summary` 分别生成主公平证书、按各自 s0 的条件吞吐证书和两阶段图表。
+`leo_v12_solve_schedule`、`leo_v12_run_price_phase` 和 `leo_v12_build_service_surrogates` 是冻结 V10/V8 机制的新目标适配；内层继续调用 V8 SB/Local。
+`leo_fairness_from_ratios`、`leo_fairness_limit` 统一未封顶评分和有效有限界；`leo_fairness_certificate` / `leo_refine_fairness_node` 对原模型 max-min 作独立完整定价及二元分支。
+`run_leo_v12_verify_exports` 从 CSV 日程原式复核未封顶公平、总服务及阶段一门槛保持；`SHOW_V12_RESULTS` / `run_leo_v12_show_results` 只读打开或重画已有图。
+`leo_v12_options` 保存独立协议，`leo_v12_trace_data` / `leo_build_v12_specs` 保存实际两阶段轨迹及六联图数据。详细定义见 V12_LEXICOGRAPHIC.md。

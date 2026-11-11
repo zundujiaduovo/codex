@@ -86,7 +86,7 @@ rmpath(path); clear leo_build_service_surrogates leo_build_resource_qubo;
 rmdir(path,'s');
 end
 function problem=fixture(limit,power)
-p=leo_default_parameters(); p.statistics.serviceModel='slot_union'; p.system.K=2;
+p=leo_default_parameters(); p.problem.objectiveMode='full_qos_sum'; p.statistics.serviceModel='slot_union'; p.system.K=2;
 p.system.maxStreams=limit; p.system.bandwidthHz=1; p.system.qosTargetBits=1;
 p.problem.requireFullQos=true; p.time.nSlots=2; p.time.blockSlots=1; p.time.slotDurationS=1;
 p.time.baseOverheadS=0; p.time.configOverheadS=0; p=leo_validate_parameters(p);

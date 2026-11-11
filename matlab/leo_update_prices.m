@@ -6,6 +6,6 @@ function lambdaNext = leo_update_prices(lambda,lowerUserBits,q,sAux,step)
 assert(isequal(size(lambda),size(lowerUserBits),size(q)));
 assert(all(isfinite(lambda) & lambda>=0) && all(isfinite(lowerUserBits)));
 assert(all(isfinite(q) & q>0) && isscalar(step) && isfinite(step) && step>0);
-assert(isscalar(sAux) && isfinite(sAux) && sAux>=0 && sAux<=1);
+assert(isscalar(sAux) && isfinite(sAux) && sAux>=0);
 lambdaNext = max(0,lambda+step*(sAux-lowerUserBits./q));
 end

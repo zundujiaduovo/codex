@@ -72,7 +72,7 @@ fprintf('PASS: frozen V8 dispatch/RNG, paired controls, hand-calculated quality/
     end
 end
 function problem=fixture()
-p=leo_default_parameters(); p.statistics.serviceModel='slot_union'; p.system.K=2;
+p=leo_default_parameters(); p.problem.objectiveMode='full_qos_sum'; p.statistics.serviceModel='slot_union'; p.system.K=2;
 p.system.maxStreams=2; p.system.bandwidthHz=1; p.system.qosTargetBits=1; p.problem.requireFullQos=true;
 p.time.nSlots=2; p.time.blockSlots=1; p.time.slotDurationS=1; p.time.baseOverheadS=0; p.time.configOverheadS=0;
 p=leo_validate_parameters(p); resources=leo_build_resources(p); beams.available=true(2); beams.index=repmat([1;2],1,2);

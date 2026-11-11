@@ -68,6 +68,8 @@ if strcmp(p.statistics.serviceModel,'periodic_multilevel')
     end
 end
 if ~isfield(p.problem,'requireFullQos'), p.problem.requireFullQos=false; end
+if ~isfield(p.problem,'objectiveMode'), p.problem.objectiveMode='full_qos_sum'; end
+assert(any(strcmp(p.problem.objectiveMode,{'lexicographic_max_min','full_qos_sum'})),'Unknown objective mode.');
 assert(isscalar(p.problem.requireFullQos) && any(p.problem.requireFullQos==[0,1]));
 if isempty(p.problem.referenceBits)
     p.problem.referenceBits = sum(q);

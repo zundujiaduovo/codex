@@ -48,10 +48,10 @@ o.batchSize=7;b=leo_exhaustive_search(problem,o);
 assert(a.visitedSchedules==b.visitedSchedules && isequal(a.x,b.x));
 assert(a.fairness==b.fairness && a.totalBits==b.totalBits);checks=checks+1;
 
-% 5. 公平封顶 1 后最大吞吐；q_i 不是服务截断值。
+% 5. 单用户累计服务比例也不封顶；q_i不是服务截断值。
 problem=toy_problem([1,10],1,1,[1,1],true(1,2));
 r=leo_exhaustive_search(problem,o);
-assert(r.fairness==1 && abs(r.totalBits-11)<1e-10 && all(r.x(:)));
+assert(abs(r.fairness-11)<1e-10 && abs(r.totalBits-11)<1e-10 && all(r.x(:)));
 assert(r.stage1Complete && r.stage2Complete);checks=checks+1;
 
 % 6. 一个用户永远不可服务时公平为 0，仍应做第二阶段吞吐比较。

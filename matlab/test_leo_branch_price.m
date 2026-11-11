@@ -1,6 +1,6 @@
 function test_leo_branch_price()
 %TEST_LEO_BRANCH_PRICE 人为构造LP分数间隙，独立整数枚举验证真正的分支收紧。
-p=leo_default_parameters(); p.statistics.serviceModel='slot_union';
+p=leo_default_parameters(); p.problem.objectiveMode='full_qos_sum'; p.statistics.serviceModel='slot_union';
 p.system.K=2; p.system.maxStreams=1; p.time.nSlots=2; p.time.blockSlots=1;
 p.time.slotDurationS=1; p.time.baseOverheadS=0; p.time.configOverheadS=0;
 p.system.bandwidthHz=1e6; p.system.qosTargetBits=1e6; p=leo_validate_parameters(p);

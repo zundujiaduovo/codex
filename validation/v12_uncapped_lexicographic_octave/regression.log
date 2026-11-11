@@ -1,0 +1,50 @@
+K=32, T=100, M=20, Na=64, NB=32, L=8
+Available user-resource pairs: 623/640; codebook sampled holes: 0.48%
+Fixed block: 5 slots (50.0 ms); candidate slots=3115; opportunity max-flow=32/32
+Service model: slot_union. All candidate user-slot events; union bound; no independence required.
+Example active SINR [min, median, max] = [-6.37, -0.56, 6.56] dB
+Problem formed, unsolved: 640 binary variables + s; example design fairness=0.
+Stage-2 template fairness floor from feasibility witness: 0.0343725 (not optimized).
+Tangent/chord built (minimax); uniform proxy-optimum fairness-gap bound <= 0.00351476.
+PASS: 12 problem-formation test groups.
+K=32, T=100, M=20, Na=64, NB=32, L=8
+Available user-resource pairs: 623/640; codebook sampled holes: 0.48%
+Fixed block: 5 slots (50.0 ms); candidate slots=3115; opportunity max-flow=32/32
+Service model: slot_union. All candidate user-slot events; union bound; no independence required.
+Example active SINR [min, median, max] = [-6.37, -0.56, 6.56] dB
+Problem formed, unsolved: 640 binary variables + s; example design fairness=0.
+Stage-2 template fairness floor from feasibility witness: 0.0343725 (not optimized).
+Tangent/chord built (minimax); uniform proxy-optimum fairness-gap bound <= 0.00351476.
+PASS: 10 exhaustive-baseline test groups.
+PASS: 17 Lagrangian/SB method test groups.
+Theory pricing cache: block 1/2, 3 beams, 7 subsets
+Theory pricing cache: block 2/2, 2 beams, 4 subsets
+Full-QoS certified-service upper bound: 0.000015 Mbit/period
+Best known feasible schedule: 0.000014 Mbit/period (exhaustive)
+Method: Previous matching-data certificate combined with UB1; time limit during enumeration
+Certified remaining gap: 1.017018%; target 0.010000%; target met=1; nodes=0.
+Certificate output: /tmp/oct-m5Eytm/certificate_v7
+Upper bound is conditional on full QoS and may not be attainable.
+PASS: exact binary enumeration, common QoS-floor upper bound, UB1 fallback and saved-result recovery.
+PASS: independently enumerated capped/count pricing under branch fixes, valid count cuts and unknown-incumbent certificate search.
+Theory pricing cache: block 1/2, 2 beams, 3 subsets
+Theory pricing cache: block 2/2, 2 beams, 3 subsets
+Certificate node 1: lower=18.000000 upper=19.750000 Mbit, open=2, full_lp_priced
+Certificate node 2: lower=18.000000 upper=19.750000 Mbit, open=3, full_lp_priced
+Certificate node 3: lower=18.000000 upper=19.750000 Mbit, open=4, full_lp_priced
+Certificate node 6: lower=18.000000 upper=19.750000 Mbit, open=5, full_lp_priced
+Certificate node 7: lower=18.000000 upper=18.000000 Mbit, open=4, full_lp_priced
+Theory pricing cache: block 1/2, 3 beams, 4 subsets
+Theory pricing cache: block 2/2, 3 beams, 4 subsets
+Certificate node 1: lower=NaN upper=-Inf Mbit, open=0, full_lp_priced
+PASS: nonzero LP/integer gap, branch closure to independent exact optimum, fractional-feasible/integer-infeasible case and budget truncation.
+Theory pricing cache: block 1/2, 3 beams, 7 subsets
+Theory pricing cache: block 2/2, 3 beams, 7 subsets
+Recovered 7 completed runs from raw_benchmark.mat; no algorithms re-run.
+PASS: V5 multilevel rate floor, exact discrete tails for all schedules, original/proxy/upper consistency and strict full-QoS gating.
+PASS: V9 original-objective pool winner, joint QoS compensation, exact cache, active ablations, proxy-free Tabu, paired controls and gap plots.
+Quality/time metrics saved in /tmp/oct-lGHw9a; no algorithm rerun.
+PASS: frozen V8 dispatch/RNG, paired controls, hand-calculated quality/time metrics, missing and late targets, held returns and off-reference proxy audit.
+PASS: V11 paired bootstrap/sign/Holm, missing pairs, RNG, duplicate seeds, V10 trace equivalence and matched engine controls.
+PASS: V12 uncapped lexicographic counterexample, >1 phase search, strict stage-2 floor, MILP cap removal, original-model bounds, risk margins and zero-fairness branching.
+REGRESSION_FAILURES 0

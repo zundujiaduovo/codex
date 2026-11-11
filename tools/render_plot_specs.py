@@ -48,9 +48,9 @@ def color(name, index):
         return '#3373d9'
     if name == 'SB minus original_tabu':
         return '#00804d'
-    if name == 'sb_v8_blockwise':
+    if name in {'sb_v8_blockwise', 'sb_v12_lexicographic'}:
         return '#d92633'
-    if name == 'local_v8_blockwise':
+    if name in {'local_v8_blockwise', 'local_v12_lexicographic'}:
         return '#3373d9'
     modern = ['initial', 'original_exchange', 'original_tabu', 'original_tabu_independent',
               'price_sb_blockwise', 'price_local_blockwise', 'price_sb_joint', 'price_local_joint']
@@ -193,7 +193,7 @@ def render(source: Path, directory: Path):
     plt.close(fig)
     links = ["# 图表索引", "", "数值和图形规格由 MATLAB 生成；本目录图像使用 Matplotlib 渲染。", "",
              "[全部图表 PDF](all_figures.pdf) · [总览](overview.png)", "",
-             "折线点：多种子中位数；误差棒：最小至最大（不是置信区间）。代表曲线固定取第一个请求的种子。", "",
+             "数值含义、聚合方式和代表种子以各图标题及 JSON 规格为准；V12 六联图固定取第一个请求的种子。", "",
              "NaN / N/A 表示不适用或未报告；迭代计数的单位详见项目 PLOTS.md。", ""]
     for spec in specs:
         links.append(f'- {spec["name"]}: [PNG]({spec["name"]}.png) · [PDF]({spec["name"]}.pdf)')

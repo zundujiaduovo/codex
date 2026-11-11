@@ -4,7 +4,6 @@ function report = run_leo_benchmarks(caseOrParameters,overrides)
 % 输出：报告、全部 CSV/MAT/JSON 及图形后端可用时的 18 图 PNG/PDF/FIG；不自动缩小参数。
 if nargin<1, caseOrParameters = 'small'; end
 if nargin<2, overrides = struct(); end
-options = leo_benchmark_options(overrides);
 if isstruct(caseOrParameters)
     p = caseOrParameters; caseName = 'custom';
 else
@@ -14,6 +13,7 @@ else
 end
 p.method.enabled = false; p.exhaustive.enabled = false;
 model = run_leo_sinr(p,false);
+options = leo_benchmark_options(overrides,model.problem.data);
 report = leo_benchmark_case(model,options);
 report.caseName = caseName;
 directory = options.outputDirectory;

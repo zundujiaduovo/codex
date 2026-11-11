@@ -13,7 +13,7 @@ assert(isequal(a.phaseIndex,b.phaseIndex) && isequal(a.F,b.F));
 base=tempname; directoryCleanup=onCleanup(@() cleanup_dir(base)); %#ok<NASGU>
 opts=struct('methods',{{'initial'}},'budgetSeconds',12,'validationSamples',3, ...
  'verbose',false,'theoryOptions',struct('maxSeconds',0));
-[report,fig]=run_leo_comparison(base,opts,false);
+[report,fig]=run_leo_full_qos_comparison(base,opts,false);
 assert(isempty(fig) && report.runSeed==71669974 && strcmp(report.seedSource,'fixed_default'));
 assert(report.problemData.maxStreams==8 && nnz(report.problemData.available)==623);
 folder=report.options.outputDirectory;

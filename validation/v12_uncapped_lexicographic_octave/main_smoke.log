@@ -1,0 +1,30 @@
+K=32, T=100, M=20, Na=64, NB=32, L=8
+Available user-resource pairs: 623/640; codebook sampled holes: 0.48%
+Fixed block: 5 slots (50.0 ms); candidate slots=3115; opportunity max-flow=32/32
+Service model: periodic_multilevel. Multilevel fading-floor certificate; independent slots per user; fixed common parameters; joint risk budget is totalRisk.
+Example active SINR [min, median, max] = [-6.74, -1.39, 5.13] dB
+Problem formed, unsolved: 640 binary variables + s; example design fairness=0.
+Stage-2 template fairness floor from feasibility witness: 0.166285 (not optimized).
+Quadratic proxy deferred: original-objective baselines receive no proxy.
+V12 CHANGED OBJECTIVE: maximize UNCAPPPED s=min_i G_i/q_i; then maximize sum(G_i) with every ratio >= attained stage-1 s.
+1 search seed(s), 3 methods, 25 s/method; fairness phase fraction 0.70.
+Output: /workspace/codex/results/v12_smoke
+original_tabu           seed=71669974 completed    s=1.43845949 V=85.1623 Mbit wall=11.580 s
+  Stop: iteration_limit / iteration_limit
+  Goal: uncapped max-min first; stage-1 s=1.43845949, preserved floor=1.43845949, final s=1.43845949.
+sb_v12_lexicographic    seed=71669974 completed    s=1.43845949 V=92.1384 Mbit wall=25.579 s
+  Stop: time_limit / time_limit
+  Goal: uncapped max-min first; stage-1 s=1.43845949, preserved floor=1.43845949, final s=1.43845949.
+local_v12_lexicographic seed=71669974 completed    s=1.43845949 V=93.2007 Mbit wall=20.764 s
+  Stop: iteration_limit / iteration_limit
+  Goal: uncapped max-min first; stage-1 s=1.43845949, preserved floor=1.43845949, final s=1.43845949.
+V12_PAIR_SAVED seed=71669974 (1/1).
+Theory pricing cache: block 1/20, 16 beams, 39203 subsets
+Theory pricing cache: block 2/20, 16 beams, 39203 subsets
+Theory pricing cache: block 3/20, 16 beams, 39203 subsets
+V12 original_tabu            seed 71669974: s1=1.43845949, s2=1.43845949, floor=1.43845949, total=85.1623 Mbit, preserved=1.
+V12 sb_v12_lexicographic     seed 71669974: s1=1.43845949, s2=1.43845949, floor=1.43845949, total=92.1384 Mbit, preserved=1.
+V12 local_v12_lexicographic  seed 71669974: s1=1.43845949, s2=1.43845949, floor=1.43845949, total=93.2007 Mbit, preserved=1.
+GLOBAL FAIRNESS optimum in [1.43845949, 1.82034651]; time limit during enumeration. Secondary throughput bounds are conditional on each stated floor.
+PASS: 3 exported schedules re-evaluated by the original model; max total error 0 bit.
+PASS: V12 original-model scores and every attained stage-1 fairness floor preserved; no cap at 1.

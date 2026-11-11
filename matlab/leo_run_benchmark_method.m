@@ -2,7 +2,18 @@ function result = leo_run_benchmark_method(problem,proxy,provided,name,options)
 %LEO_RUN_BENCHMARK_METHOD 第 13.3 节实验分派；所有求解均只收到同一模型/初始化。
 % 输入：原问题、minimax 代理、提供日程、方法名、方法预算；输出方法的原始可行结果。
 switch name
+    case {'sb_v12_lexicographic','local_v12_lexicographic'}
+        legacy=leo_v8_method_options(); fields=fieldnames(legacy);
+        for j=1:numel(fields)
+            if isfield(options,fields{j}), legacy.(fields{j})=options.(fields{j}); end
+        end
+        legacy.blockwiseOriginalAccept=true;
+        if strcmp(name,'sb_v12_lexicographic'), legacy.innerSolver='sb'; else, legacy.innerSolver='local'; end
+        result=leo_v12_solve_schedule(problem,[],legacy,provided);
+        result.usesQuadraticProxy=true; result.usesProvidedSchedule=~isempty(provided);
+        result.searchEngine='V12 uncapped adaptation of V10/V8';
     case {'sb_v8_blockwise','local_v8_blockwise'}
+        assert(~leo_is_lexicographic(problem.data),'Use sb_v12_lexicographic/local_v12_lexicographic for the V12 objective.');
         % 冻结V8引擎：只传V8已有参数，禁止混入V9扰动/候选池/联合搜索。
         legacy=leo_v8_method_options(); fields=fieldnames(legacy);
         for j=1:numel(fields)

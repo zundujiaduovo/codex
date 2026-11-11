@@ -1,12 +1,12 @@
-"""Build V11 based on V10 as a source-only MATLAB release."""
+"""Build V12 uncapped lexicographic fairness as a source-only MATLAB release."""
 from pathlib import Path
 import hashlib
 import zipfile
 
 ROOT = Path(__file__).resolve().parents[1]
-NAME = "LEO_QoS_Comparison_v11_based_on_v10"
+NAME = "LEO_QoS_Comparison_v12_uncapped_lexicographic"
 DOCS = {
-    "README.md", "VERSION.md", "V11_FROM_V10.md", "V11_VALIDATION.md", "V10_METHOD.md", "V9_METHOD.md", "V8_SEARCH_SNAPSHOT.json", "REPRODUCIBILITY.md", "FULL_QOS_MODEL.md",
+    "README.md", "VERSION.md", "V12_LEXICOGRAPHIC.md", "V12_VALIDATION.md", "V11_FROM_V10.md", "V11_VALIDATION.md", "V10_METHOD.md", "V9_METHOD.md", "V8_SEARCH_SNAPSHOT.json", "REPRODUCIBILITY.md", "FULL_QOS_MODEL.md",
     "THEORETICAL_BOUND.md", "CERTIFICATE_SEARCH.md", "SB_CONVERGENCE.md", "METHODS_AND_METRICS.md", "PAPER_REFERENCE.md",
     "ADAPTIVE_SB.md", "PERIODIC_QOS.md", "PROBLEM_FORMULATION.md", "METHOD.md",
     "FUNCTION_GUIDE.md", "PLOTS.md", "IMPLEMENTATION_STATUS.md", "BENCHMARKS.md",

@@ -1,4 +1,14 @@
 % LEO 固定块 QoS：建模、两阶段拉格朗日 SB、原始穷举与统一实验。
+% V12: 未封顶min_i G_i/q_i优先，再在取得的公平门槛下提高总保证服务。
+%   run_leo_v12_comparison            - 新目标、三方法同模型/初态/种子/时间对照。
+%   run_leo_v12_show_results          - 可见打开两阶段六联图，缺图仅从JSON重画。
+%   run_leo_v12_verify_exports        - 从原模型和CSV日程重算成绩及严格公平保持。
+%   leo_v12_parameters               - 继承V10/V11物理场景，显式改用未封顶目标。
+%   leo_v12_solve_schedule           - V10/V8外层的未封顶公平V12适配。
+%   leo_fairness_certificate         - 原模型全局最大公平值的独立上下界证书。
+%   leo_theory_bound                 - V12必须指定fairnessFloor的条件吞吐证书。
+%   run_leo_full_qos_comparison      - 显式保留V10/V11全员达标后追求总服务的旧目标。
+%   test_leo_v12                     - 精确枚举反例、>1搜索、门槛保持和两类原界。
 % V10: 冻结V8引擎+V9对照；time-to-quality、定时质量、过程界差及非切点代理误差。
 %   leo_v8_solve_schedule             - V8 cd4ba09冻结搜索，不混入V9候选/扰动。
 %   run_leo_performance_metrics       - 从已有日志导出共同质量/时间指标。

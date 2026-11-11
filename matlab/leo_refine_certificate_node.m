@@ -2,7 +2,7 @@ function node = leo_refine_certificate_node(data,cache,fixed,pool,initialUpper,o
 %LEO_REFINE_CERTIFICATE_NODE 用可行基单纯形+完整组定价求节点LP上界。
 % 人工缺口变量只用于主问题初始化；上界总是重新按完整原组集合定价。
 K=data.shape(1); M=data.shape(2); [~,margin]=leo_service_adjustment(data);
-target=(data.qosTargetBits+margin)/1e6; marginTotal=sum(margin)/1e6;
+target=(leo_certificate_targets(data)+margin)/1e6; marginTotal=sum(margin)/1e6;
 if options.countCuts, target=[target;cache.minimumCounts]; end
 R=numel(target);
 node=struct('upper',initialUpper,'hardInfeasible',false,'status','time_limit', ...

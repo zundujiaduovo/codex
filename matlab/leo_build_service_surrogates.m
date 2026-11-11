@@ -75,7 +75,8 @@ for t = 1:T
 end
 proxy.error.lowerUserBits = sum(proxy.error.lowerResourceBits,2);
 proxy.error.upperUserBits = sum(proxy.error.upperResourceBits,2);
-proxy.error.optimalFairnessGapBound = min(1,max(proxy.error.lowerUserBits./data.qosTargetBits));
+proxy.error.optimalFairnessGapBound = max(proxy.error.lowerUserBits./data.qosTargetBits);
+if ~leo_is_lexicographic(data), proxy.error.optimalFairnessGapBound=min(1,proxy.error.optimalFairnessGapBound); end
 proxy.scope = 'Service bounds only on feasible binary schedules; E3 fairness gap is for baseline O2 optima.';
 proxy.problemDataSnapshot=data;
 proxy.referenceTouchMaxAbsBits = NaN;

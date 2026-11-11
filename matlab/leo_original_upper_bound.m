@@ -24,7 +24,8 @@ end
 penalty = sum(lambda(:).*margin./data.qosTargetBits);
 if strcmp(phase,'fairness')
     % 正公平必有 A_i>=margin_i+s*q_i；若正公平不可行，最优值为零。
-    bound.value = max(0,min(1,max(0,1-sum(lambda))+sum(bound.resource)-penalty));
+    limit=leo_fairness_limit(data);
+    bound.value = max(0,min(limit,limit*max(0,1-sum(lambda))+sum(bound.resource)-penalty));
 elseif s0>0 || ~any(margin>0)
     bound.value = sum(bound.resource)-s0*sum(lambda)-penalty-sum(margin)/data.referenceBits;
 else

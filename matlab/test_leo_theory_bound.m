@@ -1,6 +1,6 @@
 function test_leo_theory_bound()
 %TEST_LEO_THEORY_BOUND 穷举小问题检查上界、完整波束定价、备份及无可行记录。
-p=leo_default_parameters(); p.system.K=3; p.system.maxStreams=2; p.time.nSlots=8;
+p=leo_default_parameters(); p.problem.objectiveMode='full_qos_sum'; p.system.K=3; p.system.maxStreams=2; p.time.nSlots=8;
 p.time.blockSlots=4; p.system.bandwidthHz=100; p.system.qosTargetBits=[.3;.4;.5]; p=leo_validate_parameters(p);
 r=leo_build_resources(p); b.available=true(3,2); b.available(1,2)=false;
 b.index=repmat((1:3).',1,2); b.index(~b.available)=0;

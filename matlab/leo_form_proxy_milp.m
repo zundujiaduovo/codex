@@ -43,5 +43,6 @@ model.intcon = (1:nx).'; model.f = zeros(n,1);
 if isFair, model.f(n) = -1; else, model.f = -full(sum(D,1)).'/data.referenceBits; end
 model.serviceMatrixBits = D; model.pairs = pairs; model.nScheduleBits = nx;
 model.sIndex = []; if isFair, model.sIndex = n; end
+if isFair, model.ub(n)=leo_fairness_limit(data); end
 model.phase = phase; model.fairnessFloor = s0;
 end

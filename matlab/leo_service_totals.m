@@ -12,6 +12,7 @@ service.userBits = service.signedUserBits;
 if clipNegative, service.userBits = service.guaranteedUserBits; end
 service.totalBits = sum(service.userBits);
 service.demandRatio = service.userBits./data.qosTargetBits;
-service.fairness = min(1,min(service.demandRatio));
+service.fairness = leo_fairness_from_ratios(data,service.demandRatio);
+service.qosCompletion=min(1,min(service.demandRatio)); % 仅为QoS达标辅助指标，不用于V12优化排序。
 service.normalizedThroughput = service.totalBits/data.referenceBits;
 end

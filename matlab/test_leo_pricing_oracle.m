@@ -1,6 +1,6 @@
 function test_leo_pricing_oracle()
 %TEST_LEO_PRICING_ORACLE 原始组枚举独立检查带截断/整数计数割/分支限制的精确定价。
-p=leo_default_parameters(); p.statistics.serviceModel='slot_union'; p.system.K=4;
+p=leo_default_parameters(); p.problem.objectiveMode='full_qos_sum'; p.statistics.serviceModel='slot_union'; p.system.K=4;
 p.system.maxStreams=2; p.system.bandwidthHz=1e6; p.system.qosTargetBits=[.3;.4;.5;.6]*1e6;
 p.time.nSlots=4; p.time.blockSlots=2; p.time.slotDurationS=.5;
 p.time.baseOverheadS=0; p.time.configOverheadS=0; p=leo_validate_parameters(p);

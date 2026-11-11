@@ -18,13 +18,16 @@ data.referenceBits = p.problem.referenceBits;
 data.periodSeconds = p.time.nSlots*p.time.slotDurationS;
 data.design = design;
 data.requireFullQos = isfield(p.problem,'requireFullQos') && p.problem.requireFullQos;
+if isfield(p.problem,'objectiveMode'), data.objectiveMode=p.problem.objectiveMode; end
+if leo_is_lexicographic(data), data.fairnessUpperLimit=leo_fairness_limit(data); end
 n = prod(data.shape);
 stage.name = 'P_F: maximize capped minimum normalized design service';
+if leo_is_lexicographic(data), stage.name='P_F: maximize UNCAPPED minimum cumulative guaranteed-service ratio'; end
 stage.objective = @(z) leo_problem_objective(z,data,1);
 stage.nonlcon = @(z) leo_problem_nonlcon(z,data,1,0);
 stage.A = [hard.A,sparse(size(hard.A,1),1)]; stage.b = hard.rhs;
 stage.Aeq = sparse(0,n+1); stage.beq = [];
-stage.lb = [hard.lower;0]; stage.ub = [hard.upper;1];
+stage.lb = [hard.lower;0]; stage.ub = [hard.upper;leo_fairness_limit(data)];
 stage.intcon = hard.integerIndices;  % 最后 s 是连续变量，不在 intcon 中
 stage.x0 = zeros(n+1,1);            % O2 的空日程、s=0 是已知可行点
 stage.sIndex = n+1;

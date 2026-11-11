@@ -18,10 +18,17 @@ if isfield(data,'serviceModel') && any(strcmp(data.serviceModel,{'periodic_chern
 end
 
 p = metric(records,good,'fairness',1,'Capped minimum QoS ratio','Fairness');
+if isfield(data,'objectiveMode') && strcmp(data.objectiveMode,'lexicographic_max_min')
+    p=metric(records,good,'fairness',1,'Uncapped minimum cumulative guaranteed-service ratio','min_i G_i/q_i');
+end
 if isfield(data,'requireFullQos') && data.requireFullQos && isfield(records,'upperGapPercent')
     p=metric(records,good,'upperGapPercent',1,'Gap to common upper bound','Percent');
 end
 p(2) = metric(records,good,'totalBits',1e-6,'Diagnostic certified service (all returned schedules)','Mbit');
+if isfield(data,'objectiveMode') && strcmp(data.objectiveMode,'lexicographic_max_min')
+    p(2).title='Sum service at each attained fairness floor';
+    p(2).note='Different attained floors define different secondary problems; compare fairness first.';
+end
 if isfield(data,'requireFullQos') && data.requireFullQos
     p(2)=metric(records,good,'feasibleTotalBits',1e-6,'Certified service ONLY for full-QoS schedules','Mbit');
 end

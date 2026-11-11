@@ -1,0 +1,5 @@
+PASS: V12 uncapped lexicographic counterexample, >1 phase search, strict stage-2 floor, MILP cap removal, original-model bounds, risk margins and zero-fairness branching.
+PASS: 3 exported schedules re-evaluated by the original model; max total error 0 bit.
+PASS: V12 BOTH stages re-evaluated from binary CSV schedules; every attained stage-1 fairness floor preserved; no cap at 1.
+PASS: independent fairness-certificate incumbent re-evaluated; global upper covers every exported method and certificate incumbent.
+error: ignoring const execution_exception& while preparing to exit

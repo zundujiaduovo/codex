@@ -32,7 +32,7 @@ for m=1:M
     if isempty(cache.blockTrace), cache.blockTrace=row; else, cache.blockTrace(end+1,1)=row; end
     if options.verbose, fprintf('Theory pricing cache: block %d/%d, %d beams, %d subsets\n',m,M,B,count); end
 end
-[~,margin]=leo_service_adjustment(data); target=(data.qosTargetBits+margin)/1e6;
+[~,margin]=leo_service_adjustment(data); target=(leo_certificate_targets(data)+margin)/1e6;
 maximum=zeros(K,M);
 for m=1:M, maximum(:,m)=max(cache.blocks{m}.rates,[],2)*(1+1e-10)+1e-12; end
 sorted=sort(maximum,2,'descend'); cumulative=cumsum(sorted,2);

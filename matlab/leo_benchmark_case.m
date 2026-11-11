@@ -2,13 +2,13 @@ function report = leo_benchmark_case(model,options)
 %LEO_BENCHMARK_CASE 第 13.3 节：同一物理样本上的多算法、多随机种子对比。
 % 输入：run_leo_sinr 的未求解模型、实验选项；输出逐次记录、日程、统计及穷举参考。
 % 共用预处理耗时按每个方法各记一次；穷举在所有启发式结束后运行，禁止先验泄漏。
-options = leo_benchmark_options(options);
 problem = model.problem;
+options = leo_benchmark_options(options,problem.data);
 providedSchedule=model.xExample; commonFullStart=false;
-if leo_requires_full_qos(problem.data) && isfield(problem.data.design,'calibrationX')
+if isfield(problem.data.design,'calibrationX')
     % 公共确定性校准日程属于已计时预处理，所有方法同样可用。
     providedSchedule=problem.data.design.calibrationX;
-    commonFullStart=all(problem.data.design.calibrationBits>=problem.data.qosTargetBits);
+    commonFullStart=leo_requires_full_qos(problem.data) && all(problem.data.design.calibrationBits>=problem.data.qosTargetBits);
 end
 commonSeconds = model.timings.physicalProblemSeconds;
 template = struct('method','','seed',0,'status','','solverStatus','','message','','fairness',NaN, ...
@@ -23,6 +23,10 @@ template = struct('method','','seed',0,'status','','solverStatus','','message','
 template.usesQuadraticProxy=false; template.initializationPolicy='common_original_candidates';
 template.gainOverInitialPercent=NaN; template.upperGapPercent=NaN; template.knownLowerGapPercent=NaN;
 template.searchEngine='original_objective';
+template.objectiveMode='full_qos_sum';
+if leo_is_lexicographic(problem.data), template.objectiveMode='lexicographic_max_min'; end
+template.stage1Fairness=NaN; template.stage2Fairness=NaN; template.stage1FairnessGap=NaN;
+template.stage1Certified=false; template.fairnessPreserved=false;
 records = repmat(template,0,1); solutions = {};
 for seed = options.seeds(:).'
     for j = 1:numel(options.methods)
@@ -57,10 +61,19 @@ for seed = options.seeds(:).'
                 service = problem.evaluate(result.x); % 最后统一校验硬约束、原始服务
                 row.fullQosFeasible=all(service.userBits>=problem.data.qosTargetBits);
                 row.requiredFairnessFloor=result.fairnessFloor;
+                row.stage1Fairness=result.stage1.service.fairness;
+                row.stage2Fairness=service.fairness;
+                row.stage1FairnessGap=max(0,result.fairnessUpperBound-row.stage1Fairness);
+                row.stage1Certified=row.stage1FairnessGap<=method.gapTolerance;
+                row.fairnessPreserved=all(service.demandRatio>=result.fairnessFloor);
                 if row.fullQosFeasible
                     row.goalStatus='full_qos_met'; row.feasibleTotalBits=service.totalBits;
                 else
                     row.goalStatus='full_qos_not_found';
+                end
+                if leo_is_lexicographic(problem.data)
+                    row.goalStatus='lexicographic_fairness_then_throughput';
+                    row.feasibleTotalBits=service.totalBits;
                 end
                 if ~leo_requires_full_qos(problem.data) || row.fullQosFeasible
                     assert(all(service.demandRatio>=result.fairnessFloor));
@@ -77,7 +90,7 @@ for seed = options.seeds(:).'
                 row.qosSatisfactionRate = mean(service.demandRatio>=1); row.totalBits = service.totalBits;
                 row.averageCompletion = mean(min(1,service.demandRatio));
                 row.initialFairness = result.initial.service.fairness; row.initialTotalBits = result.initial.service.totalBits;
-                if row.fullQosFeasible && row.initialFairness==1 && row.initialTotalBits>0
+                if (leo_is_lexicographic(problem.data) || (row.fullQosFeasible && row.initialFairness==1)) && row.initialTotalBits>0
                     row.gainOverInitialPercent=100*(service.totalBits/row.initialTotalBits-1);
                 end
                 row.fairnessFloor = result.fairnessFloor; row.fairnessUpperBound = result.fairnessUpperBound;
@@ -108,7 +121,13 @@ for seed = options.seeds(:).'
             fprintf('%-23s seed=%d %-12s s=%.9g V=%.6g Mbit wall=%.3f s\n', ...
                 name,seed,row.status,row.fairness,row.totalBits/1e6,row.endToEndSeconds);
             if ~isempty(row.solverStatus), fprintf('  Stop: %s\n',row.solverStatus); end
-            if ~isempty(row.goalStatus), fprintf('  Goal: %s (full-user QoS floor 1).\n',row.goalStatus); end
+            if ~isempty(row.goalStatus)
+                if leo_is_lexicographic(problem.data)
+                    fprintf('  Goal: uncapped max-min first; stage-1 s=%.9g, preserved floor=%.9g, final s=%.9g.\n',row.stage1Fairness,row.requiredFairnessFloor,row.stage2Fairness);
+                else
+                    fprintf('  Goal: %s (full-user QoS floor 1).\n',row.goalStatus);
+                end
+            end
             if ~isempty(row.message), fprintf('  %s\n',row.message); end
         end
     end

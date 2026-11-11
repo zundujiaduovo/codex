@@ -5,11 +5,11 @@ assert(isequal(before,after) && isscalar(seed) && seed>=0 && seed<=2^32-1 && see
 p = leo_paper_parameters();
 assert(p.system.carrierHz==4e9 && p.channel.ricianKDb==12);
 assert(p.channel.elementGainDbi==6 && p.channel.receiveGainDbi==1 && strcmp(p.users.layout,'reference32'));
-opts = leo_benchmark_options(struct('seeds',429756090)); assert(numel(opts.methods)==16);
+opts = leo_benchmark_options(struct('seeds',429756090)); assert(numel(opts.methods)==8);
 base = tempname; cleanup = onCleanup(@() cleanup_dir(base)); %#ok<NASGU>
 o = struct('methods',{{'initial'}},'seeds',429756090,'budgetSeconds',12, ...
     'verbose',false,'validationSamples',5,'theoryOptions',struct('maxSeconds',0));
-[report,fig] = run_leo_comparison(base,o,false); %#ok<ASGLU>
+[report,fig] = run_leo_full_qos_comparison(base,o,false); %#ok<ASGLU>
 assert(isempty(fig) && report.runSeed==429756090 && report.validationSeed==429860819);
 assert(report.validationSamples==5 && strcmp(report.parameters.users.layout,'reference32'));
 assert(strcmp(report.records(1).status,'completed'));

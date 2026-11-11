@@ -1,0 +1,2 @@
+fairnessLower,fairnessUpper,absoluteGap,relativeGap,gapTargetMet,status,nodesProcessed,openNodes,pricingComplete,elapsedSeconds,scope
+1.8111631759686624,1.8203465061251018,0.009183330156439462,0.0050448253261340045,0,"time_limit",27,27,1,181.03632688522339,"ORIGINAL uncapped max-min G/q; certificate search is separate from benchmark methods."

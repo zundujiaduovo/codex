@@ -9,6 +9,8 @@ if isfield(report,'caseName'), data.caseName = report.caseName; end
 data.methods = report.options.methods; data.seeds = report.options.seeds;
 data.representativeSeed = data.seeds(1); data.budgetSeconds = report.options.budgetSeconds;
 data.requireFullQos=leo_requires_full_qos(report.problemData);
+data.objectiveMode='full_qos_sum';
+if leo_is_lexicographic(report.problemData), data.objectiveMode='lexicographic_max_min'; end
 data.records = report.records; data.summary = report.summary;
 data.shape = report.problemData.shape; data.maxStreams = report.problemData.maxStreams;
 data.nBeams = size(report.problemData.design.beamPowerW,2);

@@ -55,7 +55,7 @@ assert(strcmp(report.solutions{2}.options.innerSolver,'sb') && strcmp(report.sol
 fprintf('PASS: V11 paired bootstrap/sign/Holm, missing pairs, RNG, duplicate seeds, V10 trace equivalence and matched engine controls.\n');
 end
 function problem=fixture()
-p=leo_default_parameters(); p.system.K=2; p.system.maxStreams=1; p.system.bandwidthHz=1e6;
+p=leo_default_parameters(); p.problem.objectiveMode='full_qos_sum'; p.system.K=2; p.system.maxStreams=1; p.system.bandwidthHz=1e6;
 p.system.qosTargetBits=1e4; p.problem.requireFullQos=true; p.time.nSlots=2; p.time.blockSlots=1;
 p.time.slotDurationS=1; p.time.baseOverheadS=0; p.time.configOverheadS=0; p=leo_validate_parameters(p);
 r=leo_build_resources(p); b.available=true(2,2); b.index=repmat((1:2).',1,2);

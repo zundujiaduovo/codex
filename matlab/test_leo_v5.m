@@ -100,7 +100,8 @@ for j=1:numel(report.solutions)
  sol=report.solutions{j}; assert(isequal(sol.stage1.x,sol.stage2.x) && sol.fairnessFloor==1);
 end
 [~,values]=leo_plot_method_comparison(report,tempdir,false);
-assert(all(isnan(values.median(:,3))));
+assert(all(isnan(values.median(:,1)))); % 当前图第1列才是全QoS有效吞吐，第3列是达标率辅助检查。
+assert(all(isfinite(values.median(:,3))));
 % MATLAB 备用恢复脚本也不得把未达标日程放入正式吞吐栏。
 recoveryDirectory=tempname; mkdir(recoveryDirectory);
 cleanup=onCleanup(@() rmdir(recoveryDirectory,'s')); %#ok<NASGU>

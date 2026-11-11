@@ -2,9 +2,14 @@ function result = leo_theory_bound(report,options)
 %LEO_THEORY_BOUND 固定证书模型的列生成/分支定价：可行下界、全域上界与真实剩余差距。
 % 不依赖外部优化工具箱。主问题的分数值不能冒充整数可行下界。
 if nargin<2, options=struct(); end
+if leo_is_lexicographic(report.problemData) && ~isfield(options,'fairnessFloor')
+ error('leo:conditionalFloorRequired','V12 throughput bounds require an explicit fairnessFloor; use leo_fairness_certificate for stage 1.');
+end
 options=defaults(options); data=report.problemData; K=data.shape(1); M=data.shape(2);
+if options.fairnessFloor~=1 || isfield(data,'certificateFairnessFloor'), data.certificateFairnessFloor=options.fairnessFloor; end
+targets=leo_certificate_targets(data);
 started=tic; budget=struct('timer',started,'seconds',options.maxSeconds);
-result=struct('fairnessFloor',1,'userTargetsBits',data.qosTargetBits, ...
+result=struct('fairnessFloor',options.fairnessFloor,'userTargetsBits',targets, ...
  'lowerBits',NaN,'bestMethod','','bestSeed',NaN,'incumbentX',[], ...
  'recordServiceBits',NaN(numel(report.records),1),'recordFeasible',false(numel(report.records),1), ...
  'kind','UB1 cardinality relaxation','pricingComplete',false,'pricingIterations',0, ...
@@ -16,7 +21,7 @@ bestRecord=0;
 for j=1:numel(report.records)
  if ~strcmp(report.records(j).status,'completed') || isempty(report.solutions{j}), continue; end
  s=leo_evaluate_service(data,report.solutions{j}.x);
- result.recordServiceBits(j)=s.totalBits; result.recordFeasible(j)=all(s.userBits>=data.qosTargetBits);
+ result.recordServiceBits(j)=s.totalBits; result.recordFeasible(j)=all(s.demandRatio>=options.fairnessFloor);
  if result.recordFeasible(j) && (isnan(result.lowerBits) || s.totalBits>result.lowerBits)
   result.lowerBits=s.totalBits; result.bestMethod=report.records(j).method;
   result.bestSeed=report.records(j).seed; result.incumbentX=report.solutions{j}.x; bestRecord=j;
@@ -26,7 +31,7 @@ end
 if isfield(report,'theory') && isfield(report.theory,'incumbentX') && ~isempty(report.theory.incumbentX)
  try
   s=leo_evaluate_service(data,report.theory.incumbentX);
-  if all(s.userBits>=data.qosTargetBits) && (isnan(result.lowerBits) || s.totalBits>result.lowerBits)
+  if all(s.demandRatio>=options.fairnessFloor) && (isnan(result.lowerBits) || s.totalBits>result.lowerBits)
    result.lowerBits=s.totalBits; result.incumbentX=report.theory.incumbentX;
    result.bestMethod='previous_certificate_search'; result.bestSeed=NaN;
   end
@@ -34,7 +39,7 @@ if isfield(report,'theory') && isfield(report.theory,'incumbentX') && ~isempty(r
   % 历史日程不属于本次可行域时不参与下界。
  end
 end
-coarse=leo_original_upper_bound(data,leo_prepare_upper_bounds(data),zeros(K,1),'throughput',1);
+coarse=leo_original_upper_bound(data,leo_prepare_upper_bounds(data),zeros(K,1),'throughput',options.fairnessFloor);
 upper=coarse.value*data.referenceBits/1e6;
 if isfield(report,'theory') && isfield(report.theory,'problemDataSnapshot') && ...
         isequaln(report.theory.problemDataSnapshot,data) && isfinite(report.theory.upperBits)
@@ -42,6 +47,7 @@ if isfield(report,'theory') && isfield(report.theory,'problemDataSnapshot') && .
     result.kind='Previous matching-data certificate combined with UB1';
 end
 cache=leo_prepare_pricing_cache(data,options,budget);
+if options.fairnessFloor==0, cache.complete=false; cache.status='Zero floor: safe UB1 for clipped service, no signed-service branch bound.'; end
 result.subsetCounts=cache.subsetCounts; result.blockTrace=cache.blockTrace;
 result.pricingComplete=cache.complete; result.pricingStatus=cache.status;
 if cache.complete, result.minimumResourceCounts=cache.minimumCounts; end
@@ -79,7 +85,7 @@ if cache.complete
      candidate=coordinated.x;
     end
     s=leo_evaluate_service(data,candidate);
-    if isempty(bestCandidateService) || leo_service_is_better(s,bestCandidateService,'fairness',0)
+    if isempty(bestCandidateService) || better_at_floor(s,bestCandidateService,options.fairnessFloor)
      bestCandidate=candidate; bestCandidateService=s;
     end
    catch
@@ -91,14 +97,14 @@ if cache.complete
    localBudget=budget; seconds=options.recoverySeconds;
    if task.id==1, seconds=4*seconds; end
    localBudget.seconds=min(budget.seconds,toc(started)+seconds);
-   if bestCandidateService.fairness==1, phase='throughput'; floorValue=1;
+   if all(bestCandidateService.demandRatio>=options.fairnessFloor), phase='throughput'; floorValue=options.fairnessFloor;
    else, phase='fairness'; floorValue=0; end
    repaired=leo_recover_schedule(problem,bestCandidate,phase,floorValue,repairOptions,task.id,localBudget);
-   if leo_service_is_better(repaired.service,bestCandidateService,'fairness',0)
+   if better_at_floor(repaired.service,bestCandidateService,options.fairnessFloor)
     bestCandidate=repaired.x; bestCandidateService=repaired.service;
    end
   end
-  if ~isempty(bestCandidateService) && all(bestCandidateService.userBits>=data.qosTargetBits) && ...
+  if ~isempty(bestCandidateService) && all(bestCandidateService.demandRatio>=options.fairnessFloor) && ...
           (isnan(result.lowerBits) || bestCandidateService.totalBits>result.lowerBits)
    if bestCandidateService.totalBits>upper*1e6+1e-6*max(1,abs(upper*1e6))
     error('leo:upperBoundInvalid','Recovered integer schedule exceeds prior global bound.');
@@ -116,7 +122,7 @@ if cache.complete
   decision=0; closed=false;
   if node.hardInfeasible
    closed=true; node.upper=-Inf;
-  elseif node.upper*1e6<sum(data.qosTargetBits)-1e-3
+  elseif node.upper*1e6<sum(targets)-1e-3
    closed=true; % 任何全QoS日程的总服务至少为sum(q)。
   elseif node.upper*1e6<=finite_lower(result.lowerBits)+1e-3
    closed=true; closedUpper=max(closedUpper,node.upper);
@@ -131,7 +137,7 @@ if cache.complete
    [score,decision]=max(fraction(:));
    if ~any(free(:))
     x=task.fixed==1; s=leo_evaluate_service(data,x);
-    if all(s.userBits>=data.qosTargetBits)
+    if all(s.demandRatio>=options.fairnessFloor)
      if isnan(result.lowerBits) || s.totalBits>result.lowerBits
       result.lowerBits=s.totalBits; result.incumbentX=x; result.bestMethod='certificate_search'; result.bestSeed=NaN;
      end
@@ -184,13 +190,20 @@ end
 result.gapTargetMet=met_gap(result.upperBits,result.lowerBits,options);
 if ~isempty(result.incumbentX)
     check=leo_evaluate_service(data,result.incumbentX);
-    assert(all(check.userBits>=data.qosTargetBits) && abs(check.totalBits-result.lowerBits)<1e-6*max(1,result.lowerBits));
+    assert(all(check.demandRatio>=options.fairnessFloor) && abs(check.totalBits-result.lowerBits)<1e-6*max(1,result.lowerBits));
     result.incumbentUserBits=check.userBits;
 else
     result.incumbentUserBits=[];
 end
 result.elapsedSeconds=toc(started);
-result.scope='Fixed certified-service model, full-user QoS floor 1; exact integer optimum lies between verified lower and global upper; not stochastic physical capacity.';
+result.scope=sprintf('Fixed certified-service model at explicit min G/q >= %.17g; CONDITIONAL throughput optimum, not the stage-1 max-min optimum or stochastic capacity.',options.fairnessFloor);
+end
+
+function yes=better_at_floor(a,b,floorValue)
+af=all(a.demandRatio>=floorValue); bf=all(b.demandRatio>=floorValue);
+if af && bf, yes=a.totalBits>b.totalBits;
+elseif af~=bf, yes=af;
+else, yes=leo_service_is_better(a,b,'fairness',0); end
 end
 
 function pool=initial_pool(report,data,incumbent,bestRecord)
@@ -223,14 +236,14 @@ function o=defaults(o)
 values=struct('maxSeconds',180,'maxIterations',150,'maxBeams',18,'maxSubsets',200000, ...
  'maxTotalSubsets',1500000,'maxNodes',128,'maxSimplexPivots',10000, ...
  'cappedService',true,'countCuts',true,'roundingCandidates',8,'recoverySeconds',.25, ...
- 'relativeGap',.0001,'absoluteGapBits',1,'pricingTolerance',1e-8,'artificialPenalty',1000,'verbose',true);
+ 'relativeGap',.0001,'absoluteGapBits',1,'pricingTolerance',1e-8,'artificialPenalty',1000,'verbose',true,'fairnessFloor',1);
 names=fieldnames(o); assert(all(ismember(names,fieldnames(values))),'Unknown theory option.');
 for j=1:numel(names), values.(names{j})=o.(names{j}); end
 o=values;
 for f={'maxIterations','maxBeams','maxSubsets','maxTotalSubsets','maxNodes','maxSimplexPivots','roundingCandidates'}
  v=o.(f{1}); assert(isscalar(v) && isfinite(v) && v>=1 && v==fix(v));
 end
-for f={'maxSeconds','relativeGap','absoluteGapBits','recoverySeconds'}
+for f={'maxSeconds','relativeGap','absoluteGapBits','recoverySeconds','fairnessFloor'}
  v=o.(f{1}); assert(isscalar(v) && isfinite(v) && v>=0);
 end
 assert(isscalar(o.countCuts) && (o.countCuts==0 || o.countCuts==1));

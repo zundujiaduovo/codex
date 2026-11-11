@@ -1,3 +1,5 @@
+> **V12：** 本文的旧全员 QoS 吞吐证书现推广到显式 `fairnessFloor=s0` 的条件吞吐问题。V12 的第一阶段另用 `leo_fairness_certificate` 认证未封顶最大公平值，不能用本文的吞吐上界替代。见 [V12_LEXICOGRAPHIC.md](V12_LEXICOGRAPHIC.md)。
+
 # V7 全员 QoS 下的整数最优区间
 
 当前采用完整组定价、列生成、合法强化和原变量分支定界，推导与实现边界见 [CERTIFICATE_SEARCH.md](CERTIFICATE_SEARCH.md)。目标与V6相同：固定保证模型下，所有用户G_i>=q_i后最大化sum G_i。

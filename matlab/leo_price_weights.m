@@ -8,7 +8,7 @@ assert(isequal(size(lambda),[data.shape(1),1]) && all(isfinite(lambda) & lambda>
 assert(any(strcmp(phase,{'fairness','throughput'})));
 weights = lambda./data.qosTargetBits;
 if strcmp(phase,'fairness')
-    sAux = double(sum(lambda)<=1);   % 等于 1 时 [0,1] 中任何值均可
+    sAux = leo_fairness_limit(data)*double(sum(lambda)<=1);
 else
     weights = weights+1/data.referenceBits;
     sAux = s0;

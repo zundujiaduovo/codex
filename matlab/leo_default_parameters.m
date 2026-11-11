@@ -62,6 +62,7 @@ p.statistics.independentSlots = true; % 与 leo_generate_fading 的基本槽独�
 p.statistics.goodFadeThreshold = 0.25; % 预先固定，不用未来衰落调参
 p.statistics.chernoffTilt = 2.5;     % theta_i * 最大单槽服务，正的无量纲常数
 p.problem.referenceBits = [];        % [] -> sum(q_i)，与决策无关
+p.problem.objectiveMode = 'lexicographic_max_min'; % V12：先未封顶min(G/q)，再保持该水平增加sum(G)
 p.problem.feasibilityTolerance = 1e-9; % 归一化约束容差，不改变数学约束
 p.exhaustive = leo_exhaustive_options(); % 默认不启动；run_leo_exhaustive_demo 开启
 p.surrogate.referenceMode = 'minimax'; % 切线/弦线；current_schedule 以预检见证相切

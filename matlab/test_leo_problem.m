@@ -31,7 +31,8 @@ checks = checks+1;
 
 % 3. 不是选完日程才分配风险，也不是按 M 个资源数计风险事件。
 d = model.design;
-assert(d.nEvents==nnz(d.eventMask) && d.nEvents==3200);
+expectedEvents=nnz(model.beams.available(:,model.resources.slotToResource));
+assert(d.nEvents==nnz(d.eventMask) && d.nEvents==expectedEvents);
 assert(d.nEvents>nnz(model.beams.available));
 assert(abs(d.usedRisk-p.statistics.totalRisk)<1e-13);
 assert(all(d.risk(~d.eventMask)==0) && all(d.zeta(~d.eventMask)==0));

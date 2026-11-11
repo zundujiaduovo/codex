@@ -4,7 +4,7 @@ function result = leo_exhaustive_search(problem,overrides)
 % 输入：problem：原问题；overrides：可选穷举预算。
 % 输出：result：最优/超限/超时状态、已访问数量、最好合法日程及原始服务。
 % 对所有资源合法组的笛卡尔积逐一评价；无剪枝、采样或逐块贪心。
-% 先比较 min(1,min(D_i/q_i))，严格同分再比较总服务；不放宽公平门槛。
+% V12先比较未封顶min(G_i/q_i)，严格同分再比较总服务；旧模型快照保留原语义。
 if nargin<2, overrides = struct(); end
 options = leo_exhaustive_options(overrides);
 data = problem.data;
@@ -77,7 +77,7 @@ for first = 0:options.batchSize:N-1
     end
     [~,margin] = leo_service_adjustment(data);
     D = max(0,bsxfun(@minus,D,margin));
-    fairness = min(1,min(bsxfun(@rdivide,D,data.qosTargetBits),[],1));
+    fairness = leo_fairness_from_ratios(data,bsxfun(@rdivide,D,data.qosTargetBits));
     total = sum(D,1);
     batchBest = max(fairness);
     if batchBest>=bestFairness

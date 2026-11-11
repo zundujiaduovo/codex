@@ -20,7 +20,7 @@ if ~isempty(phase1.z)
     if leo_service_is_better(service,best.service,'fairness',0), best.x = logical(x); best.service = service; end
 end
 if phase1.optimal
-    upperF.value = min(upperF.value,min(1,-phase1.objective+proxy.error.optimalFairnessGapBound));
+    upperF.value = min(upperF.value,min(leo_fairness_limit(data),-phase1.objective+proxy.error.optimalFairnessGapBound));
 end
 result.stage1.x = best.x; result.stage1.service = best.service; result.stage1.solver = phase1;
 result.stage1.initialService = initial.service;

@@ -99,7 +99,7 @@ assert(inner.score>=inner.oldScore-1e-12 && ~inner.optimal); checks = checks+1;
 
 % 9. 价格更新方向、负下界保留和第二阶段权重；sAux 不是当前实际公平。
 lambda = ones(4,1)/4;
-[w,s] = leo_price_weights(data,lambda,'fairness'); assert(s==1 && isequal(w,lambda./data.qosTargetBits));
+[w,s] = leo_price_weights(data,lambda,'fairness'); assert(s==leo_fairness_limit(data) && isequal(w,lambda./data.qosTargetBits));
 [~,s] = leo_price_weights(data,2*lambda,'fairness'); assert(s==0);
 [w,s] = leo_price_weights(data,lambda,'throughput',.3);
 assert(s==.3 && max(abs(w-lambda./data.qosTargetBits-1/data.referenceBits))<1e-15);
@@ -191,7 +191,7 @@ assert(~any(emptyInner.x) && emptyInner.nBits==0); checks = checks+1;
 
 % 17. 已达到公平封顶时，第一阶段可直接认证；阶段 2 从相切点严格保留门槛。
 best = find(fair==exactFair,1); capped = problem;
-cd = data; cd.qosTargetBits = allServices(best).userBits/2;
+cd = data; cd.objectiveMode='full_qos_sum'; cd.qosTargetBits = allServices(best).userBits/2; % 显式旧版封顶目标的兼容测试。
 capped.data = cd; capped.evaluate = @(x) leo_evaluate_service(cd,x);
 cappedProxy = leo_build_service_surrogates(capped);
 cappedResult = leo_solve_schedule(capped,cappedProxy,options,allSchedules{best});
