@@ -7,7 +7,7 @@ if nargin<2, overrides=struct(); end
 o=struct('maxSeconds',30,'maxIterations',150,'maxPivots',10000,'tolerance',1e-7);
 names=fieldnames(overrides); assert(all(ismember(names,fieldnames(o))));
 for j=1:numel(names), o.(names{j})=overrides.(names{j}); end
-assert(o.maxSeconds>=0 && isfinite(o.maxSeconds) && o.maxIterations>=1 && o.maxPivots>=1 && o.tolerance>0);
+assert(o.maxSeconds>=0 && ~isnan(o.maxSeconds) && o.maxIterations>=1 && o.maxPivots>=1 && o.tolerance>0);
 data=report.problemData; K=data.shape(1); M=data.shape(2); started=tic;
 budget=struct('timer',started,'seconds',o.maxSeconds);
 if nargin<3, cache=leo_prepare_upper_bounds(data); end
@@ -28,6 +28,7 @@ for j=1:numel(schedules)
     exact=leo_evaluate_service(data,schedules{j}); knownLower=max(knownLower,exact.fairness);
     for m=1:M
         g=logical(schedules{j}(:,m)); n=nnz(g);
+        if n==0, continue; end
         if any(all(bsxfun(@eq,groups{m},g),1)), continue; end
         groups{m}(:,end+1)=g; rates{m}(:,end+1)=u(:,m,n).*g;
     end

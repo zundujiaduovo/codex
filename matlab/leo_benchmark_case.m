@@ -23,6 +23,8 @@ template = struct('method','','seed',0,'status','','solverStatus','','message','
 template.usesQuadraticProxy=false; template.initializationPolicy='common_original_candidates';
 template.gainOverInitialPercent=NaN; template.upperGapPercent=NaN; template.knownLowerGapPercent=NaN;
 template.searchEngine='original_objective';
+template.terminationMode='time_budget';
+if leo_iteration_only(options.method), template.terminationMode='iteration_limits'; end
 template.objectiveMode='full_qos_sum';
 if leo_is_lexicographic(problem.data), template.objectiveMode='lexicographic_max_min'; end
 template.stage1Fairness=NaN; template.stage2Fairness=NaN; template.stage1FairnessGap=NaN;
@@ -52,7 +54,9 @@ for seed = options.seeds(:).'
         elseif seconds<=0
             row.status = 'budget_exhausted_before_search'; row.message = 'Common preprocessing already exhausts the requested budget.';
         else
-            method = options.method; method.seed = seed; method.maxSeconds = seconds; method.verbose = false;
+            method = options.method; method.seed = seed;
+            if ~leo_iteration_only(method), method.maxSeconds=seconds; method.verbose=false;
+            else, method.verbose=options.verbose; end
             timer = tic;
             try
                 solverProxy=[]; if prebuiltProxy, solverProxy=model.surrogate; end
@@ -115,6 +119,7 @@ for seed = options.seeds(:).'
             row.searchSeconds = toc(timer);
             row.endToEndSeconds = commonSeconds+row.proxyPreparationSeconds+row.searchSeconds;
             row.budgetOverrunSeconds = max(0,row.endToEndSeconds-options.budgetSeconds);
+            if leo_iteration_only(method), row.budgetOverrunSeconds=NaN; end
             % 独立报告验证：不计入搜索时间，不用这些样本/指标选择日程。
             if strcmp(row.status,'completed') && isfield(problem.data.design,'nominalSignalW')
                 nominal = leo_evaluate_nominal_service(problem.data,result.x);

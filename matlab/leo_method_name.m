@@ -5,6 +5,7 @@ switch id
     case {'sb_v12_lexicographic','sb_v8_blockwise','SB'}, name='SB';
     case {'local_v12_lexicographic','local_v8_blockwise','Local'}, name='Local';
     case {'original_greedy','Greedy'}, name='Greedy';
+    case {'proxy_tabu','Proxy+Tabu'}, name='Proxy+Tabu';
     otherwise, name=id;
 end
 end

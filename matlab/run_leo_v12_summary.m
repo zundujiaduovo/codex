@@ -148,6 +148,12 @@ if isfield(certificate,'cardinalityRelaxation')
     fprintf('Standard fairness bound: coarse %.9g, uniform cardinality %.9g, configuration LP dual %.9g (%s).\n', ...
         certificate.coarseUpper,b.uniformUpper,b.upper,b.status);
 end
+if strcmp(release.tag,'V13')
+    leo_print_bound_explanation(report);
+    explanation=evalc('leo_print_bound_explanation(report)');
+    fid=fopen(fullfile(directory,'UPPER_BOUND_EXPLANATION.txt'),'w','n','UTF-8'); assert(fid>=0);
+    fprintf(fid,'%s',explanation); fclose(fid);
+end
 end
 function write_summary(report,directory)
 c=report.fairnessCertificate; fid=fopen(fullfile(directory,'RESULTS.md'),'w','n','UTF-8'); assert(fid>=0); cleanup=onCleanup(@() fclose(fid)); %#ok<NASGU>
@@ -160,7 +166,11 @@ for j=1:numel(report.records)
     r=report.records(j); fprintf(fid,'| %s | %.0f | %.9g | %.9g | %.9g | %.9g | %d |\n',leo_method_name(r.method),r.seed,r.stage1Fairness,r.stage2Fairness,r.requiredFairnessFloor,r.totalBits/1e6,r.stage1CertificateConfirmed);
 end
 fprintf(fid,'\nFairness is the primary comparison. Total service at different attained floors solves different conditional problems; do not rank it as one common throughput objective.\n');
-fprintf(fid,'A time-limited stage-1 result is an attained feasible fairness value, not a proven global maximum unless the fairness certificate closes its gap to the stated tolerance.\n');
-fprintf(fid,'Per-stage search stopping details are in stopping_summary.csv. target_gap uses a valid original-model upper bound; stagnation only reports a lack of meaningful improvement.\n');
+fprintf(fid,'Stage-1 values are attained feasible fairness values. A global optimality claim requires the independent fairness certificate gap to close.\n');
+if leo_iteration_only(report.options.method)
+    fprintf(fid,'Search uses maximum iteration counts, with no wall-clock/gap/stagnation stopping. Greedy can exhaust all improving additions. See stopping_summary.csv and stages.csv.\n');
+else
+    fprintf(fid,'Per-stage stopping details are in stopping_summary.csv. target_gap uses a valid original-model bound; stagnation only reports a lack of meaningful improvement.\n');
+end
 fprintf(fid,'V10/V11 optimized full-QoS-then-sum service and their scores/bounds are not reused as V12 lexicographic optimality evidence.\n');
 end

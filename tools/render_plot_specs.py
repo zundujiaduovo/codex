@@ -42,6 +42,8 @@ def vec(value):
 
 
 def color(name, index):
+    if name in {'Proxy+Tabu', 'proxy_tabu'}:
+        return '#8c33b3'
     if name == 'Tabu':
         return '#00804d'
     if name == 'Greedy':

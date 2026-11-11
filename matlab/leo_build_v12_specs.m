@@ -38,7 +38,11 @@ p(4).note='During stage 1 fairness has priority over total service. Stage 2 pres
 p(5).note='Services are accumulated over all slots before taking user ratios. Instantaneous per-slot fairness is not the objective.';
 p(6).note='Conditional original-model sum-service bounds; these are not certificates for the primary max-min objective.';
 titleText=sprintf('%s | uncapped max-min first, sum service second | seed %.0f',release.tag,seed);
-if strcmp(release.tag,'V13'), titleText=sprintf('V13 | K=64, NB=64, L=16 | uncapped max-min first, sum second | seed %.0f',seed); end
+if strcmp(release.tag,'V13')
+    pModel=report.parameters;
+    titleText=sprintf('V13 | K=%d, Na=%d, NB=%d, L=%d | uncapped max-min first, sum second | seed %.0f', ...
+        pModel.system.K,pModel.array.nElements,pModel.array.nBeams,pModel.system.maxStreams,seed);
+end
 specs=struct('name',[release.prefix,'_uncapped_lexicographic'],'title',titleText, ...
     'rows',3,'cols',2,'panels',p);
 end

@@ -1,19 +1,24 @@
 function [options,resultFolder] = V13_SETTINGS()
-%V13_SETTINGS 编辑这里即可调整停止阈值；改协议时使用新的结果子目录。
-options.budgetSeconds=120;            % 每方法最长预算，包含共同建模；允许提前结束
+%V13_SETTINGS 128阵元版：按最大迭代次数运行，不按时间/停滞/近优差距停止。
+options.method.iterationOnly=true;
+options.method.fairnessRounds=60;
+options.method.throughputRounds=30;
+options.method.originalFairnessRounds=2000;
+options.method.originalThroughputRounds=1000;
 options.method.sbSteps=500;
 options.method.sbTrajectories=32;
 options.method.localRestarts=32;       % 配对Local同时增加起点数
 options.method.polishMoves=12;
 options.method.refreshEvery=2;
 options.method.fastPolish=true;       % 同一局部动作及平局顺序的向量实现，SB/Local共用
+options.method.proxyTabuIterations=80; % 每次固定二次块目标、每个起点的Tabu轮数
+options.method.proxyTabuRestarts=4;    % 旧组、空组和两个随机修复起点
+options.method.proxyTabuTenure=7;
 options.method.audit=struct('enabled',true,'snapshots',4,'tabuMoves',16);
-options.method.stopping=struct( ...
-    'enabled',true, ...                 % false：关闭新提前停止，恢复预算/原迭代限制
-    'relativeGap',.01, ...              % 原模型有效上界相对差距<=1%：已认证近优
-    'minPhaseSeconds',10, ...           % 停滞判断前，每阶段至少搜索10秒
-    'patienceSeconds',40, ...           % 给更重的内层更多外层探索机会
-    'relativeImprovement',1e-4, ...      % 相对改善0.01%才重置停滞时钟（累计计算）
-    'minIterations',6);
-resultFolder='v13_64users_scaled_audit';
+options.method.stopping=struct('enabled',false);
+% 理论证书也不设时间截断，保留列生成迭代/节点等有限上限。
+options.fairnessCertificateOptions=struct('maxSeconds',Inf,'relaxationMaxSeconds',Inf, ...
+    'relaxationMaxIterations',300,'maxNodes',128,'maxIterations',150,'recoverySeconds',0);
+options.throughputCertificateOptions=struct('maxSeconds',Inf,'maxNodes',128,'maxIterations',150,'recoverySeconds',0);
+resultFolder='v13_64users_128ant_iterations';
 end

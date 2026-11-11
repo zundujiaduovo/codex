@@ -1,5 +1,5 @@
 function report = run_leo_v12_pair(directory,seed)
-%RUN_LEO_V12_PAIR 执行或读取一个完整配对；同模型、同种子、同初态、同时间。
+%RUN_LEO_V12_PAIR 执行或读取完整配对；同模型、同种子、同初态及保存的预算协议。
 saved=load(fullfile(directory,'experiment.mat'),'experiment'); e=saved.experiment; o=e.protocol;
 release=leo_lexicographic_release(e.version);
 assert(leo_is_lexicographic(e.problemData),'Cannot mix V10/V11 runs with the uncapped objective.');

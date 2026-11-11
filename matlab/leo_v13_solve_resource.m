@@ -22,6 +22,9 @@ switch options.innerSolver
             x=leo_polish_group(q,x,options.polishMoves);
             value=score(x); if value>bestScore, best=x; bestScore=value; end
         end
+    case 'tabu'
+        search=leo_proxy_tabu_group(q,old,options,budget);
+        best=search.x; bestScore=search.score; repairs=search.repaired;
     otherwise
         result=leo_v8_solve_resource(data,lower,m,weights,oldGroup,options,budget); return;
 end
@@ -30,5 +33,8 @@ result=struct('x',false(data.shape(1),1),'bits',leo_encode_group_bits(q,best), .
 result.x(q.userIds)=best;
 if strcmp(options.innerSolver,'sb')
     result.sbSteps=sb.steps; result.energyHistory=sb.history; result.energyScale=sb.energyScale; result.trajectories=sb.trajectories;
+end
+if strcmp(options.innerSolver,'tabu')
+    result.tabuIterations=search.iterations; result.tabuCandidates=search.candidates;
 end
 end

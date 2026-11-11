@@ -1,4 +1,4 @@
-% V13基于V12：64用户、64波束、最多16人并发；保留未封顶公平优先目标。
+% V13：64用户、128阵元、64波束、最多16人并发，五方法按最大迭代次数运行。
 clear functions
 comparisonRoot=fileparts(mfilename('fullpath'));
 CHECK_V13_INSTALLATION(comparisonRoot);

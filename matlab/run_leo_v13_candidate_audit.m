@@ -8,7 +8,7 @@ files={};
 report=leo_v12_load_report(source); data=report.problemData;
 directory=fullfile('results','v13_candidate_audit');
 if ischar(source), directory=fullfile(source,'candidate_audit'); end
-o=struct('maxSeconds',60,'maxReferencesPerPhase',3,'maxNeighbors',320, ...
+o=struct('maxSeconds',Inf,'maxReferencesPerPhase',3,'maxNeighbors',320, ...
     'maxCandidates',8,'maxTabuMovesPerPhase',8,'outputDirectory',directory);
 names=fieldnames(overrides); assert(all(ismember(names,fieldnames(o))));
 for j=1:numel(names), o.(names{j})=overrides.(names{j}); end
@@ -27,7 +27,7 @@ budget=struct('timer',tic,'seconds',o.maxSeconds); rows=struct([]); references=s
 problem=struct('data',data,'evaluate',@(x) leo_evaluate_service(data,x));
 ids=cellfun(@leo_method_id,{report.records.method},'UniformOutput',false);
 for j=1:numel(report.records)
-    if ~any(strcmp(ids{j},{'sb_v12_lexicographic','local_v12_lexicographic'})) || ~strcmp(report.records(j).status,'completed'), continue; end
+    if ~any(strcmp(ids{j},{'sb_v12_lexicographic','local_v12_lexicographic','proxy_tabu'})) || ~strcmp(report.records(j).status,'completed'), continue; end
     r=report.records(j); sol=report.solutions{j};
     for phaseIndex=1:2
         stage=sol.(sprintf('stage%d',phaseIndex)); snapshots={};

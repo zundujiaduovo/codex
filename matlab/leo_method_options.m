@@ -42,6 +42,7 @@ o.blockwiseOriginalAccept = false;  % 按原周期目标逐块验收，阶段 2 
 o.verbose = true;
 if nargin>0
     assert(isstruct(overrides) && isscalar(overrides));
+    [overrides,iterationFields]=leo_extract_iteration_options(overrides);
     if isfield(overrides,'stopping')
         stopping=leo_stopping_options(overrides.stopping); overrides=rmfield(overrides,'stopping');
     end
@@ -93,4 +94,8 @@ assert(isfinite(o.crossResourceFraction) && o.crossResourceFraction>=0 && o.cros
 if exist('stopping','var'), o.stopping=stopping; end
 if exist('audit','var'), o.audit=audit; end
 if exist('fastPolish','var'), o.fastPolish=logical(fastPolish); end
+if exist('iterationFields','var')
+    names=fieldnames(iterationFields);
+    for j=1:numel(names), o.(names{j})=iterationFields.(names{j}); end
+end
 end

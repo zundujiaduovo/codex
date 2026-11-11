@@ -2,7 +2,7 @@ function [diagnosis,files] = run_leo_v13_diagnose(directory,overrides,render)
 %RUN_LEO_V13_DIAGNOSE 既有方法结果只读；新界、诊断和重画结果写入独立子目录。
 if nargin<2, overrides=struct(); end
 if nargin<3, render=true; end
-o=struct('boundSeconds',60,'boundIterations',300,'candidateOptions',struct());
+o=struct('boundSeconds',Inf,'boundIterations',300,'candidateOptions',struct());
 names=fieldnames(overrides); assert(all(ismember(names,fieldnames(o))));
 for j=1:numel(names), o.(names{j})=overrides.(names{j}); end
 report=leo_v12_load_report(directory); assert(strcmp(report.releaseTag,'V13'));

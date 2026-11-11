@@ -20,7 +20,8 @@ assert(all(isfinite(o.seeds) & o.seeds>=0 & o.seeds<=2^32-1 & o.seeds==fix(o.see
 for name={'sceneSeed','validationSeed'}
     v=o.(name{1}); assert(isscalar(v) && isfinite(v) && v>=0 && v<=2^32-1 && v==fix(v));
 end
-assert(isscalar(o.budgetSeconds) && isfinite(o.budgetSeconds) && o.budgetSeconds>0);
+assert(isscalar(o.budgetSeconds) && o.budgetSeconds>0 && ...
+    (isfinite(o.budgetSeconds) || (isinf(o.budgetSeconds) && leo_iteration_only(o.method))));
 assert(isscalar(o.validationSamples) && isfinite(o.validationSamples) && o.validationSamples>=0 && o.validationSamples==fix(o.validationSamples));
 assert(isscalar(o.prepareOnly) && any(o.prepareOnly==[0,1])); o.prepareOnly=logical(o.prepareOnly);
 o.method=leo_method_options(o.method); o.parameters.seed=o.sceneSeed;

@@ -21,7 +21,7 @@ state.iterations=iteration;
 state.nearOptimalCertified=isfinite(upper) && ...
     state.absoluteGap<=max(state.absoluteTolerance,state.options.relativeGap*abs(upper));
 status='';
-if ~state.options.enabled, return; end
+if ~state.options.enabled || leo_iteration_only(options), return; end
 if state.nearOptimalCertified
     status='target_gap';
 elseif iteration>=state.options.minIterations && state.phaseSeconds>=state.options.minPhaseSeconds && ...

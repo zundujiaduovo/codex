@@ -10,7 +10,7 @@ p(4)=panel('Stage 2: sum service at each attained floor','Native outer iteration
 q=p; q(1).xlabel='Recorded original candidate scores in this phase'; q(2).xlabel=q(1).xlabel;
 q(2).title='Stage 2: sum service versus recorded original candidate scores';
 q(3)=panel('Time to a common original-model fairness target','Method','First recorded attainment (s)'); q(3).kind='categorical_line'; q(3).labels=methodNames;
-q(4)=panel('Actual end-to-end runtime, including early stopping','Method','Seconds'); q(4).kind='categorical_line'; q(4).labels=methodNames;
+q(4)=panel('Actual end-to-end runtime','Method','Seconds'); q(4).kind='categorical_line'; q(4).labels=methodNames;
 for j=1:numel(methods)
     for phase=1:2
         rows=data.iterations(strcmp({data.iterations.method},methods{j}) & [data.iterations.seed]==seed & [data.iterations.phase]==phase);
@@ -35,7 +35,7 @@ for j=1:numel(methods)
 end
 q(4)=add(q(4),'Actual elapsed time',1:numel(methods),values);
 for j=1:4
-    p(j).note='Actual saved outer history. SB/Local: price-round attempts (including a possible partial last round); Tabu: neighborhood rounds; Greedy: accepted construction additions. Units do not imply equal work. No extension beyond actual stopping.';
+    p(j).note='Actual saved outer history. SB/Local/Proxy+Tabu: price rounds; Tabu: original-model neighborhood rounds; Greedy: accepted additions. Units do not imply equal work. No extension beyond actual stopping.';
     q(j).note='Original candidate counts cover recorded search scores, not all computations. Time targets are identical across methods; missing attainment remains NaN. Phase-2 floors may differ.';
 end
 specs=struct('name',[release.prefix,'_iteration_convergence'],'title',sprintf('%s native-iteration convergence | units differ by method | seed %.0f',release.tag,seed),'rows',2,'cols',2,'panels',p);

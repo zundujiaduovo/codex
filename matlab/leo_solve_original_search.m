@@ -6,6 +6,8 @@ if nargin<4, provided = []; end
 assert(any(strcmp(kind,{'greedy','exchange','tabu','initial'})));
 options = leo_method_options(options); previous = rng; cleanup = onCleanup(@() rng(previous)); %#ok<NASGU>
 rng(options.seed,'twister'); budget.timer = tic; budget.seconds = options.maxSeconds;
+budget.iterationOnly=leo_iteration_only(options);
+if budget.iterationOnly, budget.seconds=Inf; end
 initial = leo_initial_schedules(problem,provided,options,budget); best = initial;
 data = problem.data; evaluations = 0; strict = leo_requires_full_qos(data);
 cache = leo_prepare_upper_bounds(data);
@@ -14,6 +16,10 @@ for phaseIndex = 1:2
     auditMoves={}; auditEnabled=isfield(options,'audit') && options.audit.enabled;
     phaseEvaluationStart=evaluations;
     localBudget = budget;
+    phaseCap=options.originalSearchRounds;
+    if phaseIndex==1 && isfield(options,'originalFairnessRounds'), phaseCap=options.originalFairnessRounds; end
+    if phaseIndex==2 && isfield(options,'originalThroughputRounds'), phaseCap=options.originalThroughputRounds; end
+    localBudget.maxIterations=phaseCap;
     if phaseIndex==1
         phase = 'fairness'; s0 = 0; localBudget.seconds = options.maxSeconds*options.fairnessBudgetFraction;
         if strict, localBudget.seconds=options.maxSeconds; end
@@ -57,7 +63,7 @@ for phaseIndex = 1:2
     elseif ~strcmp(kind,'initial')
         current = best; tabuUntil = zeros(data.shape); stagnant = 0;
         iterationKind = [kind,'_round'];
-        for iteration = 1:options.originalSearchRounds
+        for iteration = 1:phaseCap
             if leo_budget_expired(localBudget) || options.recoveryEvaluations==0, break; end
             if strict && phaseIndex==1 && best.service.fairness==1, break; end
             before = best.service;
@@ -93,6 +99,10 @@ for phaseIndex = 1:2
             if leo_service_is_better(current.service,best.service,phase,s0), best = current; end
             phaseIterations = iteration;
             history = leo_record_search_step(history,best.service,iteration,toc(budget.timer),evaluations);
+            if options.verbose && (iteration==1 || mod(iteration,100)==0 || iteration==phaseCap)
+                fprintf('  %s %-10s %d/%d: fairness=%.9g, total=%.6g Mbit\n', ...
+                    kind,phase,iteration,phaseCap,best.service.fairness,best.service.totalBits/1e6);
+            end
             [stopping,stopStatus]=leo_search_stopping(options,phase,best.service,bound,toc(budget.timer),iteration,stopping);
             if ~isempty(stopStatus), break; end
             if leo_service_is_better(best.service,before,phase,s0), stagnant = 0;
@@ -109,7 +119,8 @@ for phaseIndex = 1:2
     elseif leo_budget_expired(localBudget), stage.status='time_limit';
     elseif strcmp(kind,'greedy'), stage.status='no_improving_addition';
     elseif strcmp(kind,'exchange'), stage.status='stagnation';
-    elseif phaseIterations>=options.originalSearchRounds, stage.status='iteration_limit'; end
+    elseif phaseIterations>=phaseCap, stage.status='iteration_limit'; end
+    if strcmp(kind,'greedy') && phaseIterations>=phaseCap, stage.status='iteration_limit'; end
     if ~isempty(stopStatus), stage.status=stopStatus; end
     if strict && phaseIndex==1 && phaseStart.fairness==1, stage.status='full_qos_already_met'; end
     if strict && phaseIndex==2 && best.service.fairness<1, stage.status='not_started_full_qos_not_found'; end

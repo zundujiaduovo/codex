@@ -6,6 +6,7 @@ if nargin<6, stopContext=[]; end
 stopStatus='';
 iteration = 0; history = leo_record_search_step([],service,0,toc(budget.timer),0);
 while ~leo_budget_expired(budget)
+    if isfield(budget,'maxIterations') && iteration>=budget.maxIterations, stopStatus='iteration_limit'; break; end
     [~,order] = sort(service.demandRatio,'ascend'); found = false;
     for i = order.'
         candidateFound = false; candidate = service; candidateX = x;

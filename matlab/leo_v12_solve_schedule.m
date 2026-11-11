@@ -13,6 +13,8 @@ assert(leo_is_lexicographic(problem.data),'V12 solver requires the uncapped lexi
 previousRng = rng; cleanup = onCleanup(@() rng(previousRng)); %#ok<NASGU>
 rng(options.seed,'twister');
 budget.timer = tic; budget.seconds = options.maxSeconds;
+budget.iterationOnly=leo_iteration_only(options);
+if budget.iterationOnly, budget.seconds=Inf; end
 initial = leo_initial_schedules(problem,initialSchedule,options,budget);
 cacheTimer=tic;
 cache = leo_prepare_upper_bounds(problem.data);

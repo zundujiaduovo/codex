@@ -6,11 +6,11 @@ import zipfile
 from build_source_release import DOCS
 
 ROOT = Path(__file__).resolve().parents[1]
-NAME = "LEO_QoS_Comparison_v13_from_v12_64users_16streams"
+NAME = "LEO_QoS_Comparison_v13_64users_128ant_iterations"
 
 
 def build():
-    sources = [ROOT / name for name in DOCS | {"V13_FROM_V12.md", "V13_ADAPTIVE_STOPPING.md", "V13_SCALING_DIAGNOSIS.md"}]
+    sources = [ROOT / name for name in DOCS | {"V13_FROM_V12.md", "V13_ADAPTIVE_STOPPING.md", "V13_SCALING_DIAGNOSIS.md", "V13_128ANT_ITERATIONS.md"}]
     for pattern in ("*.m", "matlab/*.m", "tools/*.py"):
         sources.extend(ROOT.glob(pattern))
     sources.append(ROOT / ".gitignore")
@@ -37,7 +37,8 @@ def build():
                      "matlab/run_leo_v13_comparison.m", "matlab/leo_reference_users_64.m",
                      "matlab/run_leo_v12_diagnostics.m", "matlab/leo_lexicographic_release.m",
                      "matlab/leo_search_stopping.m", "matlab/leo_method_name.m", "ANALYZE_V13_RESULTS.m",
-                     "matlab/leo_cardinality_fairness_bound.m", "matlab/run_leo_v13_candidate_audit.m"):
+                     "matlab/leo_cardinality_fairness_bound.m", "matlab/run_leo_v13_candidate_audit.m",
+                     "matlab/leo_proxy_tabu_group.m", "matlab/leo_print_bound_explanation.m", "matlab/leo_iteration_only.m"):
             assert NAME + "/" + name in bundle.namelist()
     print(f"{archive.name}: {len(sources)} source/document files, {archive.stat().st_size} bytes; no results.")
 

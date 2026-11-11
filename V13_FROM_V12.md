@@ -1,5 +1,7 @@
 # V13 基于 V12：64 用户、64 波束、16 人并发
 
+本文记录最初64阵元版。当前默认已改为128阵元、五方法和最大迭代次数，见[V13_128ANT_ITERATIONS.md](V13_128ANT_ITERATIONS.md)。下述120秒及64阵元配置仅适用于旧结果。
+
 分支：`leo-qos-v13-from-v12-64users-16streams`。
 基于 V12 提交 `3a004695eb6f2ad90fe8be9b6b05de6e2017d6bc`。
 源码包：`LEO_QoS_Comparison_v13_from_v12_64users_16streams.zip`。

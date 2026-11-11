@@ -10,7 +10,8 @@ required={'leo_v13_parameters','leo_reference_users_64','leo_lexicographic_relea
     'leo_stopping_options','leo_search_stopping','leo_stopping_rows', ...
     'leo_method_id','leo_method_name','run_leo_v13_replot','leo_audit_options', ...
     'leo_cardinality_fairness_bound','leo_strengthen_fairness_certificate', ...
-    'run_leo_v13_candidate_audit','run_leo_v13_diagnose','leo_v13_saved_directory','leo_v13_solve_resource'};
+    'run_leo_v13_candidate_audit','run_leo_v13_diagnose','leo_v13_saved_directory','leo_v13_solve_resource', ...
+    'leo_iteration_only','leo_extract_iteration_options','leo_proxy_tabu_group','leo_print_bound_explanation'};
 if exist(fullfile(projectRoot,'V13_SETTINGS.m'),'file')~=2
     error('leo:v13IncompleteInstallation','Missing V13_SETTINGS.m. Extract the complete V13 source archive.');
 end
@@ -31,5 +32,5 @@ for j=1:numel(required)
     end
 end
 installation=struct('projectRoot',projectRoot,'requiredFunctions',{required},'resolvedFiles',{resolved});
-fprintf('PASS: V13 installation complete; K=64, NB=64, L=16 profile and analysis dependencies resolve locally.\n');
+fprintf('PASS: V13 installation complete; K=64, Na=128 (16x8), NB=64, L=16; five methods, iteration limits.\n');
 end

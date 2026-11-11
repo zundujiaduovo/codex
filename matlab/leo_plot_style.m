@@ -14,4 +14,5 @@ if ~isempty(strfind(name,'Verified lower')), color=[.4,.4,.4]; style=':'; end
 if any(strcmp(name,{'sb_v8_blockwise','sb_v12_lexicographic'})), color=[.85,.15,.2]; style='-'; end
 if any(strcmp(name,{'local_v8_blockwise','local_v12_lexicographic'})), color=[.2,.45,.85]; style='--'; end
 if strcmp(name,'original_greedy'), color=[.1,.65,.65]; style='-'; end
+if strcmp(name,'proxy_tabu'), color=[.55,.2,.7]; style='-.'; end
 end

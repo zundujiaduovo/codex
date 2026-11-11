@@ -7,7 +7,10 @@ o=struct('maxSeconds',180,'maxNodes',128,'maxIterations',150,'maxSimplexPivots',
     'artificialPenalty',1000,'verbose',true,'relaxationMaxSeconds',30,'relaxationMaxIterations',150);
 names=fieldnames(overrides); assert(all(ismember(names,fieldnames(o))));
 for j=1:numel(names), o.(names{j})=overrides.(names{j}); end
-for name={'maxSeconds','recoverySeconds','relativeGap','absoluteGap','relaxationMaxSeconds'}
+for name={'maxSeconds','relaxationMaxSeconds'}
+    v=o.(name{1}); assert(isscalar(v) && ~isnan(v) && v>=0);
+end
+for name={'recoverySeconds','relativeGap','absoluteGap'}
     v=o.(name{1}); assert(isscalar(v) && isfinite(v) && v>=0);
 end
 for name={'maxNodes','maxIterations','maxSimplexPivots','maxBeams','maxSubsets','maxTotalSubsets','roundingCandidates','relaxationMaxIterations'}

@@ -4,6 +4,7 @@ function result = leo_v12_run_price_phase(problem,proxy,cache,phase,start,option
 % 输入：problem/proxy/cache：模型、固定代理、有效界；phase/start/options/budget。
 % 输出：result：阶段日程、价格/迭代/工作量轨迹、上界、停止状态及首次内层 sbTrace。
 data = problem.data; K = data.shape(1); M = data.shape(2);
+iterationOnly=leo_iteration_only(options);
 bestX = start.x; bestService = start.service; priceX = bestX;
 isFairness = strcmp(phase,'fairness');
 if isFairness
@@ -28,7 +29,7 @@ history.priceX = false(K,M,rounds);
 fields = {'sAux','step','priceFairness','priceTotalBits','savedFairness','savedTotalBits', ...
     'upperBound','proxyEpoch','innerImprovement','resourcesSolved','sbSteps', ...
     'repairedCandidates','recoveryEvaluations','crossEvaluations','acceptedMoves','elapsedSeconds', ...
-    'blockwiseEvaluations','blockwiseAccepted','innerSeconds','originalSelectionSeconds', ...
+    'blockwiseEvaluations','blockwiseAccepted','innerSeconds','innerTabuIterations','innerTabuCandidates','originalSelectionSeconds', ...
     'recoverySeconds','proxyRefreshSeconds','maxQuboBits','sbTrajectorySteps','denseDynamicsTerms'};
 for j = 1:numel(fields), history.(fields{j}) = zeros(1,rounds); end
 history.completePriceRound = false(1,rounds);
@@ -39,7 +40,7 @@ end
 completed = 0; status = 'iteration_limit';
 auditEnabled=isfield(options,'audit') && options.audit.enabled; auditSnapshots={};
 for k = 1:rounds
-    if certified_gap(bestUpper.value,bestService,isFairness)<=options.gapTolerance
+    if ~iterationOnly && certified_gap(bestUpper.value,bestService,isFairness)<=options.gapTolerance
         status = 'bound_gap'; break;
     end
     [stopping,stopStatus]=leo_search_stopping(options,phase,bestService,bestUpper.value,toc(budget.timer),completed,stopping);
@@ -53,17 +54,18 @@ for k = 1:rounds
     history.lambda(:,k) = lambda;
     improvement = 0; solved = 0; steps = 0; repairs = 0;
     blockwiseEvaluations = 0; blockwiseAccepted = 0;
-    innerSeconds=0; originalSeconds=0; maxBits=0; trajectorySteps=0; denseTerms=0;
+    innerSeconds=0; originalSeconds=0; maxBits=0; trajectorySteps=0; denseTerms=0; tabuIterations=0; tabuCandidates=0;
     order = mod((0:M-1)+k-1,M)+1;
     for m = order
         if leo_budget_expired(budget), break; end
         innerTimer=tic;
-        if isfield(options,'fastPolish') && options.fastPolish
+        if strcmp(options.innerSolver,'tabu') || (isfield(options,'fastPolish') && options.fastPolish)
             inner=leo_v13_solve_resource(data,proxy.lower,m,weights,priceX(:,m),options,budget);
         else
             inner = leo_v8_solve_resource(data,proxy.lower,m,weights,priceX(:,m),options,budget);
         end
         innerSeconds=innerSeconds+toc(innerTimer);
+        if isfield(inner,'tabuIterations'), tabuIterations=tabuIterations+inner.tabuIterations; tabuCandidates=tabuCandidates+inner.tabuCandidates; end
         maxBits=max(maxBits,inner.nBits);
         trajectorySteps=trajectorySteps+inner.sbSteps*options.sbTrajectories;
         denseTerms=denseTerms+inner.nBits^2*inner.sbSteps*options.sbTrajectories;
@@ -155,8 +157,9 @@ for k = 1:rounds
     end
     [stopping,stopStatus]=leo_search_stopping(options,phase,bestService,bestUpper.value,toc(budget.timer),completed,stopping);
     if ~isempty(stopStatus), status=stopStatus; break; end
+    history.innerTabuIterations(k)=tabuIterations; history.innerTabuCandidates(k)=tabuCandidates;
     if options.refreshEvery>0 && mod(k,options.refreshEvery)==0 && k<rounds && ...
-            ~leo_budget_expired(budget) && certified_gap(bestUpper.value,bestService,isFairness)>options.gapTolerance
+            ~leo_budget_expired(budget) && (iterationOnly || certified_gap(bestUpper.value,bestService,isFairness)>options.gapTolerance)
         proxyTimer=tic;
         proxy = leo_v12_build_service_surrogates(problem,'current_schedule',bestX);
         history.proxyRefreshSeconds(k)=toc(proxyTimer);
@@ -165,7 +168,7 @@ for k = 1:rounds
         touchErrors(epoch) = proxy.referenceTouchMaxAbsBits; %#ok<AGROW>
     end
 end
-if certified_gap(bestUpper.value,bestService,isFairness)<=options.gapTolerance
+if ~iterationOnly && certified_gap(bestUpper.value,bestService,isFairness)<=options.gapTolerance
     status = 'bound_gap';
 elseif leo_budget_expired(budget) && ~strcmp(status,'target_gap')
     status = 'time_limit';

@@ -1,5 +1,7 @@
 # V13 自动停止与清晰方法名
 
+本文为旧自适应时间预算配置。当前128阵元版默认关闭提前停止，按最大迭代次数运行，见[V13_128ANT_ITERATIONS.md](V13_128ANT_ITERATIONS.md)。要恢复本文的时间模式，需显式设置`options.method.iterationOnly=false`并设置有限的`options.budgetSeconds`。
+
 在`V13_SETTINGS.m`中编辑停止设置，再运行`RUN_V13_64_USERS`。
 
 ```matlab

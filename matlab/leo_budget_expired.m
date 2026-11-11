@@ -3,5 +3,5 @@ function expired = leo_budget_expired(budget)
 % 接口标注：
 % 输入：budget：含 tic 句柄 timer 和秒数 seconds；[] 表示不设限。
 % 输出：expired：逻辑标量，已达软时间上限。
-expired = ~isempty(budget) && toc(budget.timer)>=budget.seconds;
+expired = ~isempty(budget) && ~leo_iteration_only(budget) && toc(budget.timer)>=budget.seconds;
 end

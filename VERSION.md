@@ -1,4 +1,8 @@
-# LEO QoS Comparison V13 — based on V12, 64 users / 64 beams / 16 streams
+# LEO QoS Comparison V13 — 64 users / 128 antennas / 64 beams / 16 streams
+
+当前源码包：`LEO_QoS_Comparison_v13_64users_128ant_iterations.zip`。在V13提交`5b2436b`上将阵列改为16×8，新增Proxy+Tabu，五方法按最大迭代次数运行；Tabu阶段上限2000/1000轮，三个代理方法60/30价格轮。重新生成物理模型和上界，并打印推导说明；新目录`v13_64users_128ant_iterations`与旧数据隔离。按用户要求，本次未运行仿真或测试。详见[V13_128ANT_ITERATIONS.md](V13_128ANT_ITERATIONS.md)。
+
+## 此前64阵元V13记录
 
 分支：`leo-qos-v13-from-v12-64users-16streams`。
 基于V12提交`3a004695eb6f2ad90fe8be9b6b05de6e2017d6bc`。

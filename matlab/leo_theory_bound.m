@@ -79,7 +79,7 @@ if cache.complete
   for candidateIndex=1:numel(candidates)
    try
     candidate=candidates{candidateIndex};
-    if toc(started)<options.maxSeconds
+    if toc(started)<options.maxSeconds && options.recoverySeconds>0
      localBudget=budget; localBudget.seconds=min(budget.seconds,toc(started)+options.recoverySeconds);
      coordinated=leo_round_column_schedule(data,node.pool,candidate,localBudget,12);
      candidate=coordinated.x;
@@ -91,7 +91,7 @@ if cache.complete
    catch
    end
   end
-  if ~isempty(bestCandidate) && toc(started)<options.maxSeconds
+  if ~isempty(bestCandidate) && toc(started)<options.maxSeconds && options.recoverySeconds>0
    problem=struct('data',data,'evaluate',@(x) leo_evaluate_service(data,x));
    repairOptions=leo_method_options(struct('verbose',false,'recoveryEvaluations',200,'recoveryPasses',4));
    localBudget=budget; seconds=options.recoverySeconds;
@@ -243,7 +243,8 @@ o=values;
 for f={'maxIterations','maxBeams','maxSubsets','maxTotalSubsets','maxNodes','maxSimplexPivots','roundingCandidates'}
  v=o.(f{1}); assert(isscalar(v) && isfinite(v) && v>=1 && v==fix(v));
 end
-for f={'maxSeconds','relativeGap','absoluteGapBits','recoverySeconds','fairnessFloor'}
+assert(isscalar(o.maxSeconds) && ~isnan(o.maxSeconds) && o.maxSeconds>=0);
+for f={'relativeGap','absoluteGapBits','recoverySeconds','fairnessFloor'}
  v=o.(f{1}); assert(isscalar(v) && isfinite(v) && v>=0);
 end
 assert(isscalar(o.countCuts) && (o.countCuts==0 || o.countCuts==1));

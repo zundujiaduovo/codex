@@ -1,16 +1,16 @@
-# LEO QoS V13：基于V12，64用户、64波束、每槽最多16人
+# LEO QoS V13：64用户、128阵元、64波束、每槽最多16人
 
-[下载V13完整源码包](LEO_QoS_Comparison_v13_from_v12_64users_16streams.zip)。分支`leo-qos-v13-from-v12-64users-16streams`，基于V12提交`3a00469`；目标仍为未封顶公平优先，再在取得的公平下限下提高总保证服务。
+[下载V13完整源码包](LEO_QoS_Comparison_v13_64users_128ant_iterations.zip)。分支`leo-qos-v13-from-v12-64users-16streams`；本次从V13提交`5b2436b`继续修改，目标仍为未封顶公平优先，再在取得的公平下限下提高总保证服务。
 
 解压到独立的新目录，在MATLAB项目根目录运行：
 
 ```matlab
-RUN_V13_64_USERS
+RUN_COMPARISON
 ```
 
-默认四方法Tabu、SB、Local、Greedy，每方法最长120秒，达到有效上界差距1%或满足停滞条件可提前结束；自动保存数据并打开性能、迭代、工作量和候选诊断图。新配置为500步SB、32条轨迹、32个Local随机起点、12步向量局部改进、每2轮刷新；结果写入`results/v13_64users_scaled_audit`，旧目录保留。已有数据执行`ANALYZE_V13_RESULTS`，可单独收紧公平上界并检查Tabu改进候选，不重跑方法。详见[V13_SCALING_DIAGNOSIS.md](V13_SCALING_DIAGNOSIS.md)。设置在`V13_SETTINGS.m`，只看图执行`SHOW_V13_RESULTS`。`RUN_COMPARISON`在本分支指向V13。
+默认五方法Tabu、SB、Local、Proxy+Tabu、Greedy。Tabu公平/速率阶段为2000/1000轮；三个代理方法为60/30价格轮，关闭时间、停滞和上界差距提前停止。新增Proxy+Tabu与SB共用二次代理和外层机制，只替换内层搜索器。设置在`V13_SETTINGS.m`，完整说明见[V13_128ANT_ITERATIONS.md](V13_128ANT_ITERATIONS.md)。按要求本次未运行仿真或测试。
 
-准入比例为16/64=1/4；射频链16、每流10 W、总功率上限160 W。阵列保持8×8；码本网格加密以生成64个固定波束。默认固定64用户布局的前32人保留V12坐标。完整参数、配对运行及结果解释见[V13_FROM_V12.md](V13_FROM_V12.md)。
+阵列改为16×8，共128阵元；准入比例16/64=1/4，射频链16、每流10 W、总功率上限160 W。重新生成信道、代理与原模型上界；MATLAB窗口打印上界公式及计算数值，另存`UPPER_BOUND_EXPLANATION.txt`。自动保存数据并打开性能、迭代、工作量和候选诊断图，结果写入新目录`results/v13_64users_128ant_iterations`。只看已有图执行`SHOW_V13_RESULTS`，旧结果保留。
 
 ## V12历史入口与说明
 
