@@ -1,0 +1,52 @@
+PASS: V13 installation complete; K=64, NB=64, L=16 profile and analysis dependencies resolve locally.
+K=64, T=100, M=20, Na=64, NB=64, L=16
+Available user-resource pairs: 1280/1280; codebook sampled holes: 0.00%
+Fixed block: 5 slots (50.0 ms); candidate slots=6400; opportunity max-flow=64/64
+Service model: periodic_multilevel. Multilevel fading-floor certificate; independent slots per user; fixed common parameters; joint risk budget is totalRisk.
+Example active SINR [min, median, max] = [-6.79, -3.26, 2.65] dB
+Problem formed, unsolved: 1280 binary variables + s; example design fairness=0.
+Stage-2 template fairness floor from feasibility witness: 0 (not optimized).
+Quadratic proxy deferred: original-objective baselines receive no proxy.
+V13 based on V12: 64 users, 64 beams, 16 streams: maximize UNCAPPED s=min_i G_i/q_i; then maximize sum(G_i) with every ratio >= attained stage-1 s.
+K=64, NB=64, L=16; admission 25%; nRF=16, p0=10 W, Pmax=160 W.
+1 search seed(s), 4 methods, 20 s/method; fairness phase fraction 0.70.
+Output: /tmp/oct-2Etpbp
+V13 based on V12: 64 users, 64 beams, 16 streams: maximize UNCAPPED s=min_i G_i/q_i; then maximize sum(G_i) with every ratio >= attained stage-1 s.
+K=64, NB=64, L=16; admission 25%; nRF=16, p0=10 W, Pmax=160 W.
+1 search seed(s), 4 methods, 20 s/method; fairness phase fraction 0.70.
+Output: /tmp/oct-2Etpbp
+original_tabu           seed=71669974 completed    s=1.19805359 V=108.761 Mbit wall=11.404 s
+  Stop: iteration_limit / iteration_limit
+  Goal: uncapped max-min first; stage-1 s=1.16844745, preserved floor=1.16844745, final s=1.19805359.
+sb_v12_lexicographic    seed=71669974 completed    s=1.16844745 V=112.957 Mbit wall=22.487 s
+  Stop: time_limit / time_limit
+  Goal: uncapped max-min first; stage-1 s=1.16844745, preserved floor=1.16844745, final s=1.16844745.
+local_v12_lexicographic seed=71669974 completed    s=1.10614694 V=110.308 Mbit wall=22.679 s
+  Stop: time_limit / time_limit
+  Goal: uncapped max-min first; stage-1 s=1.10614694, preserved floor=1.10614694, final s=1.10614694.
+original_greedy         seed=71669974 completed    s=1.10614694 V=108.593 Mbit wall=16.989 s
+  Stop: time_limit / no_improving_addition
+  Goal: uncapped max-min first; stage-1 s=1.10614694, preserved floor=1.10614694, final s=1.10614694.
+V13_PAIR_SAVED seed=71669974 (1/1).
+V13 diagnostics: 35 native history points, 4 completed runs; no optimization rerun. Missing old instrumentation remains NaN.
+V13 original_tabu            seed 71669974: s1=1.16844745, s2=1.19805359, floor=1.16844745, total=108.761 Mbit, preserved=1.
+V13 sb_v12_lexicographic     seed 71669974: s1=1.16844745, s2=1.16844745, floor=1.16844745, total=112.957 Mbit, preserved=1.
+V13 local_v12_lexicographic  seed 71669974: s1=1.10614694, s2=1.10614694, floor=1.10614694, total=110.308 Mbit, preserved=1.
+V13 original_greedy          seed 71669974: s1=1.10614694, s2=1.10614694, floor=1.10614694, total=108.593 Mbit, preserved=1.
+GLOBAL FAIRNESS optimum in [1.19805359, 14.3600612]; time limit during enumeration. Secondary throughput bounds are conditional on each stated floor.
+PASS: 4 exported schedules re-evaluated by the original model; max total error 0 bit.
+PASS: V12 BOTH stages re-evaluated from binary CSV schedules; every attained stage-1 fairness floor preserved; no cap at 1.
+PASS: independent fairness-certificate incumbent re-evaluated; global upper covers every exported method and certificate incumbent.
+V13 based on V12: 64 users, 64 beams, 16 streams: maximize UNCAPPED s=min_i G_i/q_i; then maximize sum(G_i) with every ratio >= attained stage-1 s.
+K=64, NB=64, L=16; admission 25%; nRF=16, p0=10 W, Pmax=160 W.
+1 search seed(s), 4 methods, 20 s/method; fairness phase fraction 0.70.
+Output: /tmp/oct-2Etpbp
+V13 pair 71669974 already saved; retained.
+V13 diagnostics: 35 native history points, 4 completed runs; no optimization rerun. Missing old instrumentation remains NaN.
+V13 original_tabu            seed 71669974: s1=1.16844745, s2=1.19805359, floor=1.16844745, total=108.761 Mbit, preserved=1.
+V13 sb_v12_lexicographic     seed 71669974: s1=1.16844745, s2=1.16844745, floor=1.16844745, total=112.957 Mbit, preserved=1.
+V13 local_v12_lexicographic  seed 71669974: s1=1.10614694, s2=1.10614694, floor=1.10614694, total=110.308 Mbit, preserved=1.
+V13 original_greedy          seed 71669974: s1=1.10614694, s2=1.10614694, floor=1.10614694, total=108.593 Mbit, preserved=1.
+GLOBAL FAIRNESS optimum in [1.19805359, 14.3600612]; time limit during enumeration. Secondary throughput bounds are conditional on each stated floor.
+PASS: V13 real 64-user model, 64 beams, 16/17 admission boundary, four paired methods, strict phase-2 fairness, original-model CSV audit, V13 plots and cache isolation/resume.
+error: ignoring const execution_exception& while preparing to exit

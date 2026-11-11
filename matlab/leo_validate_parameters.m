@@ -25,7 +25,7 @@ assert(p.time.baseOverheadS>=0 && p.time.configOverheadS>=0 && ...
     '净数据时间不能为负。');
 assert(p.users.radiusM>=0 && p.users.radiusM<pi*p.earth.aM);
 if ~isfield(p.users,'layout'), p.users.layout = 'random_cap'; end
-assert(any(strcmp(p.users.layout,{'reference32','random_cap'})));
+assert(any(strcmp(p.users.layout,{'reference32','reference64','random_cap'})));
 assert(abs(p.users.centerLatDeg)<=90 && p.users.altitudeM>=0);
 assert(p.channel.extraLossDb>=0 && isfinite(p.channel.extraLossDb));
 assert(all(isfinite([p.channel.elementGainDbi,p.channel.receiveGainDbi, ...

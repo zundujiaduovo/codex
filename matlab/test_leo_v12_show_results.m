@@ -19,6 +19,12 @@ assert(numel(handles)==3 && numel(files)==3 && v12RedrawCalls==2);
 assert(strcmp(fileread(path),'existing original figure'));
 for j=1:numel(v12ViewCalls), assert(isequal(v12ViewCalls{j}(2:3),{'new','visible'})); end
 run_leo_v12_show_results(directory); assert(v12RedrawCalls==2);
+% V13复用查看器，按独立前缀读取规格并打开三张四方法图。
+write(fullfile(directory,'v13_specs.json'),jsonencode(struct('name','v13_uncapped_lexicographic')));
+specs=struct('name',{'v13_iteration_convergence','v13_workload_quality'});
+write(fullfile(directory,'v13_diagnostic_specs.json'),jsonencode(specs));
+[handles,files]=run_leo_v12_show_results(directory,'V13');
+assert(numel(handles)==3 && numel(files)==3 && v12RedrawCalls==5);
 fprintf('PASS: V12 legacy figure opening, array-spec redraw, three visible windows and no experiment rerun (mock GUI).\n');
 end
 function write(path,text)

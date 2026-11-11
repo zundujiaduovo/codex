@@ -4,7 +4,8 @@ if nargin<1, projectRoot=fileparts(mfilename('fullpath')); end
 matlabDirectory=fullfile(projectRoot,'matlab');
 required={'run_leo_v12_comparison','run_leo_v12_summary','run_leo_v12_diagnostics', ...
     'leo_v12_load_report','leo_v12_diagnostic_data','leo_build_v12_diagnostic_specs', ...
-    'run_leo_v12_show_results','run_leo_v12_greedy_control','run_leo_v12_proxy_control','run_leo_v12_scaling'};
+    'run_leo_v12_show_results','run_leo_v12_greedy_control','run_leo_v12_proxy_control','run_leo_v12_scaling', ...
+    'leo_lexicographic_release'};
 missing={};
 for j=1:numel(required)
     if exist(fullfile(matlabDirectory,[required{j},'.m']),'file')~=2

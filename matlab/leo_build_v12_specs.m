@@ -1,8 +1,9 @@
 function specs = leo_build_v12_specs(report,data)
 %LEO_BUILD_V12_SPECS 明确区分未封顶公平主指标、固定公平门槛下的吞吐和QoS辅助项。
 methods=report.options.methods; seed=report.options.seeds(1); n=numel(methods);
+release=leo_lexicographic_release(report);
 first=NaN(1,n); final=first; before=first; after=first; floors=first; conditional=first;
-p=panel('categorical_line','V12 primary: uncapped minimum cumulative service ratio','Method','min_i G_i/q_i (uncapped)'); p.labels=methods;
+p=panel('categorical_line',[release.tag,' primary: uncapped minimum cumulative service ratio'],'Method','min_i G_i/q_i (uncapped)'); p.labels=methods;
 p(2)=panel('categorical_line','Secondary service at each method''s attained floor','Method and attained floor','Mbit/period');
 p(3)=panel('line','Primary fairness versus recorded elapsed time','Accounted elapsed time (s)','Uncapped min_i G_i/q_i');
 p(4)=panel('line','Total service versus time: fairness phase may reduce sum','Accounted elapsed time (s)','Mbit/period');
@@ -32,7 +33,9 @@ p(3).note='Real saved checkpoints. No cap at 1, no fabricated plateau or extensi
 p(4).note='During stage 1 fairness has priority over total service. Stage 2 preserves the attained stage-1 floor.';
 p(5).note='Services are accumulated over all slots before taking user ratios. Instantaneous per-slot fairness is not the objective.';
 p(6).note='Conditional original-model sum-service bounds; these are not certificates for the primary max-min objective.';
-specs=struct('name','v12_uncapped_lexicographic','title',sprintf('V12 CHANGED OBJECTIVE | uncapped max-min first, sum service second | seed %.0f',seed), ...
+titleText=sprintf('%s | uncapped max-min first, sum service second | seed %.0f',release.tag,seed);
+if strcmp(release.tag,'V13'), titleText=sprintf('V13 based on V12 | K=64, NB=64, L=16 | uncapped max-min first, sum second | seed %.0f',seed); end
+specs=struct('name',[release.prefix,'_uncapped_lexicographic'],'title',titleText, ...
     'rows',3,'cols',2,'panels',p);
 end
 function p=panel(kind,titleText,xlabelText,ylabelText)

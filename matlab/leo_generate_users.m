@@ -8,10 +8,13 @@ K = p.system.K;
 lat0 = p.users.centerLatDeg*pi/180;
 lon0 = p.users.centerLonDeg*pi/180;
 cap = p.users.radiusM/p.earth.aM;
-fixed = strcmp(p.users.layout,'reference32') && K==32 && ...
+fixed32 = strcmp(p.users.layout,'reference32') && K==32 && ...
     p.users.centerLatDeg==0 && p.users.centerLonDeg==0 && p.users.radiusM==200e3;
-if fixed
-    [u.latDeg,u.lonDeg] = leo_reference_users_32();
+fixed64 = strcmp(p.users.layout,'reference64') && K==64 && ...
+    p.users.centerLatDeg==0 && p.users.centerLonDeg==0 && p.users.radiusM==200e3;
+if fixed32 || fixed64
+    if fixed64, [u.latDeg,u.lonDeg] = leo_reference_users_64();
+    else, [u.latDeg,u.lonDeg] = leo_reference_users_32(); end
     % 保留历史默认样本对随机流的消耗，衰落样本仍由原 seed 生成。
     rand(1,K); rand(1,K);
 else

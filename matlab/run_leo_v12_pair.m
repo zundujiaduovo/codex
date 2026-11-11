@@ -1,25 +1,26 @@
 function report = run_leo_v12_pair(directory,seed)
 %RUN_LEO_V12_PAIR 执行或读取一个完整配对；同模型、同种子、同初态、同时间。
 saved=load(fullfile(directory,'experiment.mat'),'experiment'); e=saved.experiment; o=e.protocol;
-assert(strcmp(e.version,'V12 uncapped lexicographic') && leo_is_lexicographic(e.problemData),'Cannot mix V10/V11 runs with the V12 objective.');
+release=leo_lexicographic_release(e.version);
+assert(leo_is_lexicographic(e.problemData),'Cannot mix V10/V11 runs with the uncapped objective.');
 index=find(o.seeds==seed); assert(isscalar(index),'Seed is not in the saved experiment protocol.');
 pairDir=fullfile(directory,'pairs'); if ~exist(pairDir,'dir'), mkdir(pairDir); end
 path=fullfile(pairDir,sprintf('seed_%.0f.mat',seed));
 if exist(path,'file')
     saved=load(path,'report'); report=saved.report;
     assert(isequaln(report.pairedProtocol,o) && isequaln(report.problemData,e.problemData),'Saved pair does not match experiment.');
-    fprintf('V12 pair %.0f already saved; retained.\n',seed); return;
+    fprintf('%s pair %.0f already saved; retained.\n',release.tag,seed); return;
 end
 model=e.modelSnapshot;
 model.problem=leo_form_problem(model.parameters,model.resources,model.beams,model.design);
 assert(isequaln(model.problem.data,e.problemData));
 % 循环轮换执行顺序，避免SB总在热机后运行；每个方法重置为同一搜索种子。
-order=mod((0:2)+index-1,3)+1;
+count=numel(e.methods); order=mod((0:count-1)+index-1,count)+1;
 b=struct('methods',{e.methods(order)},'seeds',seed,'budgetSeconds',o.budgetSeconds, ...
     'outputDirectory','','exhaustive',false,'makePlots',false,'verbose',true, ...
     'diagnosticSurrogates',false,'method',o.method);
 report=leo_benchmark_case(model,b);
-report.caseName='v12_uncapped_lexicographic'; report.pairedProtocol=o;
+report.caseName=release.caseName; report.releaseTag=release.tag; report.pairedProtocol=o;
 report.sceneSeed=o.sceneSeed; report.validationSeed=o.validationSeed; report.validationSamples=o.validationSamples;
 first=[];
 for j=1:numel(report.records)
@@ -46,5 +47,5 @@ report.summary=leo_summarize_benchmark(report.records,e.methods);
 temporary=[tempname(pairDir),'.mat']; save(temporary,'report','-v7');
 [ok,message]=movefile(temporary,path); assert(ok,message);
 leo_write_struct_csv(fullfile(pairDir,sprintf('seed_%.0f_runs.csv',seed)),report.records);
-fprintf('V12_PAIR_SAVED seed=%.0f (%d/%d).\n',seed,index,numel(o.seeds));
+fprintf('%s_PAIR_SAVED seed=%.0f (%d/%d).\n',release.tag,seed,index,numel(o.seeds));
 end

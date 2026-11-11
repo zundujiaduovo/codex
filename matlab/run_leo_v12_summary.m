@@ -2,14 +2,15 @@ function [report,files] = run_leo_v12_summary(directory,render)
 %RUN_LEO_V12_SUMMARY 主指标是未封顶公平；吞吐界只能在明确的同一s0下解释。
 if nargin<2, render=true; end
 saved=load(fullfile(directory,'experiment.mat'),'experiment'); e=saved.experiment; o=e.protocol;
-assert(strcmp(e.version,'V12 uncapped lexicographic') && leo_is_lexicographic(e.problemData));
+release=leo_lexicographic_release(e.version);
+assert(leo_is_lexicographic(e.problemData));
 report=struct();
 for seed=o.seeds
     path=fullfile(directory,'pairs',sprintf('seed_%.0f.mat',seed)); assert(exist(path,'file')==2,['Missing V12 pair: ',path]);
     loaded=load(path,'report'); pair=loaded.report;
     assert(isequaln(pair.problemData,e.problemData) && isequaln(pair.pairedProtocol,o));
-    assert(numel(pair.records)==3 && all([pair.records.seed]==seed));
-    assert(numel(unique({pair.records.method}))==3 && all(ismember(e.methods,{pair.records.method})));
+    assert(numel(pair.records)==numel(e.methods) && all([pair.records.seed]==seed));
+    assert(numel(unique({pair.records.method}))==numel(e.methods) && all(ismember(e.methods,{pair.records.method})));
     for j=1:numel(pair.records)
         if ~strcmp(pair.records(j).status,'completed'), continue; end
         solution=pair.solutions{j}; service=leo_evaluate_service(e.problemData,solution.x);
@@ -23,7 +24,7 @@ for seed=o.seeds
     else, report.records=[report.records;pair.records(:)]; report.solutions=[report.solutions;pair.solutions(:)]; end
 end
 report.options.methods=e.methods; report.options.seeds=o.seeds; report.options.outputDirectory=directory;
-report.objectiveMode='lexicographic_max_min';
+report.objectiveMode='lexicographic_max_min'; report.releaseTag=release.tag;
 fairPath=fullfile(directory,'fairness_certificate.mat');
 if exist(fairPath,'file')==2
     loaded=load(fairPath,'certificate'); certificate=loaded.certificate;
@@ -117,21 +118,22 @@ end
 leo_write_struct_csv(fullfile(directory,'fairness_certificate_users.csv'),certificateUsers);
 leo_write_struct_csv(fullfile(directory,'fairness_certificate_schedule.csv'),certificateSchedule);
 save(fullfile(directory,'benchmark.mat'),'report','-v7');
-specs=leo_build_v12_specs(report,data); fid=fopen(fullfile(directory,'v12_specs.json'),'w','n','UTF-8'); assert(fid>=0);
+specs=leo_build_v12_specs(report,data); fid=fopen(fullfile(directory,[release.prefix,'_specs.json']),'w','n','UTF-8'); assert(fid>=0);
 fprintf(fid,'%s',jsonencode(specs)); fclose(fid);
 files={}; if render, files=leo_render_plot_specs(specs,directory); end
 [~,diagnosticFiles]=run_leo_v12_diagnostics(report,directory,render); files=[files,diagnosticFiles];
 write_summary(report,directory);
 for j=1:numel(report.records)
     r=report.records(j);
-    fprintf('V12 %-24s seed %.0f: s1=%.9g, s2=%.9g, floor=%.9g, total=%.6g Mbit, preserved=%d.\n', ...
-        r.method,r.seed,r.stage1Fairness,r.stage2Fairness,r.requiredFairnessFloor,r.totalBits/1e6,r.fairnessPreserved);
+    fprintf('%s %-24s seed %.0f: s1=%.9g, s2=%.9g, floor=%.9g, total=%.6g Mbit, preserved=%d.\n', ...
+        release.tag,r.method,r.seed,r.stage1Fairness,r.stage2Fairness,r.requiredFairnessFloor,r.totalBits/1e6,r.fairnessPreserved);
 end
 fprintf('GLOBAL FAIRNESS optimum in [%.9g, %.9g]; %s. Secondary throughput bounds are conditional on each stated floor.\n',certificate.lower,certificate.upper,certificate.status);
 end
 function write_summary(report,directory)
 c=report.fairnessCertificate; fid=fopen(fullfile(directory,'RESULTS.md'),'w','n','UTF-8'); assert(fid>=0); cleanup=onCleanup(@() fclose(fid)); %#ok<NASGU>
-fprintf(fid,'# V12 changed objective: uncapped lexicographic fairness\n\n');
+release=leo_lexicographic_release(report);
+fprintf(fid,'# %s: uncapped lexicographic fairness\n\n',release.version);
 fprintf(fid,'Primary: maximize min_i G_i/q_i with no cap at 1. Secondary: maximize sum_i G_i while every ratio remains >= the attained stage-1 level.\n\n');
 fprintf(fid,'Global original-model fairness interval: [%.12g, %.12g]; status %s; gap target met %d. Extra certificate schedules are separate from method scores.\n\n',c.lower,c.upper,c.status,c.gapTargetMet);
 fprintf(fid,'| Method | Search seed | Stage-1 fairness | Final fairness | Preserved floor | Final service (Mbit/period) | Stage-1 confirmed within certificate tolerance |\n|---|---:|---:|---:|---:|---:|---:|\n');

@@ -1,0 +1,17 @@
+PASS: V13 installation complete; K=64, NB=64, L=16 profile and analysis dependencies resolve locally.
+warning: function /tmp/oct-6u24cD/mocks/openfig.m shadows a core library function
+warning: called from
+    test_leo_v12_show_results at line 10 column 1
+
+V12 result figure opened: /tmp/oct-6u24cD/v12_uncapped_lexicographic.fig
+V12 result figure opened: /tmp/oct-6u24cD/v12_uncapped_lexicographic.fig
+V12 result figure opened: /tmp/oct-6u24cD/v12_iteration_convergence.fig
+V12 result figure opened: /tmp/oct-6u24cD/v12_workload_quality.fig
+V12 result figure opened: /tmp/oct-6u24cD/v12_uncapped_lexicographic.fig
+V12 result figure opened: /tmp/oct-6u24cD/v12_iteration_convergence.fig
+V12 result figure opened: /tmp/oct-6u24cD/v12_workload_quality.fig
+V13 result figure opened: /tmp/oct-6u24cD/v13_uncapped_lexicographic.fig
+V13 result figure opened: /tmp/oct-6u24cD/v13_iteration_convergence.fig
+V13 result figure opened: /tmp/oct-6u24cD/v13_workload_quality.fig
+PASS: V12 legacy figure opening, array-spec redraw, three visible windows and no experiment rerun (mock GUI).
+error: ignoring const execution_exception& while preparing to exit

@@ -1,4 +1,14 @@
-# LEO QoS Comparison V12 — uncapped lexicographic fairness
+# LEO QoS Comparison V13 — based on V12, 64 users / 64 beams / 16 streams
+
+分支：`leo-qos-v13-from-v12-64users-16streams`。
+基于V12提交`3a004695eb6f2ad90fe8be9b6b05de6e2017d6bc`。
+源码包：`LEO_QoS_Comparison_v13_from_v12_64users_16streams.zip`。
+
+扩大为64用户、64固定波束、每槽至多16人（1/4波束准入）；16射频链，每流10 W，总功率上限160 W。码本网格过采样由2改为4以提供足够的合法码字。固定64用户位置表前32人继承V12。
+
+优化目标、SB/Local内层、外层验收和原式Tabu/贪婪保持V12逻辑。默认四方法同场景配对；独立V13版本标识、目录、数据和图，旧V12配对继续兼容。`RUN_V13_64_USERS`或`RUN_COMPARISON`运行新场景。见[V13_FROM_V12.md](V13_FROM_V12.md)。
+
+## V12历史版本
 
 分支：`leo-qos-v12-uncapped-lexicographic-fairness`。
 基于 V11 提交 `37bbe3d72cbb13b26fa1e6a5384391afddd64020`；沿用 V10/V11 的物理场景和保证服务证书，**改变优化目标**。

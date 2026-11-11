@@ -1,4 +1,18 @@
-# LEO QoS V12：未封顶公平优先，再提高总保证服务
+# LEO QoS V13：基于V12，64用户、64波束、每槽最多16人
+
+[下载V13完整源码包](LEO_QoS_Comparison_v13_from_v12_64users_16streams.zip)。分支`leo-qos-v13-from-v12-64users-16streams`，基于V12提交`3a00469`；目标仍为未封顶公平优先，再在取得的公平下限下提高总保证服务。
+
+解压到独立的新目录，在MATLAB项目根目录运行：
+
+```matlab
+RUN_V13_64_USERS
+```
+
+默认四方法Tabu、SB、Local、贪婪，每方法120秒上限；自动保存数据并打开性能、原生迭代收敛、工作量三张图。结果目录`results/v13_from_v12_64users_16streams`。只查看图执行`SHOW_V13_RESULTS`。`RUN_COMPARISON`在本分支指向V13。
+
+准入比例为16/64=1/4；射频链16、每流10 W、总功率上限160 W。阵列保持8×8；码本网格加密以生成64个固定波束。默认固定64用户布局的前32人保留V12坐标。完整参数、配对运行及结果解释见[V13_FROM_V12.md](V13_FROM_V12.md)。
+
+## V12历史入口与说明
 
 [下载 V12 纯源码包](LEO_QoS_Comparison_v12_uncapped_lexicographic.zip)。分支 `leo-qos-v12-uncapped-lexicographic-fairness`，从 V11 提交 `37bbe3d72cbb13b26fa1e6a5384391afddd64020` 继续开发。
 
@@ -17,7 +31,7 @@ RUN_V12_LEXICOGRAPHIC
 
 全部图可执行 `RUN_V12_ALL_FIGURES`，依次复用原三方法结果、补贪婪、运行代理诊断和规模实验。规模实验的默认预算见下文验证说明。
 
-`RUN_COMPARISON` 也运行 V12。默认同一个物理场景、一个搜索种子，比较原目标 Tabu、SB 和配对 Local；每方法 120 秒，另给公平上界 180 秒及各公平门槛的条件吞吐上界各 30 秒。搜索预算合计约 6 分钟，证书和独立衰落验证另计。
+`RUN_V12_LEXICOGRAPHIC`运行V12。默认同一个物理场景、一个搜索种子，比较原目标 Tabu、SB 和配对 Local；每方法 120 秒，另给公平上界 180 秒及各公平门槛的条件吞吐上界各 30 秒。搜索预算合计约 6 分钟，证书和独立衰落验证另计。
 
 结果保存到 `results/v12_uncapped_lexicographic`，包含 MAT、CSV、JSON，以及 PNG/PDF/可编辑 FIG。根目录脚本结束时自动打开结果文件夹、六联图、原生迭代四联图和工作量/共同质量时间图。只查看已有图，执行 `SHOW_V12_RESULTS`，不重新搜索。
 

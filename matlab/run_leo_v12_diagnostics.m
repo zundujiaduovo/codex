@@ -8,15 +8,16 @@ if nargin<2 || isempty(directory)
 end
 if nargin<3, render=true; end
 report=leo_v12_load_report(source); if ~exist(directory,'dir'), mkdir(directory); end
+release=leo_lexicographic_release(report);
 analysis=leo_v12_diagnostic_data(report);
 leo_write_struct_csv(fullfile(directory,'iteration_convergence.csv'),analysis.iterations);
 leo_write_struct_csv(fullfile(directory,'workload_by_phase.csv'),analysis.phases);
 leo_write_struct_csv(fullfile(directory,'workload_summary.csv'),analysis.workload);
 leo_write_struct_csv(fullfile(directory,'fairness_targets.csv'),analysis.targets);
 specs=leo_build_v12_diagnostic_specs(report,analysis);
-fid=fopen(fullfile(directory,'v12_diagnostic_specs.json'),'w','n','UTF-8'); assert(fid>=0);
+fid=fopen(fullfile(directory,[release.prefix,'_diagnostic_specs.json']),'w','n','UTF-8'); assert(fid>=0);
 fprintf(fid,'%s',jsonencode(specs)); fclose(fid);
 save(fullfile(directory,'diagnostics.mat'),'analysis','-v7');
 files={}; if render, files=leo_render_plot_specs(specs,directory); end
-fprintf('V12 diagnostics: %d native history points, %d completed runs; no optimization rerun. Missing old instrumentation remains NaN.\n',numel(analysis.iterations),numel(analysis.workload));
+fprintf('%s diagnostics: %d native history points, %d completed runs; no optimization rerun. Missing old instrumentation remains NaN.\n',release.tag,numel(analysis.iterations),numel(analysis.workload));
 end

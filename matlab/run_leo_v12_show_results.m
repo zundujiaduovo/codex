@@ -1,13 +1,15 @@
-function [figures,files] = run_leo_v12_show_results(directory)
+function [figures,files] = run_leo_v12_show_results(directory,releaseTag)
 %RUN_LEO_V12_SHOW_RESULTS 打开已保存的V12两阶段六联图；只读结果，不执行优化。
 % 优先可编辑FIG，其次PNG；图文件缺失时按现有JSON重新导出后打开。
 if nargin<1, directory=fullfile('results','v12_uncapped_lexicographic'); end
+if nargin<2, releaseTag='V12'; end
+release=leo_lexicographic_release(releaseTag); prefix=release.prefix;
 assert(exist(directory,'dir')==7,['Result directory not found: ',directory]);
-names={'v12_uncapped_lexicographic'};
-specNames={'v12_specs.json'};
-if exist(fullfile(directory,'v12_diagnostic_specs.json'),'file')==2
-    names=[names,{'v12_iteration_convergence','v12_workload_quality'}];
-    specNames=[specNames,{'v12_diagnostic_specs.json','v12_diagnostic_specs.json'}];
+names={[prefix,'_uncapped_lexicographic']};
+specNames={[prefix,'_specs.json']};
+if exist(fullfile(directory,[prefix,'_diagnostic_specs.json']),'file')==2
+    names=[names,{[prefix,'_iteration_convergence'],[prefix,'_workload_quality']}];
+    specNames=[specNames,{[prefix,'_diagnostic_specs.json'],[prefix,'_diagnostic_specs.json']}];
 end
 figures={}; files={};
 for j=1:numel(names)
@@ -51,7 +53,7 @@ for j=1:numel(names)
     else
         drawnow;
         figures{end+1}=handle; files{end+1}=opened; %#ok<AGROW>
-        fprintf('V12 result figure opened: %s\n',opened);
+        fprintf('%s result figure opened: %s\n',release.tag,opened);
     end
 end
 end

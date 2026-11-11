@@ -1,6 +1,7 @@
 function specs = leo_build_v12_diagnostic_specs(report,data)
 %LEO_BUILD_V12_DIAGNOSTIC_SPECS 原生外层迭代、原式候选评价和共同质量达标时间。
 seed=report.options.seeds(1); methods=report.options.methods;
+release=leo_lexicographic_release(report);
 p=panel('Stage 1: saved uncapped fairness','Native outer iteration (method-specific units)','min_i G_i/q_i');
 p(2)=panel('Stage 1: sum service while fairness is prioritized','Native outer iteration (method-specific units)','Mbit/period');
 p(3)=panel('Stage 2: fairness retained at each method''s s0','Native outer iteration (method-specific units)','min_i G_i/q_i');
@@ -36,8 +37,8 @@ for j=1:4
     p(j).note='Actual saved outer history. SB/Local: price-round attempts (including a possible partial last round); Tabu: neighborhood rounds; Greedy: accepted construction additions. Units do not imply equal work. No extension beyond actual stopping.';
     q(j).note='Original candidate counts cover recorded search scores, not all computations. Time targets are identical across methods; missing attainment remains NaN. Phase-2 floors may differ.';
 end
-specs=struct('name','v12_iteration_convergence','title',sprintf('V12 native-iteration convergence | units differ by method | seed %.0f',seed),'rows',2,'cols',2,'panels',p);
-specs(2)=struct('name','v12_workload_quality','title',sprintf('V12 recorded work and common-quality timing | seed %.0f',seed),'rows',2,'cols',2,'panels',q);
+specs=struct('name',[release.prefix,'_iteration_convergence'],'title',sprintf('%s native-iteration convergence | units differ by method | seed %.0f',release.tag,seed),'rows',2,'cols',2,'panels',p);
+specs(2)=struct('name',[release.prefix,'_workload_quality'],'title',sprintf('%s recorded work and common-quality timing | seed %.0f',release.tag,seed),'rows',2,'cols',2,'panels',q);
 end
 function p=panel(titleText,xlabelText,ylabelText)
 p=struct('kind','line','title',titleText,'xlabel',xlabelText,'ylabel',ylabelText,'labels',{{}}, ...
