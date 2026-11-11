@@ -38,6 +38,18 @@ else
     save(fairPath,'certificate','-v7');
 end
 report.fairnessCertificate=certificate;
+if strcmp(release.tag,'V14') && ~isfield(certificate,'coupledRelaxation')
+    fprintf('V14: solving original chord/McCormick common-interference fairness relaxation...\n');
+    coupled=leo_v14_coupled_bound(report,'fairness',0); certificate.coupledRelaxation=coupled;
+    certificate.upper=min(certificate.upper,coupled.upper);
+    assert(certificate.upper>=certificate.lower-1e-7*max(1,certificate.lower));
+    certificate.upper=max(certificate.upper,certificate.lower);
+    certificate.absoluteGap=certificate.upper-certificate.lower;
+    certificate.relativeGap=certificate.absoluteGap/max(certificate.upper,eps);
+    certificate.gapTargetMet=certificate.absoluteGap<=max(certificate.options.absoluteGap,certificate.options.relativeGap*certificate.upper);
+    report.fairnessCertificate=certificate; save(fairPath,'certificate','-v7');
+    fprintf('V14 coupled upper=%.9g (%s); merged upper=%.9g.\n',coupled.upper,coupled.lp.status,certificate.upper);
+end
 if isfield(certificate,'cardinalityRelaxation')
     b=certificate.cardinalityRelaxation;
     components=struct('coarseNoInterferenceUpper',certificate.coarseUpper, ...
@@ -62,7 +74,18 @@ for j=1:numel(report.records)
     floorValue=r.stage1Fairness; at=find(cache.floors==floorValue,1);
     if isempty(at)
         options=o.throughputCertificateOptions; options.fairnessFloor=floorValue;
-        t=leo_theory_bound(report,options); cache.floors(end+1)=floorValue; cache.bounds{end+1}=t;
+        t=leo_theory_bound(report,options);
+        if strcmp(release.tag,'V14')
+            floorBound=leo_v14_floor_bound(report,floorValue);
+            coupled=leo_v14_coupled_bound(report,'throughput',floorValue);
+            t.cardinalityFloorBound=floorBound; t.coupledRelaxation=coupled;
+            t.upperBits=min([t.upperBits,floorBound.upperBits,coupled.upper]);
+            assert(isnan(t.lowerBits) || t.upperBits>=t.lowerBits-1e-7*max(1,t.lowerBits));
+            t.absoluteGapBits=max(0,t.upperBits-t.lowerBits); t.relativeGap=t.absoluteGapBits/max(t.upperBits,eps);
+            t.gapTargetMet=isfinite(t.lowerBits) && t.absoluteGapBits<=max(t.targetAbsoluteGapBits,t.targetRelativeGap*t.upperBits);
+            t.pricingStatus=['V14 floor dual + coupled LP: ',coupled.lp.status];
+        end
+        cache.floors(end+1)=floorValue; cache.bounds{end+1}=t;
         save(boundsPath,'cache','-v7');
     else, t=cache.bounds{at}; end
     assert(t.upperBits>=r.totalBits-1e-8*max(1,r.totalBits));
@@ -149,7 +172,7 @@ if isfield(certificate,'cardinalityRelaxation')
     fprintf('Standard fairness bound: coarse %.9g, uniform cardinality %.9g, configuration LP dual %.9g (%s).\n', ...
         certificate.coarseUpper,b.uniformUpper,b.upper,b.status);
 end
-if strcmp(release.tag,'V13')
+if any(strcmp(release.tag,{'V13','V14'}))
     leo_print_bound_explanation(report);
     explanation=evalc('leo_print_bound_explanation(report)');
     fid=fopen(fullfile(directory,'UPPER_BOUND_EXPLANATION.txt'),'w','n','UTF-8'); assert(fid>=0);

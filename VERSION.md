@@ -1,4 +1,10 @@
-# LEO QoS Comparison V13 — 64 users / 128 antennas / 64 beams / 16 streams
+# LEO QoS Comparison V14 — based on V13, normalized fairness coordination
+
+分支：`leo-qos-v14-from-v13-fairness-coordination`；基于V13提交`54f7412`。源码包：`LEO_QoS_Comparison_v14_from_v13_fairness_coordination.zip`。
+
+V14实现用户指定的七项决策改进：单纯形平滑公平价格、2～3块联合补偿、增益误差可信域、上下文候选池及成本/收益调度、自适应bSB及有界松弛编码、共同干扰弦线McCormick/RLT有效上界、固定目标和两类独立控制。场景保持64用户/128阵元/16并发。见[V14_FROM_V13.md](V14_FROM_V13.md)。V14入口`RUN_V14_ALL`；`RUN_COMPARISON`指向V14主实验。
+
+## V13历史版本：64 users / 128 antennas / 64 beams / 16 streams
 
 当前源码包：`LEO_QoS_Comparison_v13_128ant_proxy_refinement.zip`。基于提交`82300fa`，增加外层120/60轮、每轮主代理刷新及候选切点重建、多候选原目标重评分及瓶颈用户候选。新增五配置单项对照和改进来源导出，默认目录`v13_proxy_refinement_combined`。图及窗口明确上界可达性未证实。沿用用户要求，本次未运行仿真或测试。详见[V13_PROXY_REFINEMENT.md](V13_PROXY_REFINEMENT.md)。
 

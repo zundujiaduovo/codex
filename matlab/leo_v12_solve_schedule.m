@@ -36,7 +36,9 @@ if options.verbose
         initial.bestName,initial.service.fairness,initial.service.totalBits/1e6);
 end
 fairBudget = budget; fairBudget.seconds = options.maxSeconds*options.fairnessBudgetFraction;
-stage1 = leo_v12_run_price_phase(problem,proxy,cache,'fairness',initial,options,fairBudget);
+phaseSolver=@leo_v12_run_price_phase;
+if isfield(options,'coordination'), phaseSolver=@leo_v14_run_price_phase; end
+stage1 = phaseSolver(problem,proxy,cache,'fairness',initial,options,fairBudget);
 % 第二阶段在阶段 1 保留日程处相切；正公平时它也是代理可行点。
 % 周期模式 s0=0 时有符号代理可能更严格，仍保留原式可行日程验收。
 stage2Proxy = [];
@@ -46,7 +48,7 @@ if ~leo_budget_expired(budget)
     stage2Proxy = leo_v12_build_service_surrogates(problem,'current_schedule',stage1.x);
     stage2ProxySeconds=toc(proxyTimer);
 end
-stage2 = leo_v12_run_price_phase(problem,stage2Proxy,cache,'throughput',stage1,options,budget);
+stage2 = phaseSolver(problem,stage2Proxy,cache,'throughput',stage1,options,budget);
 assert(all(stage2.service.demandRatio>=stage1.service.fairness));
 assert(stage2.service.totalBits>=stage1.service.totalBits);
 result.kind = ['V12 uncapped lexicographic: two-stage Lagrangian + ',options.innerSolver,' + original-service recovery'];

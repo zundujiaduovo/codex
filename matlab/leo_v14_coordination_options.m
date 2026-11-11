@@ -1,0 +1,26 @@
+function c=leo_v14_coordination_options(overrides)
+% V14公共外层/自适应内核选项。历史版本不传本结构，保持原更新。
+c=struct('normalizedFairness',true,'priceSmoothing',.2,'priceMix',.15,'priceFloor',1e-6, ...
+ 'trustInitial',4,'trustMin',2,'trustMax',16,'gainRelativeTolerance',.25, ...
+ 'gainAbsoluteTolerance',1e-7,'jointBlocks',3,'jointPool',5,'jointMaxCombinations',125, ...
+ 'familyPatience',8,'familyCooldown',4,'familyProbeEvery',5,'sbKernel','adaptive', ...
+ 'sbMinSteps',80,'sbStagnationSteps',60,'sbMaxRestarts',3, ...
+ 'adaptivePenalty',true,'penaltyMax',8,'repairLossTrigger',.05,'stage2Floor',NaN);
+if nargin>0
+ names=fieldnames(overrides); assert(all(ismember(names,fieldnames(c))));
+ for j=1:numel(names), c.(names{j})=overrides.(names{j}); end
+end
+assert(any(strcmp(c.sbKernel,{'adaptive','fixed'})));
+for f={'normalizedFairness','adaptivePenalty'}
+ v=c.(f{1}); assert(isscalar(v) && any(v==[0,1])); c.(f{1})=logical(v);
+end
+for f={'trustInitial','trustMin','trustMax','jointBlocks','jointPool','jointMaxCombinations', ...
+ 'familyPatience','familyCooldown','familyProbeEvery','sbMinSteps','sbStagnationSteps','sbMaxRestarts'}
+ v=c.(f{1}); minimum=1; if strcmp(f{1},'sbMaxRestarts'), minimum=0; end
+ assert(isscalar(v) && isfinite(v) && v==fix(v) && v>=minimum);
+end
+assert(c.jointBlocks>=2 && c.jointBlocks<=3 && c.trustMin<=c.trustInitial && c.trustInitial<=c.trustMax);
+assert(c.priceSmoothing>0 && c.priceSmoothing<=1 && c.priceMix>0 && c.priceMix<=1 && c.priceFloor>0);
+assert(c.gainRelativeTolerance>0 && c.gainAbsoluteTolerance>0 && c.penaltyMax>1 && c.repairLossTrigger>=0);
+assert(isscalar(c.stage2Floor) && (isnan(c.stage2Floor) || (isfinite(c.stage2Floor) && c.stage2Floor>=0)));
+end

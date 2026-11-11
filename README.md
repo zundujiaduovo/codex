@@ -1,4 +1,14 @@
-# LEO QoS V13：64用户、128阵元、64波束、每槽最多16人
+# LEO QoS V14：基于V13的公平协调与自适应bSB
+
+[下载V14完整源码包](LEO_QoS_Comparison_v14_from_v13_fairness_coordination.zip)。分支`leo-qos-v14-from-v13-fairness-coordination`，基于V13提交`54f7412`。物理场景为64用户、128阵元、64固定波束、每槽至多16人；继续未封顶公平优先目标。
+
+解压到新目录，在MATLAB项目根目录运行`RUN_V14_ALL`，依次生成主实验、2.50/2.60/2.65/2.70公平达标时间、同门槛同初值的第二阶段控制，以及固定QUBO的四内核对照图。只跑主实验执行`RUN_COMPARISON`，补控制执行`RUN_V14_CONTROLS`，只看图执行`SHOW_V14_RESULTS`。
+
+V14修改归一化平滑公平价格、瓶颈2～3块补偿、基于增益误差的可信域与刷新、保留补偿能力的候选池和收益调度、自适应bSB及有界松弛编码；新增共同干扰McCormick/RLT上界和真正利用公平门槛的吞吐界。设置在`V14_SETTINGS.m`。完整数学定义、对照范围和输出文件见[V14_FROM_V13.md](V14_FROM_V13.md)。本版不把自适应bSB标称为论文EC-bSB。
+
+结果保存到`results/v14_from_v13_fairness_coordination`，与历史数据隔离。未运行完整64用户性能实验；已进行源代码语法和独立枚举数学检查，实际性能以MATLAB运行结果为准。
+
+## V13历史版本
 
 [下载V13完整源码包](LEO_QoS_Comparison_v13_128ant_proxy_refinement.zip)。分支`leo-qos-v13-from-v12-64users-16streams`；本次从V13提交`82300fa`增加三项代理框架改进，目标仍为未封顶公平优先，再在取得的公平下限下提高总保证服务。
 

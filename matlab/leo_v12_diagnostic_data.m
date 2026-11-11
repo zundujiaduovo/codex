@@ -15,6 +15,7 @@ for j=1:numel(report.records)
         if isPrice
             candidates=0; resourceSolves=sum(h.resourcesSolved); sbSteps=sum(h.sbSteps);
             trajectorySteps=sbSteps*result.options.sbTrajectories;
+            if isfield(result.options,'coordination'), trajectorySteps=sum(h.sbTrajectorySteps); end
             denseTerms=total(h,'denseDynamicsTerms'); if sbSteps==0, denseTerms=0; end
             maxBits=maximum(h,'maxQuboBits');
             add(0,t0,stage.initialService,0,NaN,0,0,0,'initial');
@@ -24,6 +25,7 @@ for j=1:numel(report.records)
             if isPrice
                 n=k; increment=h.recoveryEvaluations(k)+h.blockwiseEvaluations(k)+1;
                 if isfield(h,'candidateGapEvaluations'), increment=increment+h.candidateGapEvaluations(k); end
+                if isfield(h,'jointEvaluations'), increment=increment+h.jointEvaluations(k); end
                 cumulative=cumulative+increment; candidates=cumulative;
                 complete=double(h.completePriceRound(k)); solves=h.resourcesSolved(k); steps=h.sbSteps(k);
                 terms=NaN; if isfield(h,'denseDynamicsTerms'), terms=h.denseDynamicsTerms(k); end

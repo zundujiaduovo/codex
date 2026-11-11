@@ -8,7 +8,15 @@ assert(numel(x)==qubo.nUsers && sum(x)<=qubo.maxStreams);
 assert(numel(unique(qubo.beamIndex(x)))==sum(x));
 if qubo.capacityIncluded
     slack = qubo.maxStreams-sum(x);
-    u = mod(floor(slack./qubo.slackWeights),2);
+    if isequal(qubo.slackWeights,2.^(0:numel(qubo.slackWeights)-1).')
+        u = mod(floor(slack./qubo.slackWeights),2);
+    else
+        u=zeros(size(qubo.slackWeights)); [~,order]=sort(qubo.slackWeights,'descend');
+        for j=order(:).'
+            if slack>=qubo.slackWeights(j), u(j)=1; slack=slack-qubo.slackWeights(j); end
+        end
+        assert(slack==0,'Bounded slack encoding cannot represent the remaining capacity.');
+    end
 else
     u = zeros(0,1);
 end

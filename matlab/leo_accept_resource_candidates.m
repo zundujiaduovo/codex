@@ -4,6 +4,7 @@ function r = leo_accept_resource_candidates(problem,x,service,m,inner,phase,s0,b
 if nargin<8, budget=[]; end
 r.x=x; r.service=service; r.evaluations=0; r.accepted=false;
 r.nonProxyWinner=false; r.source='none';
+r.candidateClass='none';
 if isfield(inner,'candidateGroups')
     groups=inner.candidateGroups; sources=inner.candidateSources;
 else
@@ -23,6 +24,8 @@ if winner>0
     trial=x; trial(:,m)=groups(:,winner); exact=problem.evaluate(trial);
     if leo_service_is_better(exact,service,phase,s0)
         r.x=trial; r.service=exact; r.accepted=true; r.source=sources{winner};
+        r.candidateClass=r.source;
+        if isfield(inner,'candidateClasses'), r.candidateClass=inner.candidateClasses{winner}; end
         r.nonProxyWinner=~isequal(groups(:,winner),inner.x);
     else
         r.service=service;

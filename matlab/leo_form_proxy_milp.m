@@ -1,15 +1,17 @@
-function model = leo_form_proxy_milp(data,lower,phase,s0)
+function model = leo_form_proxy_milp(data,lower,phase,s0,fullPairs)
 %LEO_FORM_PROXY_MILP 第 13.3 节：直接线性化二次下界的完整周期 MILP。
 % 输入：data、lower、fairness/throughput、固定 s0；输出稀疏 f/A/b/lb/ub/intcon。
 % y_ijm=x_im*x_jm 用三个 McCormick 不等式；x 二元时 y 可保持连续。
 % 周期模式服务矩阵保存 A_lower，serviceOffsetBits=-margin，QoS 右端已平移。
 if nargin<4, s0 = 0; end
+if nargin<5, fullPairs=false; end
 assert(any(strcmp(phase,{'fairness','throughput'})));
 K = data.shape(1); M = data.shape(2); nx = K*M; pairs = zeros(0,3);
 for m = 1:M
     ids = find(data.available(:,m));
     B = lower.bBits(ids,ids,m);
     mask = (B>0 | B.'>0) & bsxfun(@ne,data.beamIndex(ids,m),data.beamIndex(ids,m).');
+    if fullPairs, mask=bsxfun(@ne,data.beamIndex(ids,m),data.beamIndex(ids,m).'); end
     [a,b] = find(triu(mask,1));
     pairs = [pairs;ids(a),ids(b),repmat(m,numel(a),1)]; %#ok<AGROW>
 end
