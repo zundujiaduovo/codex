@@ -10,6 +10,8 @@
 
 V13更新：默认启用按原模型有效界差距/停滞的提前停止，120秒保留为最长预算；阈值集中在`V13_SETTINGS.m`。新运行方法名统一为Tabu、SB、Local、Greedy，旧结果可只重画标签。自适应实验独立写入`_adaptive`目录，分阶段停止原因和有效差距导出CSV。见[V13_ADAPTIVE_STOPPING.md](V13_ADAPTIVE_STOPPING.md)。
 
+V13规模诊断更新：500步/32轨迹SB、32个Local起点、12步等价向量局部改进、每2轮刷新；延长停滞窗口。新增实际Tabu动作和冻结代理/价格/内层提案的事后对照，新增不受18波束枚举限制的人数条件配置LP对偶公平上界；旧数据可独立分析，原方法成绩不改。默认新目录`v13_64users_scaled_audit`。见[V13_SCALING_DIAGNOSIS.md](V13_SCALING_DIAGNOSIS.md)。
+
 ## V12历史版本
 
 分支：`leo-qos-v12-uncapped-lexicographic-fairness`。

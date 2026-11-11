@@ -4,13 +4,13 @@ if nargin<2, overrides=struct(); end
 o=struct('maxSeconds',180,'maxNodes',128,'maxIterations',150,'maxSimplexPivots',10000, ...
     'maxBeams',18,'maxSubsets',200000,'maxTotalSubsets',1500000,'roundingCandidates',8, ...
     'recoverySeconds',.2,'relativeGap',1e-5,'absoluteGap',1e-6,'pricingTolerance',1e-8, ...
-    'artificialPenalty',1000,'verbose',true);
+    'artificialPenalty',1000,'verbose',true,'relaxationMaxSeconds',30,'relaxationMaxIterations',150);
 names=fieldnames(overrides); assert(all(ismember(names,fieldnames(o))));
 for j=1:numel(names), o.(names{j})=overrides.(names{j}); end
-for name={'maxSeconds','recoverySeconds','relativeGap','absoluteGap'}
+for name={'maxSeconds','recoverySeconds','relativeGap','absoluteGap','relaxationMaxSeconds'}
     v=o.(name{1}); assert(isscalar(v) && isfinite(v) && v>=0);
 end
-for name={'maxNodes','maxIterations','maxSimplexPivots','maxBeams','maxSubsets','maxTotalSubsets','roundingCandidates'}
+for name={'maxNodes','maxIterations','maxSimplexPivots','maxBeams','maxSubsets','maxTotalSubsets','roundingCandidates','relaxationMaxIterations'}
     v=o.(name{1}); assert(isscalar(v) && isfinite(v) && v>=1 && v==fix(v));
 end
 assert(o.pricingTolerance>0 && o.artificialPenalty>0);
@@ -38,6 +38,9 @@ limit=leo_fairness_limit(data); upper=limit; result=struct('lower',best.fairness
     'incumbentX',bestX,'incumbentService',best,'objectiveMode','lexicographic_max_min', ...
     'nodesProcessed',0,'openNodeCount',1,'pricingComplete',false,'branchTrace',struct([]), ...
     'options',o,'status','time_limit','scope','ORIGINAL uncapped max-min G/q; certificate search is separate from benchmark methods.');
+result.problemDataSnapshot=data;
+result=leo_strengthen_fairness_certificate(report,result,min(o.relaxationMaxSeconds,max(0,o.maxSeconds-toc(started))),o.relaxationMaxIterations);
+upper=result.upper;
 cache=leo_prepare_pricing_cache(data,o,budget); result.pricingComplete=cache.complete;
 root=struct('fixed',-ones(K,M,'int8'),'pool',pool,'upper',upper,'id',1,'parent',0);
 open={root}; nextId=2; closedUpper=0;
@@ -102,6 +105,9 @@ result.lower=best.fairness; result.upper=max(upper,best.fairness); result.incumb
 result.absoluteGap=max(0,result.upper-result.lower); result.relativeGap=result.absoluteGap/max(result.upper,eps);
 result.gapTargetMet=met(result.upper,result.lower,o); result.openNodeCount=numel(open); result.elapsedSeconds=toc(started);
 result.problemDataSnapshot=data;
+if result.upper<result.cardinalityRelaxation.upper
+    result.upperBoundKind='Minimum of configuration LP dual and original integer refinement bounds';
+end
 end
 function yes=met(upper,lower,o)
 yes=upper-lower<=max(o.absoluteGap,o.relativeGap*max(upper,eps));

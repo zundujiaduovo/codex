@@ -37,6 +37,7 @@ if ~isempty(proxy)
     errors = proxy.error.optimalFairnessGapBound; touchErrors = proxy.referenceTouchMaxAbsBits;
 end
 completed = 0; status = 'iteration_limit';
+auditEnabled=isfield(options,'audit') && options.audit.enabled; auditSnapshots={};
 for k = 1:rounds
     if certified_gap(bestUpper.value,bestService,isFairness)<=options.gapTolerance
         status = 'bound_gap'; break;
@@ -45,6 +46,10 @@ for k = 1:rounds
     if ~isempty(stopStatus), status=stopStatus; break; end
     if leo_budget_expired(budget), status = 'time_limit'; break; end
     [weights,sAux] = leo_price_weights(data,lambda,phase,s0);
+    if auditEnabled
+        snapshot=struct('iteration',k,'phase',phase,'floor',s0,'x',bestX,'priceStart',priceX, ...
+            'lambda',lambda,'referenceW',proxy.referenceW,'seconds',toc(budget.timer),'solved',false(1,M));
+    end
     history.lambda(:,k) = lambda;
     improvement = 0; solved = 0; steps = 0; repairs = 0;
     blockwiseEvaluations = 0; blockwiseAccepted = 0;
@@ -53,7 +58,11 @@ for k = 1:rounds
     for m = order
         if leo_budget_expired(budget), break; end
         innerTimer=tic;
-        inner = leo_v8_solve_resource(data,proxy.lower,m,weights,priceX(:,m),options,budget);
+        if isfield(options,'fastPolish') && options.fastPolish
+            inner=leo_v13_solve_resource(data,proxy.lower,m,weights,priceX(:,m),options,budget);
+        else
+            inner = leo_v8_solve_resource(data,proxy.lower,m,weights,priceX(:,m),options,budget);
+        end
         innerSeconds=innerSeconds+toc(innerTimer);
         maxBits=max(maxBits,inner.nBits);
         trajectorySteps=trajectorySteps+inner.sbSteps*options.sbTrajectories;
@@ -82,6 +91,7 @@ for k = 1:rounds
             end
         end
         priceX(:,m) = inner.x;
+        if auditEnabled, snapshot.solved(m)=true; end
         improvement = improvement+inner.score-inner.oldScore;
         solved = solved+1; steps = steps+inner.sbSteps; repairs = repairs+inner.nRepaired;
         originalSeconds=originalSeconds+toc(originalTimer);
@@ -134,6 +144,10 @@ for k = 1:rounds
     history.sbTrajectorySteps(k)=trajectorySteps; history.denseDynamicsTerms(k)=denseTerms;
     history.completePriceRound(k) = solved==M;
     completed = k; lambda = lambdaNext;
+    if auditEnabled
+        snapshot.proposed=priceX; auditSnapshots{end+1}=snapshot;
+        if numel(auditSnapshots)>options.audit.snapshots, auditSnapshots(1)=[]; end
+    end
     if options.verbose && (k==1 || mod(k,5)==0 || k==rounds)
         fprintf('  %-10s %3d: raw fairness=%.9g, total=%.6g Mbit, valid gap=%.6g\n', ...
             phase,k,bestService.fairness,bestService.totalBits/1e6, ...
@@ -178,6 +192,7 @@ result.elapsedAtEndSeconds = toc(budget.timer);
 result.initialService = start.service; result.initialElapsedSeconds = initialSeconds;
 result.initialUpperBound = initialUpper; result.iterationKind = 'price_round';
 result.sbTrace = firstSbTrace;
+if auditEnabled, result.auditSnapshots=auditSnapshots; end
 end
 
 function gap = certified_gap(upper,service,isFairness)

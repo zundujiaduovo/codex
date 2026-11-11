@@ -45,6 +45,13 @@ if nargin>0
     if isfield(overrides,'stopping')
         stopping=leo_stopping_options(overrides.stopping); overrides=rmfield(overrides,'stopping');
     end
+    if isfield(overrides,'audit')
+        audit=leo_audit_options(overrides.audit); overrides=rmfield(overrides,'audit');
+    end
+    if isfield(overrides,'fastPolish')
+        fastPolish=overrides.fastPolish; assert(isscalar(fastPolish) && any(fastPolish==[0,1]));
+        overrides=rmfield(overrides,'fastPolish');
+    end
     names = fieldnames(overrides);
     for j = 1:numel(names)
         assert(isfield(o,names{j}),['未知方法参数: ',names{j}]);
@@ -84,4 +91,6 @@ assert(isfinite(o.stepExponent) && o.stepExponent>0.5 && o.stepExponent<=1);
 assert(isfinite(o.gapTolerance) && o.gapTolerance>=0);
 assert(isfinite(o.crossResourceFraction) && o.crossResourceFraction>=0 && o.crossResourceFraction<=1);
 if exist('stopping','var'), o.stopping=stopping; end
+if exist('audit','var'), o.audit=audit; end
+if exist('fastPolish','var'), o.fastPolish=logical(fastPolish); end
 end

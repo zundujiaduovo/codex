@@ -48,7 +48,7 @@ clear functions
 RUN_V13_64_USERS
 ```
 
-`RUN_COMPARISON`在V13分支也指向此入口。完成后自动打开三张四方法对比图：性能六联图、分阶段原生迭代收敛图、工作量及共同公平达标时间图。三张图均含贪婪，无需再调用`ADD_V12_GREEDY`。PNG、PDF、可编辑FIG，以及MAT、CSV、JSON默认保存到`results/v13_from_v12_64users_16streams_adaptive`；原固定预算目录保留。只查看已有图并更新方法标签：
+`RUN_COMPARISON`在V13分支也指向此入口。完成后自动打开性能六联图、分阶段迭代图、工作量图和候选诊断图。主三图均含贪婪，无需再调用`ADD_V12_GREEDY`。PNG、PDF、可编辑FIG，以及MAT、CSV、JSON默认保存到`results/v13_64users_scaled_audit`；旧自适应/固定预算目录保留。新搜索配置、标准公平上界和不重跑方法的分析入口见[V13_SCALING_DIAGNOSIS.md](V13_SCALING_DIAGNOSIS.md)。只查看已有图并更新方法标签：
 
 ```matlab
 SHOW_V13_RESULTS

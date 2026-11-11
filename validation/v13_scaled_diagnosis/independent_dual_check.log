@@ -1,0 +1,2 @@
+PASS: stored LP dual prices independently give ORIGINAL cardinality upper 3.04814424723, reported outward bound 3.04814425098.
+error: ignoring const execution_exception& while preparing to exit

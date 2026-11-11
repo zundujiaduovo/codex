@@ -9,11 +9,16 @@ switch name
             if isfield(options,fields{j}), legacy.(fields{j})=options.(fields{j}); end
         end
         if isfield(options,'stopping'), legacy.stopping=options.stopping; end
+        if isfield(options,'audit'), legacy.audit=options.audit; end
+        if isfield(options,'fastPolish'), legacy.fastPolish=options.fastPolish; end
         legacy.blockwiseOriginalAccept=true;
         if strcmp(name,'sb_v12_lexicographic'), legacy.innerSolver='sb'; else, legacy.innerSolver='local'; end
         result=leo_v12_solve_schedule(problem,[],legacy,provided);
         result.usesQuadraticProxy=true; result.usesProvidedSchedule=~isempty(provided);
         result.searchEngine='V12 uncapped adaptation of V10/V8';
+        if isfield(legacy,'fastPolish') && legacy.fastPolish
+            result.searchEngine='Original-service acceptance; legacy SB dynamics with vectorized identical polish';
+        end
     case {'sb_v8_blockwise','local_v8_blockwise'}
         assert(~leo_is_lexicographic(problem.data),'Use sb_v12_lexicographic/local_v12_lexicographic for the V12 objective.');
         % 冻结V8引擎：只传V8已有参数，禁止混入V9扰动/候选池/联合搜索。

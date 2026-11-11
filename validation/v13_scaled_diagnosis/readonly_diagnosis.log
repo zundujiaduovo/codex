@@ -1,0 +1,5 @@
+V13 diagnostics: 34 native history points, 4 completed runs; no optimization rerun. Missing old instrumentation remains NaN.
+Candidate audit: 1 original improving actions; weight misalignment 1, proxy reversals 0, witnessed inner shortfalls 0; time-limited=1.
+Fairness upper: no-interference 14.3600612 -> uniform cardinality 4.22123773 -> configuration LP dual 4.22123773; LP status time_limit_valid_dual_bound.
+Original method scores, schedules and source benchmark unchanged. Diagnosis: results/v13_adaptive_release_validation/diagnosis
+error: ignoring const execution_exception& while preparing to exit

@@ -23,6 +23,9 @@ for j=1:n
 end
 p(1)=series(p(1),'Attained stage-1 fairness',1:n,first); p(1)=series(p(1),'Final fairness',1:n,final);
 p(1).reference=report.fairnessCertificate.upper; p(1).referenceLabel='Global fairness upper (original model)';
+if isfield(report.fairnessCertificate,'cardinalityRelaxation')
+    p(1).referenceLabel='Global upper: configuration LP / integer refinement';
+end
 p(2)=series(p(2),'Stage 1 service',1:n,before); p(2)=series(p(2),'Stage 2 service',1:n,after);
 labels=cell(1,n); for j=1:n, labels{j}=sprintf('%s (s0=%.5g)',methodNames{j},floors(j)); end
 p(2).labels=labels; p(6).labels=labels;

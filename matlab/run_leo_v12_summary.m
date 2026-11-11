@@ -29,11 +29,24 @@ fairPath=fullfile(directory,'fairness_certificate.mat');
 if exist(fairPath,'file')==2
     loaded=load(fairPath,'certificate'); certificate=loaded.certificate;
     assert(isequaln(certificate.problemDataSnapshot,e.problemData),'Fairness certificate belongs to another model.');
+    if ~isfield(certificate,'boundSchemaVersion') || certificate.boundSchemaVersion<2
+        certificate=leo_strengthen_fairness_certificate(report,certificate);
+        save(fairPath,'certificate','-v7');
+    end
 else
     certificate=leo_fairness_certificate(report,o.fairnessCertificateOptions);
     save(fairPath,'certificate','-v7');
 end
 report.fairnessCertificate=certificate;
+if isfield(certificate,'cardinalityRelaxation')
+    b=certificate.cardinalityRelaxation;
+    components=struct('coarseNoInterferenceUpper',certificate.coarseUpper, ...
+        'uniformCardinalityUpper',b.uniformUpper,'configurationLPUpper',b.upper, ...
+        'mergedGlobalUpper',certificate.upper,'relaxationLPConverged',b.lpConverged, ...
+        'status',b.status,'kind',b.kind);
+    leo_write_struct_csv(fullfile(directory,'fairness_bound_components.csv'),components);
+    leo_write_struct_csv(fullfile(directory,'fairness_bound_trace.csv'),b.trace);
+end
 boundsPath=fullfile(directory,'conditional_throughput_bounds.mat');
 cache=struct('floors',[],'bounds',{{}},'problemDataSnapshot',e.problemData);
 if exist(boundsPath,'file')==2
@@ -130,6 +143,11 @@ for j=1:numel(report.records)
         release.tag,leo_method_name(r.method),r.seed,r.stage1Fairness,r.stage2Fairness,r.requiredFairnessFloor,r.totalBits/1e6,r.fairnessPreserved);
 end
 fprintf('GLOBAL FAIRNESS optimum in [%.9g, %.9g]; %s. Secondary throughput bounds are conditional on each stated floor.\n',certificate.lower,certificate.upper,certificate.status);
+if isfield(certificate,'cardinalityRelaxation')
+    b=certificate.cardinalityRelaxation;
+    fprintf('Standard fairness bound: coarse %.9g, uniform cardinality %.9g, configuration LP dual %.9g (%s).\n', ...
+        certificate.coarseUpper,b.uniformUpper,b.upper,b.status);
+end
 end
 function write_summary(report,directory)
 c=report.fairnessCertificate; fid=fopen(fullfile(directory,'RESULTS.md'),'w','n','UTF-8'); assert(fid>=0); cleanup=onCleanup(@() fclose(fid)); %#ok<NASGU>

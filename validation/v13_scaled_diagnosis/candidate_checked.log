@@ -1,0 +1,9 @@
+Candidate audit: 2 original improving actions; weight misalignment 0, proxy reversals 0, witnessed inner shortfalls 2; time-limited=0.
+Candidate audit: 1 original improving actions; weight misalignment 1, proxy reversals 0, witnessed inner shortfalls 0; time-limited=0.
+Candidate audit: 1 original improving actions; weight misalignment 0, proxy reversals 0, witnessed inner shortfalls 1; time-limited=0.
+Candidate audit: 1 original improving actions; weight misalignment 0, proxy reversals 1, witnessed inner shortfalls 0; time-limited=0.
+Candidate audit: 1 original improving actions; weight misalignment 0, proxy reversals 0, witnessed inner shortfalls 0; time-limited=0.
+Candidate audit: 2 original improving actions; weight misalignment 0, proxy reversals 0, witnessed inner shortfalls 1; time-limited=0.
+PASS: cardinality LP dual bound vs independent integer oracle and known fractional optimum; risk margins, partial solves, actual online snapshots, hand-calculated price/proxy/inner witnesses, real Tabu move replay and legacy unknowns.
+Candidate audit: 48 original improving actions; weight misalignment 15, proxy reversals 8, witnessed inner shortfalls 0; time-limited=0.
+error: ignoring const execution_exception& while preparing to exit

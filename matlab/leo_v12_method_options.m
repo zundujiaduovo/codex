@@ -3,6 +3,12 @@ function o = leo_v12_method_options(overrides)
 if nargin<1, overrides=struct(); end
 hasStopping=isfield(overrides,'stopping');
 if hasStopping, stop=leo_stopping_options(overrides.stopping); overrides=rmfield(overrides,'stopping'); end
+hasAudit=isfield(overrides,'audit');
+if hasAudit, audit=leo_audit_options(overrides.audit); overrides=rmfield(overrides,'audit'); end
+hasFast=isfield(overrides,'fastPolish');
+if hasFast, fast=overrides.fastPolish; assert(isscalar(fast) && any(fast==[0,1])); overrides=rmfield(overrides,'fastPolish'); end
 o=leo_v8_method_options(overrides);
 if hasStopping, o.stopping=stop; end
+if hasAudit, o.audit=audit; end
+if hasFast, o.fastPolish=logical(fast); end
 end

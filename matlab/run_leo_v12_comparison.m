@@ -35,6 +35,10 @@ if isfield(o.method,'stopping') && o.method.stopping.enabled
     fprintf('Auto stop: valid original-model gap <= %.3g%%; or %.3g s without %.3g%% cumulative improvement (min %.3g s and %d native iterations/phase).\n', ...
         100*s.relativeGap,s.patienceSeconds,100*s.relativeImprovement,s.minPhaseSeconds,s.minIterations);
 end
+if strcmp(release.tag,'V13')
+    fprintf('Search profile: SB %d steps x %d trajectories; Local %d restarts; polish %d moves; refresh every %d rounds.\n', ...
+        o.method.sbSteps,o.method.sbTrajectories,o.method.localRestarts,o.method.polishMoves,o.method.refreshEvery);
+end
 fprintf('Output: %s\n',directory);
 originalModel=struct('problemData',experiment.problemData,'parameters',experiment.modelSnapshot.parameters,'protocol',protocol,'version',experiment.version);
 save(fullfile(directory,'original_model.mat'),'originalModel','-v7');

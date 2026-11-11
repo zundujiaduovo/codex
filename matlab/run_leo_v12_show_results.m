@@ -11,22 +11,28 @@ if exist(fullfile(directory,[prefix,'_diagnostic_specs.json']),'file')==2
     names=[names,{[prefix,'_iteration_convergence'],[prefix,'_workload_quality']}];
     specNames=[specNames,{[prefix,'_diagnostic_specs.json'],[prefix,'_diagnostic_specs.json']}];
 end
+figureDirectories=repmat({directory},size(names));
+if strcmp(release.tag,'V13') && exist(fullfile(directory,'candidate_audit','candidate_specs.json'),'file')==2
+    names{end+1}='v13_candidate_diagnosis'; specNames{end+1}='candidate_specs.json';
+    figureDirectories{end+1}=fullfile(directory,'candidate_audit');
+end
 figures={}; files={};
 for j=1:numel(names)
-    figPath=locate(directory,[names{j},'.fig']);
-    pngPath=locate(directory,[names{j},'.png']);
+    currentDirectory=figureDirectories{j};
+    figPath=locate(currentDirectory,[names{j},'.fig']);
+    pngPath=locate(currentDirectory,[names{j},'.png']);
     if isempty(figPath) && isempty(pngPath)
-        specPath=fullfile(directory,specNames{j});
+        specPath=fullfile(currentDirectory,specNames{j});
         if exist(specPath,'file')==2
             try
                 spec=jsondecode(fileread(specPath));
                 spec=spec(strcmp({spec.name},names{j})); assert(isscalar(spec),'Unexpected figure specification.');
-                leo_render_plot_specs(spec,directory);
+                leo_render_plot_specs(spec,currentDirectory);
             catch err
                 warning('leo:v12FigureRedraw','Cannot redraw %s: %s',names{j},err.message);
             end
-            figPath=locate(directory,[names{j},'.fig']);
-            pngPath=locate(directory,[names{j},'.png']);
+            figPath=locate(currentDirectory,[names{j},'.fig']);
+            pngPath=locate(currentDirectory,[names{j},'.png']);
         end
     end
     handle=[]; opened='';

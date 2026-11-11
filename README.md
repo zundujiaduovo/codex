@@ -8,7 +8,7 @@
 RUN_V13_64_USERS
 ```
 
-默认四方法Tabu、SB、Local、Greedy，每方法最长120秒，达到有效上界差距1%或满足停滞条件可提前结束；自动保存数据并打开性能、原生迭代收敛、工作量三张图。默认新结果目录`results/v13_from_v12_64users_16streams_adaptive`，旧目录保留。停止阈值在`V13_SETTINGS.m`中编辑，见[V13_ADAPTIVE_STOPPING.md](V13_ADAPTIVE_STOPPING.md)。只查看图执行`SHOW_V13_RESULTS`，也可读取旧数据重画清晰方法名。`RUN_COMPARISON`在本分支指向V13。
+默认四方法Tabu、SB、Local、Greedy，每方法最长120秒，达到有效上界差距1%或满足停滞条件可提前结束；自动保存数据并打开性能、迭代、工作量和候选诊断图。新配置为500步SB、32条轨迹、32个Local随机起点、12步向量局部改进、每2轮刷新；结果写入`results/v13_64users_scaled_audit`，旧目录保留。已有数据执行`ANALYZE_V13_RESULTS`，可单独收紧公平上界并检查Tabu改进候选，不重跑方法。详见[V13_SCALING_DIAGNOSIS.md](V13_SCALING_DIAGNOSIS.md)。设置在`V13_SETTINGS.m`，只看图执行`SHOW_V13_RESULTS`。`RUN_COMPARISON`在本分支指向V13。
 
 准入比例为16/64=1/4；射频链16、每流10 W、总功率上限160 W。阵列保持8×8；码本网格加密以生成64个固定波束。默认固定64用户布局的前32人保留V12坐标。完整参数、配对运行及结果解释见[V13_FROM_V12.md](V13_FROM_V12.md)。
 

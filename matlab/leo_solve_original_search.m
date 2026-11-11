@@ -11,6 +11,7 @@ data = problem.data; evaluations = 0; strict = leo_requires_full_qos(data);
 cache = leo_prepare_upper_bounds(data);
 upperF = leo_original_upper_bound(data,cache,ones(data.shape(1),1)/data.shape(1),'fairness');
 for phaseIndex = 1:2
+    auditMoves={}; auditEnabled=isfield(options,'audit') && options.audit.enabled;
     phaseEvaluationStart=evaluations;
     localBudget = budget;
     if phaseIndex==1
@@ -60,6 +61,7 @@ for phaseIndex = 1:2
             if leo_budget_expired(localBudget) || options.recoveryEvaluations==0, break; end
             if strict && phaseIndex==1 && best.service.fairness==1, break; end
             before = best.service;
+            if auditEnabled, currentBefore=current; end
             if strcmp(kind,'exchange')
                 candidate = leo_recover_schedule(problem,current.x,phase,s0,options,iteration,localBudget);
                 evaluations = evaluations+candidate.evaluations;
@@ -81,6 +83,12 @@ for phaseIndex = 1:2
                         current = candidate;
                     end
                 end
+            end
+            if auditEnabled && strcmp(kind,'tabu') && leo_service_is_better(current.service,currentBefore.service,phase,s0)
+                move=struct('iteration',iteration,'phase',phase,'floor',s0,'xBefore',currentBefore.x, ...
+                    'xAfter',current.x,'seconds',toc(budget.timer));
+                auditMoves{end+1}=move;
+                if numel(auditMoves)>options.audit.tabuMoves, auditMoves(1)=[]; end
             end
             if leo_service_is_better(current.service,best.service,phase,s0), best = current; end
             phaseIterations = iteration;
@@ -107,6 +115,7 @@ for phaseIndex = 1:2
     if strict && phaseIndex==2 && best.service.fairness<1, stage.status='not_started_full_qos_not_found'; end
     [stopping,~]=leo_search_stopping(options,phase,best.service,bound,toc(budget.timer),phaseIterations,stopping);
     stopping.reason=stage.status; stage.stopping=stopping;
+    if auditEnabled, stage.auditMoves=auditMoves; end
     if phaseIndex==1, result.stage1 = stage;
     else, result.stage2 = stage; result.fairnessFloor = s0; end
 end

@@ -16,7 +16,12 @@ for n=[1,4,12,32]
 end
 q.A=zeros(0,1); q.B=zeros(0); q.beamIndex=zeros(0,1); q.maxStreams=1;
 assert(isempty(leo_polish_group(q,false(0,1),6)));
-fprintf('PASS: vectorized polish matches legacy actions/ties on 200 random and flat objectives plus empty groups.\n');
+for trial=1:10
+    q.nUsers=64; q.maxStreams=16; q.A=randn(64,1); a=rand(64); q.B=a+a.'; q.B(1:65:end)=0;
+    q.beamIndex=mod((1:64).',32)+1; x=leo_repair_group(q,rand(64,1)<.5);
+    for moves=[6,12], assert(isequal(leo_polish_group(q,x,moves),reference(q,x,moves))); end
+end
+fprintf('PASS: vectorized polish matches legacy actions/ties, empty/flat groups and 64-user 16-stream groups with 6/12 moves.\n');
 end
 function x=reference(q,x,moves)
 for step=1:moves

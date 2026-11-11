@@ -1,0 +1,42 @@
+K=64, T=100, M=20, Na=64, NB=64, L=16
+Available user-resource pairs: 1280/1280; codebook sampled holes: 0.00%
+Fixed block: 5 slots (50.0 ms); candidate slots=6400; opportunity max-flow=64/64
+Service model: periodic_multilevel. Multilevel fading-floor certificate; independent slots per user; fixed common parameters; joint risk budget is totalRisk.
+Example active SINR [min, median, max] = [-6.79, -3.26, 2.65] dB
+Problem formed, unsolved: 1280 binary variables + s; example design fairness=0.
+Stage-2 template fairness floor from feasibility witness: 0 (not optimized).
+Quadratic proxy deferred: original-objective baselines receive no proxy.
+V13 based on V12: 64 users, 64 beams, 16 streams: maximize UNCAPPED s=min_i G_i/q_i; then maximize sum(G_i) with every ratio >= attained stage-1 s.
+K=64, NB=64, L=16; admission 25%; nRF=16, p0=10 W, Pmax=160 W.
+1 search seed(s), 4 methods, at most 120 s/method; fairness phase fraction 0.70.
+Auto stop: valid original-model gap <= 1%; or 40 s without 0.01% cumulative improvement (min 10 s and 6 native iterations/phase).
+Output: /workspace/codex/results/v13_scaled_120s_octave
+Tabu                    seed=71669974 completed    s=1.38283376 V=121.681 Mbit wall=120.486 s
+  Stop: time_limit / time_limit
+  Stage 1: time_limit; valid upper gap 67.28%. Stage 2: time_limit; conditional upper gap 54.96%.
+  Goal: uncapped max-min first; stage-1 s=1.38126847, preserved floor=1.38126847, final s=1.38283376.
+SB                      seed=71669974 completed    s=1.22256764 V=108.872 Mbit wall=120.777 s
+  Stop: time_limit / time_limit
+  Stage 1: time_limit; valid upper gap 71.04%. Stage 2: time_limit; conditional upper gap 59.7%.
+  Goal: uncapped max-min first; stage-1 s=1.22256764, preserved floor=1.22256764, final s=1.22256764.
+Local                   seed=71669974 completed    s=1.22256764 V=108.872 Mbit wall=120.870 s
+  Stop: time_limit / time_limit
+  Stage 1: time_limit; valid upper gap 71.04%. Stage 2: time_limit; conditional upper gap 59.7%.
+  Goal: uncapped max-min first; stage-1 s=1.22256764, preserved floor=1.22256764, final s=1.22256764.
+Greedy                  seed=71669974 completed    s=1.30042377 V=113.763 Mbit wall=120.672 s
+  Stop: time_limit / time_limit
+  Stage 1: time_limit; valid upper gap 69.19%. Stage 2: time_limit; conditional upper gap 57.89%.
+  Goal: uncapped max-min first; stage-1 s=1.30035267, preserved floor=1.30035267, final s=1.30042377.
+V13_PAIR_SAVED seed=71669974 (1/1).
+V13 diagnostics: 482 native history points, 4 completed runs; no optimization rerun. Missing old instrumentation remains NaN.
+V13 Tabu                     seed 71669974: s1=1.38126847, s2=1.38283376, floor=1.38126847, total=121.681 Mbit, preserved=1.
+V13 SB                       seed 71669974: s1=1.22256764, s2=1.22256764, floor=1.22256764, total=108.872 Mbit, preserved=1.
+V13 Local                    seed 71669974: s1=1.22256764, s2=1.22256764, floor=1.22256764, total=108.872 Mbit, preserved=1.
+V13 Greedy                   seed 71669974: s1=1.30035267, s2=1.30042377, floor=1.30035267, total=113.763 Mbit, preserved=1.
+GLOBAL FAIRNESS optimum in [1.38283376, 3.04814425]; beam count exceeds exact pricing limit. Secondary throughput bounds are conditional on each stated floor.
+Standard fairness bound: coarse 14.3600612, uniform cardinality 4.22123773, configuration LP dual 3.04814425 (iteration_limit).
+Candidate audit: 52 original improving actions; weight misalignment 26, proxy reversals 2, witnessed inner shortfalls 0; time-limited=1.
+PASS: 4 exported schedules re-evaluated by the original model; max total error 0 bit.
+PASS: V12 BOTH stages re-evaluated from binary CSV schedules; every attained stage-1 fairness floor preserved; no cap at 1.
+PASS: independent fairness-certificate incumbent re-evaluated; global upper covers every exported method and certificate incumbent.
+error: ignoring const execution_exception& while preparing to exit

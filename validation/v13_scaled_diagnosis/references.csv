@@ -1,0 +1,5 @@
+method,seed,phase,snapshot,iteration,provenance,neighborsScored,originalImprovingNeighbors
+"SB",71669974,1,2,2,"online_frozen_proxy_and_prices",320,71
+"SB",71669974,2,1,1,"online_frozen_proxy_and_prices",320,92
+"Local",71669974,1,2,2,"online_frozen_proxy_and_prices",320,71
+"Local",71669974,2,1,1,"online_frozen_proxy_and_prices",320,92
