@@ -1,2 +1,2 @@
-% V14默认入口：基于V13，归一化公平协调、跨块补偿、自适应SB。
-RUN_V14_COMPARISON
+% V15默认搜索入口：完整保留V14改进；认证独立执行RUN_V15_BOUNDS。
+RUN_V15_COMPARISON

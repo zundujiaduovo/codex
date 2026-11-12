@@ -1,4 +1,12 @@
-# LEO QoS Comparison V14 — based on V13, normalized fairness coordination
+# LEO QoS Comparison V15 — based on repaired V14, original-model certificates
+
+分支 `leo-qos-v15-from-v14-certified-original-bounds`，基于 V14 `59cb59d`。
+完整源码包 `LEO_QoS_Comparison_v15_from_v14_repaired_search_certified_bounds.zip`。
+搜索直接继承 V14 第二阶段 revision 2；新增取消18波束枚举限制的原式分支定价、配置LP、
+原始调度分支及逐块断点续算。上界与原算法性能分开记录，只有实际闭合指定差距才确认精度。
+入口 `RUN_V15_ALL`、`RUN_V15_COMPARISON`、`RUN_V15_BOUNDS`，说明见 [V15_FROM_V14.md](V15_FROM_V14.md)。
+
+## V14 — based on V13, normalized fairness coordination
 
 分支：`leo-qos-v14-from-v13-fairness-coordination`；基于V13提交`54f7412`。源码包：`LEO_QoS_Comparison_v14_from_v13_fairness_coordination.zip`。
 

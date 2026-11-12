@@ -12,7 +12,7 @@ if exist(fullfile(directory,[prefix,'_diagnostic_specs.json']),'file')==2
     specNames=[specNames,{[prefix,'_diagnostic_specs.json'],[prefix,'_diagnostic_specs.json']}];
 end
 figureDirectories=repmat({directory},size(names));
-if strcmp(release.tag,'V14')
+if any(strcmp(release.tag,{'V14','V15'}))
     extraNames={'v14_fixed_fairness_targets','v14_common_floor_throughput','v14_fixed_qubo_kernels','v14_stage2_trust_repair'};
     extraSpecs={'v14_target_specs.json','common_floor_specs.json','fixed_qubo_specs.json','stage2_repair_specs.json'};
     extraDirs={directory,fullfile(directory,'common_floor'),fullfile(directory,'fixed_qubo'),fullfile(directory,'stage2_repair_v2')};

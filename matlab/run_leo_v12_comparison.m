@@ -43,7 +43,7 @@ if isfield(o.method,'stopping') && o.method.stopping.enabled
     fprintf('Auto stop: valid original-model gap <= %.3g%%; or %.3g s without %.3g%% cumulative improvement (min %.3g s and %d native iterations/phase).\n', ...
         100*s.relativeGap,s.patienceSeconds,100*s.relativeImprovement,s.minPhaseSeconds,s.minIterations);
 end
-if any(strcmp(release.tag,{'V13','V14'}))
+if any(strcmp(release.tag,{'V13','V14','V15'}))
     if isfield(o.method,'refinement')
         r=o.method.refinement;
         fprintf('Proxy refinement: pool=%d (max %d per call), bottleneck candidates=%d (band %.4g), candidate tangent refresh=%d (gap trigger %.4g demand ratio).\n', ...
@@ -57,7 +57,7 @@ if any(strcmp(release.tag,{'V13','V14'}))
     end
     leo_print_bound_explanation(struct('problemData',experiment.problemData,'parameters',o.parameters));
 end
-if strcmp(release.tag,'V14')
+if any(strcmp(release.tag,{'V14','V15'}))
     fprintf('V14 fairness: simplex weights with smoothed ORIGINAL deficits; no bang-bang auxiliary fairness variable.\n');
     fprintf('V14: shared 2-3 block coordination, gain-error trust region, contextual candidate pool; SB kernel=%s.\n',o.method.coordination.sbKernel);
 end

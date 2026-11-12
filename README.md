@@ -1,4 +1,23 @@
-# LEO QoS V14：基于V13的公平协调与自适应bSB
+# LEO QoS V15：保留 V14 搜索修复，增加原问题全局认证
+
+[下载 V15 完整源码包](LEO_QoS_Comparison_v15_from_v14_repaired_search_certified_bounds.zip)。
+分支 `leo-qos-v15-from-v14-certified-original-bounds`，从 V14 提交 `59cb59d` 建立。
+64用户、128阵元、64波束、16人并发，未封顶公平优先目标保持不变。
+
+在 MATLAB 项目根目录执行 `RUN_V15_ALL`，依次运行五方法搜索、原问题上界认证、同公平门槛和固定QUBO控制。
+只跑搜索用 `RUN_V15_COMPARISON`；只求界或继续断点用 `RUN_V15_BOUNDS`；看图用 `SHOW_V15_RESULTS`。
+`RUN_COMPARISON` 现指向 V15 搜索。搜索设置直接继承修复后的 V14，包括第二阶段可信域中间候选和停滞扩展。
+
+新认证使用真实逐时隙SINR服务、按需波束分支定价、配置LP与原调度二元分支，取消旧18波束枚举限制。
+MATLAB内置实现，无需 SCIP、Python 或 Optimization Toolbox。
+独立输出可行下界L、有效上界U、差距、未搜索节点与是否达到默认0.1%精度；工作量用完时明确保留“未认证达标”状态，重跑继续。
+没有承诺64用户一次运行就能达到该精度。算法成绩与耗时不包含认证额外搜索。
+
+已有 V14 结果也可直接认证：在 `V15_BOUND_SETTINGS.m` 设置 `sourceDirectory` 指向含 `benchmark.mat` 的结果文件夹，再执行 `RUN_V15_BOUNDS`，不用重跑算法。
+完整公式、参数及输出见 [V15_FROM_V14.md](V15_FROM_V14.md)；覆盖更新可用 [V15平铺完整包](V15_complete_source_update.zip)，按 [安装说明](INSTALL_V15_UPDATE.md) 操作。
+已提供独立Python/SciPy数学枚举检查和MATLAB小规模穷举测试入口；开发环境无MATLAB/Octave，未运行64用户仿真。
+
+## V14 历史版本：公平协调与自适应 bSB
 
 [下载V14完整源码包](LEO_QoS_Comparison_v14_from_v13_fairness_coordination.zip)。分支`leo-qos-v14-from-v13-fairness-coordination`，基于V13提交`54f7412`。物理场景为64用户、128阵元、64固定波束、每槽至多16人；继续未封顶公平优先目标。
 
