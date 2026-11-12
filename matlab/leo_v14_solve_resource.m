@@ -39,9 +39,31 @@ switch o.innerSolver
     end
  otherwise, error('leo:v14Solver','V14 supports sb/local/tabu.');
 end
+pathCount=0; bridgeCount=0;
+throughput=isfield(context,'phase') && strcmp(context.phase,'throughput');
+if throughput && o.coordination.stage2TrustPaths
+    center=logical(context.group(q.userIds));
+    [~,path]=leo_v14_trust_path(q,center,[],context.radius,o.polishMoves);
+    for j=2:size(path,2), retain(path(:,j),'trust_ascent_step'); pathCount=pathCount+1; end
+    % 远提案不能只删除：挑不同方向，在边界以内保留每个中间组。
+    distance=sum(bsxfun(@ne,groups,center),1); far=find(distance>context.radius);
+    if ~isempty(far)
+        raw=double(groups(:,far)); values=q.A.'*raw-sum(raw.*(q.B*raw),1)/2;
+        [~,order]=sort(values,'descend'); tried=false(q.nUsers,0); count=0;
+        for j=order
+            target=groups(:,far(j));
+            if any(all(bsxfun(@eq,tried,target),1)), continue; end
+            tried(:,end+1)=target; count=count+1;
+            [~,path]=leo_v14_trust_path(q,center,target,context.radius,o.polishMoves);
+            for k=2:size(path,2), retain(path(:,k),'trust_bridge_step'); bridgeCount=bridgeCount+1; end
+            if count>=o.coordination.stage2BridgeTargets, break; end
+        end
+    end
+end
 feasibleGroups=false(data.shape(1),size(groups,2)); feasibleGroups(q.userIds,:)=groups;
 feasibleGroups=[context.group,feasibleGroups]; sources=[{'incumbent'},sources];
 distance=sum(bsxfun(@ne,feasibleGroups,context.group),1); allowed=distance<=context.radius;
+rejected=nnz(~allowed);
 feasibleGroups=feasibleGroups(:,allowed); sources=sources(allowed);
 if isempty(feasibleGroups), feasibleGroups=context.group; sources={'incumbent'}; end
 pool=leo_v14_select_candidates(data,m,q,feasibleGroups,sources,context,o.refinement.poolSize);
@@ -53,6 +75,8 @@ end
 out=struct('x',best,'bits',leo_encode_group_bits(q,best(q.userIds)),'score',bestScore, ...
  'oldScore',proxy(old),'sbSteps',sbSteps,'nRepaired',repairs,'nBits',q.nBits,'optimal',false, ...
  'candidateGroups',pool.groups,'candidateSources',{pool.sources},'candidateClasses',{pool.sources}, ...
+ 'novelCandidates',nnz(any(bsxfun(@ne,pool.groups,context.group),1)), ...
+ 'trustPathCandidates',pathCount,'trustBridgeCandidates',bridgeCount,'trustRejectedCandidates',rejected, ...
  'preselectionEvaluations',pool.preselectionEvaluations, ...
  'trajectorySteps',trajectorySteps,'denseTerms',denseTerms,'restarts',restartCount, ...
  'tabuIterations',tabuIterations,'tabuCandidates',tabuCandidates, ...

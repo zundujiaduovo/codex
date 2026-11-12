@@ -12,6 +12,14 @@ end
 assert(lambda(1)>lambda(2) && lambda(2)>lambda(3));
 lambda2=leo_update_prices(zeros(3,1),[1;2;3],ones(3,1),2,.1,'throughput',o);
 assert(isequal(lambda2,[.1;0;0]));
+% 旧式先走到终点再过滤会丢掉距离2的小步；可信域内路径必须保留。
+q=struct('nUsers',6,'A',(6:-1:1).','B',zeros(6),'beamIndex',(1:6).','maxStreams',6);
+center=false(6,1);
+[near,path]=leo_v14_trust_path(q,center,[],2,6);
+assert(nnz(near)==2 && size(path,2)==3 && all(sum(path,1)<=2));
+assert(q.A.'*double(near)==11);
+[~,bridge]=leo_v14_trust_path(q,center,true(6,1),2,6);
+assert(size(bridge,2)>1 && all(sum(bridge,1)<=2));
 for L=1:32
     q=struct('nUsers',L,'A',ones(L,1),'B',zeros(L),'beamIndex',(1:L).', ...
         'maxStreams',L,'capacityIncluded',true,'slackWeights',2.^(0:ceil(log2(L+1))-1).');
@@ -35,7 +43,7 @@ assert(bound.upper>=joint.service.fairness-1e-7);
 report.records=struct('method','witness','seed',1,'status','completed');
 report.solutions={struct('x',joint.x,'stage1',struct('x',joint.x))};
 floorBound=leo_v14_floor_bound(report,1.2,20); assert(floorBound.upperBits>=joint.service.totalBits-1e-6);
-fprintf('PASS: V14 normalized prices, independent stage-2 multipliers, bounded slack, compensating joint move and valid coupled/floor bounds.\n');
+fprintf('PASS: V14 normalized prices, independent stage-2 multipliers, trust paths, bounded slack, compensating joint move and valid coupled/floor bounds.\n');
 end
 function [problem,start,banks]=fixture()
 p=leo_default_parameters(); p.system.K=2; p.system.maxStreams=1;

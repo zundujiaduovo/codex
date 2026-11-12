@@ -14,8 +14,10 @@ for j=1:numel(report.records)
     for k=1:stage.rounds
         row=struct('method',leo_method_name(r.method),'seed',r.seed,'phase',phase,'round',k,'fairness',h.savedFairness(k));
         for name={'lambdaSum','trustRadius','gainPredictionErrors','rankingReversals','jointAccepted','jointFairnessGain', ...
-                'jointEvaluations','skippedExtraCalls','sbRestarts','sbTrajectorySteps','denseDynamicsTerms','repairLoss'}
-            row.(name{1})=h.(name{1})(k);
+                'jointEvaluations','skippedExtraCalls','sbRestarts','sbTrajectorySteps','denseDynamicsTerms','repairLoss', ...
+                'novelCandidates','trustPathCandidates','trustBridgeCandidates','trustRejectedCandidates','trustEscape','stage2StagnantRounds'}
+            value=NaN; if isfield(h,name{1}), value=h.(name{1})(k); end
+            row.(name{1})=value;
         end
         rounds=leo_append_struct(rounds,row);
     end

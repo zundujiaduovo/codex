@@ -5,17 +5,20 @@ c=struct('normalizedFairness',true,'priceSmoothing',.2,'priceMix',.15,'priceFloo
  'gainAbsoluteTolerance',1e-7,'jointBlocks',3,'jointPool',5,'jointMaxCombinations',125, ...
  'familyPatience',8,'familyCooldown',4,'familyProbeEvery',5,'sbKernel','adaptive', ...
  'sbMinSteps',80,'sbStagnationSteps',60,'sbMaxRestarts',3, ...
- 'adaptivePenalty',true,'penaltyMax',8,'repairLossTrigger',.05,'stage2Floor',NaN);
+ 'adaptivePenalty',true,'penaltyMax',8,'repairLossTrigger',.05,'stage2Floor',NaN, ...
+ 'stage2TrustPaths',true,'stage2StallExpand',true,'stage2StallRounds',3, ...
+ 'stage2EscapeEvery',5,'stage2BridgeTargets',2,'stage2SearchRevision',2);
 if nargin>0
  names=fieldnames(overrides); assert(all(ismember(names,fieldnames(c))));
  for j=1:numel(names), c.(names{j})=overrides.(names{j}); end
 end
 assert(any(strcmp(c.sbKernel,{'adaptive','fixed'})));
-for f={'normalizedFairness','adaptivePenalty'}
+for f={'normalizedFairness','adaptivePenalty','stage2TrustPaths','stage2StallExpand'}
  v=c.(f{1}); assert(isscalar(v) && any(v==[0,1])); c.(f{1})=logical(v);
 end
 for f={'trustInitial','trustMin','trustMax','jointBlocks','jointPool','jointMaxCombinations', ...
- 'familyPatience','familyCooldown','familyProbeEvery','sbMinSteps','sbStagnationSteps','sbMaxRestarts'}
+ 'familyPatience','familyCooldown','familyProbeEvery','sbMinSteps','sbStagnationSteps','sbMaxRestarts', ...
+ 'stage2StallRounds','stage2EscapeEvery','stage2BridgeTargets','stage2SearchRevision'}
  v=c.(f{1}); minimum=1; if strcmp(f{1},'sbMaxRestarts'), minimum=0; end
  assert(isscalar(v) && isfinite(v) && v==fix(v) && v>=minimum);
 end

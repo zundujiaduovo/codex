@@ -4,6 +4,8 @@
 
 V14实现用户指定的七项决策改进：单纯形平滑公平价格、2～3块联合补偿、增益误差可信域、上下文候选池及成本/收益调度、自适应bSB及有界松弛编码、共同干扰弦线McCormick/RLT有效上界、固定目标和两类独立控制。场景保持64用户/128阵元/16并发。见[V14_FROM_V13.md](V14_FROM_V13.md)。V14入口`RUN_V14_ALL`；`RUN_COMPARISON`指向V14主实验。
 
+V14第二阶段补丁（revision 2）：在可信域内保留逐步候选和远提案的边界路径，停滞时扩大半径；新增`RUN_V14_STAGE2_REPAIR`，复用保存的第一阶段，独立配对重跑旧/新阶段2。完整新实验使用`_stage2_v2`目录，原结果保留。未预报吞吐提升，旧日志只能证明搜索停滞，不能证明最优。
+
 ## V13历史版本：64 users / 128 antennas / 64 beams / 16 streams
 
 当前源码包：`LEO_QoS_Comparison_v13_128ant_proxy_refinement.zip`。基于提交`82300fa`，增加外层120/60轮、每轮主代理刷新及候选切点重建、多候选原目标重评分及瓶颈用户候选。新增五配置单项对照和改进来源导出，默认目录`v13_proxy_refinement_combined`。图及窗口明确上界可达性未证实。沿用用户要求，本次未运行仿真或测试。详见[V13_PROXY_REFINEMENT.md](V13_PROXY_REFINEMENT.md)。

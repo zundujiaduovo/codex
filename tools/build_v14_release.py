@@ -31,7 +31,8 @@ def build():
             digest, relative = line.split('  ', 1)
             assert hashlib.sha256(bundle.read(NAME + '/' + relative)).hexdigest() == digest
         for relative in ('RUN_V14_ALL.m', 'RUN_V14_CONTROLS.m', 'V14_SETTINGS.m',
-                         'matlab/leo_v14_run_price_phase.m', 'matlab/leo_v14_coupled_bound.m'):
+                         'matlab/leo_v14_run_price_phase.m', 'matlab/leo_v14_coupled_bound.m',
+                         'RUN_V14_STAGE2_REPAIR.m', 'matlab/leo_v14_trust_path.m'):
             assert NAME + '/' + relative in bundle.namelist()
     print(f'{archive.name}: {len(sources)} source/document files, {archive.stat().st_size} bytes; no results.')
 

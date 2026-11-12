@@ -5,5 +5,5 @@ o.method.coordination=leo_v14_coordination_options();
 o.method.refinement.poolSize=12; o.method.referenceMode='current_schedule';
 o.method.fairnessRounds=120; o.method.throughputRounds=60;
 o.method.fairnessStep=1; o.method.throughputStep=.15;
-folder='v14_from_v13_fairness_coordination';
+folder='v14_from_v13_fairness_coordination_stage2_v2';
 end

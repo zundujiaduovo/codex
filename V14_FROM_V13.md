@@ -3,6 +3,24 @@
 分支：`leo-qos-v14-from-v13-fairness-coordination`，基于V13提交`54f7412`。
 源码包：`LEO_QoS_Comparison_v14_from_v13_fairness_coordination.zip`。
 
+## 第二阶段停滞修复（revision 2）
+
+原V14日志中SB/Local第二阶段60轮总服务不变。代码存在候选生成与可信域不匹配的问题：先做完局部改进再按距离删掉终点，可能把合法且有用的中间小步一起丢掉；没有新提案时半径也不会扩大。这只是搜索停滞机制，不能证明已达到局部或全局最优。
+
+修复仅在第二阶段启用：在可信域内生成合法逐步改进路径，保留每一步；把少量过远提案转为朝该方向移动的边界候选。连续3轮没有有效吞吐增益后，每5轮扩大一次半径，在默认16位上限内探索。最终仍按原式验收，严格保持第一阶段公平门槛。公平阶段的生成规则不受这项补丁影响。
+
+已有V14结果时，覆盖更新源码并保留`results`，执行：
+
+```matlab
+RUN_V14_STAGE2_REPAIR
+```
+
+脚本先找原目录`results/v14_from_v13_fairness_coordination/benchmark.mat`，复用各代理方法的第一阶段日程；对旧策略和修复策略分别重设同一搜索种子，只重跑第二阶段，不重跑第一阶段、Tabu/Greedy或上界。输出在原结果目录的`stage2_repair_v2/`，包括图、`stage2_repair_runs.csv`、`stage2_repair_rounds.csv`和来源记录。两策略在每个方法内部使用同初值、同门槛、同种子；不同方法原有门槛仍不同，不能用此表直接比较同门槛的吞吐优劣。
+
+配对旧策略也重新设置种子，因此可能与历史连续两阶段运行的末值不同；历史值在`previousSavedFinalBits`单独保留。新旧配对重跑的差异才用于评估补丁影响。所有时间为独立第二阶段计时。
+
+新增`novelCandidates`、`trustPathCandidates`、`trustBridgeCandidates`、`trustRejectedCandidates`、`trustEscape`与`stage2StagnantRounds`，用于区分候选不足、过滤过度和原式验收拒绝；计数按调用累计，不是全阶段不同日程总数。
+
 场景保持K=64、Na=128（16×8）、NB=64、L=16，准入比例1/4，每流10 W、16射频链、总功率上限160 W。目标仍为先最大化跨时隙累计保证服务的最差需求满足率，再保持取得的公平门槛提高总保证服务。方法显示为Tabu、SB、Local、Proxy+Tabu、Greedy；SB采用本版自适应bSB。
 
 ## 运行和输出
@@ -13,7 +31,7 @@
 RUN_V14_ALL
 ```
 
-依次执行主实验、同门槛第二阶段控制、固定QUBO四内核控制。结果保存到`results/v14_from_v13_fairness_coordination`，已有完全相同协议的结果自动复用。主实验仍为每方法一次公平优先两阶段搜索；控制实验属于额外计算，不反过来提高主实验成绩。
+依次执行主实验、同门槛第二阶段控制、固定QUBO四内核控制。修复版完整实验保存到新目录`results/v14_from_v13_fairness_coordination_stage2_v2`，已有完全相同协议的结果自动复用。主实验仍为每方法一次公平优先两阶段搜索；控制实验属于额外计算，不反过来提高主实验成绩。
 
 分开运行：
 

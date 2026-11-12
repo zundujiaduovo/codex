@@ -1,6 +1,7 @@
 function result=leo_v14_run_price_phase(problem,proxy,cache,phase,start,o,budget)
 % 归一化公平协调、增益可信域、收益调度、瓶颈跨块补偿的公共外层。
-d=problem.data; K=d.shape(1); M=d.shape(2); c=o.coordination; isFair=strcmp(phase,'fairness');
+d=problem.data; K=d.shape(1); M=d.shape(2);
+c=leo_v14_coordination_options(o.coordination); o.coordination=c; isFair=strcmp(phase,'fairness');
 bestX=start.x; service=start.service; priceX=bestX; s0=0;
 lambda=ones(K,1)/K; rounds=o.fairnessRounds; initialStep=o.fairnessStep;
 if ~isFair, s0=service.fairness; lambda=zeros(K,1); rounds=o.throughputRounds; initialStep=o.throughputStep; end
@@ -8,6 +9,7 @@ if ~isFair && isfinite(c.stage2Floor), s0=c.stage2Floor; assert(all(service.dema
 upper=leo_original_upper_bound(d,cache,lambda,phase,s0); initialUpper=upper.value; initialSeconds=toc(budget.timer);
 radius=c.trustInitial*ones(1,M); penalty=o.penaltyFactor*ones(1,M);
 fail=zeros(M,2); next=zeros(M,2); priceState=struct(); evidence=struct([]); snapshots={}; firstTrace=[];
+stagnantRounds=0;
 checkpoints=point([],service,0,'initial'); epoch=1; errors=proxy.error.optimalFairnessGapBound; touch=proxy.referenceTouchMaxAbsBits;
 names={'sAux','step','priceFairness','priceTotalBits','savedFairness','savedTotalBits','upperBound','proxyEpoch', ...
  'innerImprovement','resourcesSolved','sbSteps','repairedCandidates','recoveryEvaluations','crossEvaluations','acceptedMoves', ...
@@ -16,13 +18,18 @@ names={'sAux','step','priceFairness','priceTotalBits','savedFairness','savedTota
  'extraInnerCalls','candidateGapEvaluations','candidateCutRefreshes','candidateCutSeconds','maxCandidateGapBefore','maxCandidateGapAfter', ...
  'poolAccepted','bottleneckAccepted','retangentAccepted','priceScheduleAccepted','recoveryAccepted','lambdaSum', ...
  'jointEvaluations','jointAccepted','jointFairnessGain','gainPredictionErrors','rankingReversals','trustRadius', ...
- 'skippedExtraCalls','sbRestarts','repairLoss','rawScore','repairedScore','polishedScore'};
+ 'skippedExtraCalls','sbRestarts','repairLoss','rawScore','repairedScore','polishedScore', ...
+ 'novelCandidates','trustPathCandidates','trustBridgeCandidates','trustRejectedCandidates','trustEscape','stage2StagnantRounds'};
 for j=1:numel(names), history.(names{j})=zeros(1,rounds); end
 history.lambda=zeros(K,rounds); history.lambdaNext=zeros(K,rounds); history.lowerUserBits=zeros(K,rounds);
 history.priceX=false(K,M,rounds); history.completePriceRound=false(1,rounds);
 [stopping,~]=leo_search_stopping(o,phase,service,upper.value,initialSeconds,0); completed=0; status='iteration_limit';
 for k=1:rounds
     if leo_budget_expired(budget), status='time_limit'; break; end
+    roundStartTotal=service.totalBits;
+    if ~isFair && c.stage2StallExpand && stagnantRounds>=c.stage2StallRounds && mod(k,c.stage2EscapeEvery)==0
+        radius=min(c.trustMax,max(radius+2,ceil(1.5*radius))); history.trustEscape(k)=1;
+    end
     [w,sAux]=leo_price_weights(d,lambda,phase,s0,o); banks=cell(1,M);
     history.lambda(:,k)=lambda; history.sAux(k)=sAux; history.lambdaSum(k)=sum(lambda);
     snap=struct('iteration',k,'phase',phase,'floor',s0,'x',bestX,'priceStart',priceX, ...
@@ -30,7 +37,7 @@ for k=1:rounds
     order=mod((0:M-1)+k-1,M)+1;
     for m=order
         if leo_budget_expired(budget), break; end
-        ctx=struct('group',bestX(:,m),'service',service,'radius',radius(m)); local=o; local.penaltyFactor=penalty(m);
+        ctx=struct('group',bestX(:,m),'service',service,'radius',radius(m),'phase',phase); local=o; local.penaltyFactor=penalty(m);
         started=tic; inner=leo_v14_solve_resource(d,proxy.lower,m,w,priceX(:,m),local,budget,ctx); seconds=toc(started);
         main=inner; addwork(inner,seconds); record('main',inner,seconds,NaN,NaN);
         penalty(m)=inner.nextPenalty;
@@ -158,6 +165,10 @@ for k=1:rounds
         end
     end
     history.recoverySeconds(k)=toc(started);
+    if ~isFair
+        if service.totalBits-roundStartTotal>c.gainAbsoluteTolerance*max(1,roundStartTotal), stagnantRounds=0;
+        else, stagnantRounds=stagnantRounds+1; end
+    end
     candidate=leo_original_upper_bound(d,cache,lambda,phase,s0); if candidate.value<upper.value, upper=candidate; end
     step=initialStep/k^o.stepExponent;
     % Stage 1 feeds ORIGINAL attained service to the smoothed relative-deficit coordinator.
@@ -168,11 +179,13 @@ for k=1:rounds
     history.priceTotalBits(k)=priceService.totalBits; history.savedFairness(k)=service.fairness;
     history.savedTotalBits(k)=service.totalBits; history.upperBound(k)=upper.value; history.proxyEpoch(k)=epoch;
     history.elapsedSeconds(k)=toc(budget.timer); history.trustRadius(k)=mean(radius); history.completePriceRound(k)=all(snap.solved);
+    history.stage2StagnantRounds(k)=stagnantRounds;
     completed=k; snap.proposed=priceX; snapshots{end+1}=snap;
     if numel(snapshots)>o.audit.snapshots, snapshots(1)=[]; end
     if o.verbose && (k==1 || mod(k,5)==0 || k==rounds)
-        fprintf('  V14 %-10s %d/%d: s=%.9g, V=%.6g Mbit, sum(lambda)=%.8g, joint=%d, radius=%.3g\n', ...
-            phase,k,rounds,service.fairness,service.totalBits/1e6,history.lambdaSum(k),joint.accepted,mean(radius));
+        fprintf('  V14 %-10s %d/%d: s=%.9g, V=%.6g Mbit, sum(lambda)=%.8g, joint=%d, radius=%.3g, novel=%d, escape=%d\n', ...
+            phase,k,rounds,service.fairness,service.totalBits/1e6,history.lambdaSum(k),joint.accepted,mean(radius), ...
+            history.novelCandidates(k),history.trustEscape(k));
     end
     if o.refreshEvery>0 && mod(k,o.refreshEvery)==0 && k<rounds
         started=tic; proxy=leo_v12_build_service_surrogates(problem,'current_schedule',bestX);
@@ -207,6 +220,9 @@ result=struct('x',bestX,'service',service,'fairnessFloor',s0,'rounds',completed,
         history.blockwiseEvaluations(k)=history.blockwiseEvaluations(k)+inner.preselectionEvaluations;
         history.sbRestarts(k)=history.sbRestarts(k)+inner.restarts;
         history.repairLoss(k)=history.repairLoss(k)+max(0,inner.repairLoss);
+        for name={'novelCandidates','trustPathCandidates','trustBridgeCandidates','trustRejectedCandidates'}
+            history.(name{1})(k)=history.(name{1})(k)+inner.(name{1});
+        end
     end
     function record(family,inner,seconds,actual,estimate)
         row=struct('phase',phase,'round',k,'resource',m,'family',family,'seconds',seconds, ...
