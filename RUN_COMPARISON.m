@@ -1,2 +1,2 @@
-% V15默认搜索入口：完整保留V14改进；认证独立执行RUN_V15_BOUNDS。
-RUN_V15_COMPARISON
+% V16: parallel64 SB, no time/outer iteration cap; stop on measured convergence.
+RUN_V16_COMPARISON

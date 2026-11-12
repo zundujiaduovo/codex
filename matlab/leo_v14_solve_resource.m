@@ -7,7 +7,10 @@ rawScores=[]; fixedScores=[]; polishedScores=[]; rawLegal=[]; rawEnergy=[]; enco
 switch o.innerSolver
  case 'sb'
     seeds=[leo_encode_group_bits(q,old),leo_encode_group_bits(q,false(q.nUsers,1))];
-    if strcmp(o.coordination.sbKernel,'adaptive')
+    if isfield(o,'parallel') && o.parallel.enabled
+        sb=leo_v16_parallel_sb(q,o,seeds,o.coordination.sbKernel);
+        trajectorySteps=sb.trajectorySteps; denseTerms=sb.denseTerms; restartCount=sb.restarts;
+    elseif strcmp(o.coordination.sbKernel,'adaptive')
         sb=leo_v14_adaptive_sb(q,o,seeds,budget); trajectorySteps=sb.trajectorySteps;
         denseTerms=sb.denseTerms; restartCount=sb.restarts;
     else
@@ -26,7 +29,7 @@ switch o.innerSolver
         for j=1:size(sb.legalGroups,2), add(sb.legalGroups(:,j),'sb_legal_checkpoint',false); end
     end
  case 'local'
-    for j=1:o.localRestarts+2
+    for j=1:o.localRestarts
         if leo_budget_expired(budget), break; end
         if j==1, x=old; elseif j==2, x=false(q.nUsers,1); else, x=rand(q.nUsers,1)<.5; end
         add(x,'local');
@@ -94,6 +97,10 @@ if o.coordination.adaptivePenalty && strcmp(o.innerSolver,'sb') && ~isempty(rawS
 end
 if strcmp(o.innerSolver,'sb')
     out.energyHistory=sb.history; out.energyScale=sb.energyScale; out.trajectories=sb.trajectories;
+end
+out.parallelWorkers=0; out.parallelTasks=0;
+if strcmp(o.innerSolver,'sb') && isfield(sb,'parallelWorkers')
+    out.parallelWorkers=sb.parallelWorkers; out.parallelTasks=sb.parallelTasks;
 end
     function add(raw,source,diagnose)
         if nargin<3, diagnose=true; end

@@ -1,3 +1,0 @@
-method,seed,referenceMode,probes,offReferenceProbes,medianObservedClippedUnderestimatePercent,maxObservedClippedUnderestimatePercent,medianObservedSignedUnderestimatePercent,offReferenceFullQosProbes,medianObservedFullQosClippedUnderestimatePercent,maxObservedFullQosClippedUnderestimatePercent,uniformTotalLowerErrorAllowanceBits
-"sb_v12_lexicographic",71669974,"current_schedule",26,25,0.13440966131705867,3.5289652299428376,0.13440966131705867,24,0.13393130840400613,0.43932955829940612,91426318.9665398
-"local_v12_lexicographic",71669974,"current_schedule",26,25,0.16461881957610114,2.1162936906769847,0.16461881957610114,24,0.15013803343839061,0.44343481779746119,91198958.083214208

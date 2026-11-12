@@ -59,7 +59,7 @@ if nargin>0
         o.(names{j}) = overrides.(names{j});
     end
 end
-assert(ischar(o.innerSolver) && any(strcmp(o.innerSolver,{'sb','local','miqp'})));
+assert(ischar(o.innerSolver) && any(strcmp(o.innerSolver,{'sb','local','miqp','tabu'})));
 assert(ischar(o.referenceMode) && any(strcmp(o.referenceMode,{'minimax','zero','current_schedule'})));
 assert(any(strcmp(o.throughputReferenceMode,{'minimax','zero','current_schedule'})));
 numericFields = setdiff(fieldnames(o),{'enabled','removeRedundantCapacity','verbose','innerSolver','referenceMode','throughputReferenceMode','blockwiseOriginalAccept','jointCandidateSearch'});

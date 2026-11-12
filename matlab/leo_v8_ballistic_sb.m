@@ -22,6 +22,7 @@ bestSpin = spin;
 bestEnergy = discrete_energy(ising,spin);
 history.step = 0;
 history.minimum = min(bestEnergy); history.median = median(bestEnergy); history.maximum = max(bestEnergy);
+energyByTrajectory=bestEnergy(:);
 scale = max([sum(abs(ising.J),2)+abs(ising.h);realmin]);
 J = ising.J/scale; h = ising.h/scale;
 completedSteps = 0;
@@ -43,6 +44,7 @@ for k = 1:options.sbSteps
         history.minimum(end+1) = min(bestEnergy);
         history.median(end+1) = median(bestEnergy);
         history.maximum(end+1) = max(bestEnergy);
+        energyByTrajectory(:,end+1)=bestEnergy(:);
     end
 end
 result.bits = (bestSpin+1)/2;
@@ -51,6 +53,7 @@ result.steps = completedSteps;
 result.stoppedByTime = completedSteps<options.sbSteps;
 result.energyScale = scale;
 result.history = history;           % 同一个 Ising 问题，修复前离散历史最好能量
+result.energyByTrajectory=energyByTrajectory;
 result.trajectories = R;
 result.optimal = false;
 end

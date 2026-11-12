@@ -2,7 +2,7 @@ function [figures,files] = run_leo_v12_show_results(directory,releaseTag)
 %RUN_LEO_V12_SHOW_RESULTS 打开已保存的V12两阶段六联图；只读结果，不执行优化。
 % 优先可编辑FIG，其次PNG；图文件缺失时按现有JSON重新导出后打开。
 if nargin<1, directory=fullfile('results','v12_uncapped_lexicographic'); end
-if nargin<2, releaseTag='V12'; end
+if nargin<2, releaseTag='V16'; end
 release=leo_lexicographic_release(releaseTag); prefix=release.prefix;
 assert(exist(directory,'dir')==7,['Result directory not found: ',directory]);
 names={[prefix,'_uncapped_lexicographic']};
@@ -12,7 +12,7 @@ if exist(fullfile(directory,[prefix,'_diagnostic_specs.json']),'file')==2
     specNames=[specNames,{[prefix,'_diagnostic_specs.json'],[prefix,'_diagnostic_specs.json']}];
 end
 figureDirectories=repmat({directory},size(names));
-if any(strcmp(release.tag,{'V14','V15'}))
+if any(strcmp(release.tag,{'V14','V15','V16'}))
     extraNames={'v14_fixed_fairness_targets','v14_common_floor_throughput','v14_fixed_qubo_kernels','v14_stage2_trust_repair'};
     extraSpecs={'v14_target_specs.json','common_floor_specs.json','fixed_qubo_specs.json','stage2_repair_specs.json'};
     extraDirs={directory,fullfile(directory,'common_floor'),fullfile(directory,'fixed_qubo'),fullfile(directory,'stage2_repair_v2')};

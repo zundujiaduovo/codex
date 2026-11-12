@@ -34,7 +34,7 @@ if exist(fairPath,'file')==2
         save(fairPath,'certificate','-v7');
     end
 else
-    certificate=leo_fairness_certificate(report,o.fairnessCertificateOptions);
+    certificate=leo_v16_initial_bounds(report,'fairness',0);
     save(fairPath,'certificate','-v7');
 end
 report.fairnessCertificate=certificate;
@@ -74,7 +74,7 @@ for j=1:numel(report.records)
     floorValue=r.stage1Fairness; at=find(cache.floors==floorValue,1);
     if isempty(at)
         options=o.throughputCertificateOptions; options.fairnessFloor=floorValue;
-        t=leo_theory_bound(report,options);
+        t=leo_v16_initial_bounds(report,'throughput',floorValue);
         if strcmp(release.tag,'V14')
             floorBound=leo_v14_floor_bound(report,floorValue);
             coupled=leo_v14_coupled_bound(report,'throughput',floorValue);
@@ -191,10 +191,12 @@ for j=1:numel(report.records)
 end
 fprintf(fid,'\nFairness is the primary comparison. Total service at different attained floors solves different conditional problems; do not rank it as one common throughput objective.\n');
 fprintf(fid,'Stage-1 values are attained feasible fairness values. A global optimality claim requires the independent fairness certificate gap to close.\n');
-if leo_iteration_only(report.options.method)
+if isfield(report.options.method,'convergence') && report.options.method.convergence.enabled
+    fprintf(fid,'Search continues without time/outer-iteration caps until the measured ORIGINAL objective meets the window convergence rule. This is empirical convergence, separate from global certification.\n');
+elseif leo_iteration_only(report.options.method)
     fprintf(fid,'Search uses maximum iteration counts, with no wall-clock/gap/stagnation stopping. Greedy can exhaust all improving additions. See stopping_summary.csv and stages.csv.\n');
 else
     fprintf(fid,'Per-stage stopping details are in stopping_summary.csv. target_gap uses a valid original-model bound; stagnation only reports a lack of meaningful improvement.\n');
 end
-fprintf(fid,'V10/V11 optimized full-QoS-then-sum service and their scores/bounds are not reused as V12 lexicographic optimality evidence.\n');
+
 end

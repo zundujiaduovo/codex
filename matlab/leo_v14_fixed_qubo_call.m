@@ -5,7 +5,10 @@ rng(seed,'twister'); budget=struct('timer',tic,'seconds',Inf,'iterationOnly',tru
 steps=0; restarts=0; terms=0; encodedLegal=[]; extraGroups=[];
 if any(strcmp(solver,{'SB adaptive','SB fixed'}))
     seeds=[leo_encode_group_bits(q,old),leo_encode_group_bits(q,false(q.nUsers,1))];
-    if strcmp(solver,'SB adaptive')
+    if isfield(o,'parallel') && o.parallel.enabled
+        kernel='adaptive'; if strcmp(solver,'SB fixed'), kernel='fixed'; end
+        sb=leo_v16_parallel_sb(q,o,seeds,kernel); terms=sb.denseTerms; restarts=sb.restarts;
+    elseif strcmp(solver,'SB adaptive')
         sb=leo_v14_adaptive_sb(q,o,seeds,budget); terms=sb.denseTerms; restarts=sb.restarts;
     else
         sb=leo_v8_ballistic_sb(leo_qubo_to_ising(q),o,seeds,budget); terms=q.nBits^2*sb.steps*o.sbTrajectories;
@@ -19,7 +22,7 @@ if any(strcmp(solver,{'SB adaptive','SB fixed'}))
     end
 elseif strcmp(solver,'Local')
     raw=[old,false(q.nUsers,1)];
-    for j=1:o.localRestarts
+    for j=1:max(0,o.localRestarts-2)
         raw(:,end+1)=leo_repair_group(q,rand(q.nUsers,1)<.5); %#ok<AGROW>
     end
 elseif strcmp(solver,'Proxy+Tabu')

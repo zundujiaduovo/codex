@@ -1,7 +1,0 @@
-V12 original_tabu            seed 71669974: s1=1.43845949, s2=1.43845949, floor=1.43845949, total=85.1623 Mbit, preserved=1.
-V12 sb_v12_lexicographic     seed 71669974: s1=1.43845949, s2=1.43845949, floor=1.43845949, total=92.1384 Mbit, preserved=1.
-V12 local_v12_lexicographic  seed 71669974: s1=1.43845949, s2=1.43845949, floor=1.43845949, total=93.2007 Mbit, preserved=1.
-GLOBAL FAIRNESS optimum in [1.43845949, 1.82034651]; time limit during enumeration. Secondary throughput bounds are conditional on each stated floor.
-PASS: 3 exported schedules re-evaluated by the original model; max total error 0 bit.
-PASS: V12 BOTH stages re-evaluated from binary CSV schedules; every attained stage-1 fairness floor preserved; no cap at 1.
-error: ignoring const execution_exception& while preparing to exit

@@ -1,4 +1,0 @@
-PASS: 4 exported schedules re-evaluated by the original model; max total error 0 bit.
-PASS: V12 BOTH stages re-evaluated from binary CSV schedules; every attained stage-1 fairness floor preserved; no cap at 1.
-PASS: independent fairness-certificate incumbent re-evaluated; global upper covers every exported method and certificate incumbent.
-error: ignoring const execution_exception& while preparing to exit

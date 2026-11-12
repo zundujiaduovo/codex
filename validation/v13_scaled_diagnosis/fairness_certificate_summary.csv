@@ -1,2 +1,0 @@
-fairnessLower,fairnessUpper,absoluteGap,relativeGap,gapTargetMet,status,nodesProcessed,openNodes,pricingComplete,elapsedSeconds,scope
-1.3828337608880381,3.0481442509769505,1.6653104900889124,0.54633585321796019,0,"beam count exceeds exact pricing limit",0,1,0,58.984412908554077,"ORIGINAL uncapped max-min G/q; certificate search is separate from benchmark methods."

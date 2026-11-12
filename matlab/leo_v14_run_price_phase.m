@@ -2,6 +2,8 @@ function result=leo_v14_run_price_phase(problem,proxy,cache,phase,start,o,budget
 % 归一化公平协调、增益可信域、收益调度、瓶颈跨块补偿的公共外层。
 d=problem.data; K=d.shape(1); M=d.shape(2);
 c=leo_v14_coordination_options(o.coordination); o.coordination=c; isFair=strcmp(phase,'fairness');
+conv=leo_v16_convergence_options(); if isfield(o,'convergence'), conv=leo_v16_convergence_options(o.convergence); end
+unlimited=conv.enabled; convergence=[];
 bestX=start.x; service=start.service; priceX=bestX; s0=0;
 lambda=ones(K,1)/K; rounds=o.fairnessRounds; initialStep=o.fairnessStep;
 if ~isFair, s0=service.fairness; lambda=zeros(K,1); rounds=o.throughputRounds; initialStep=o.throughputStep; end
@@ -19,12 +21,24 @@ names={'sAux','step','priceFairness','priceTotalBits','savedFairness','savedTota
  'poolAccepted','bottleneckAccepted','retangentAccepted','priceScheduleAccepted','recoveryAccepted','lambdaSum', ...
  'jointEvaluations','jointAccepted','jointFairnessGain','gainPredictionErrors','rankingReversals','trustRadius', ...
  'skippedExtraCalls','sbRestarts','repairLoss','rawScore','repairedScore','polishedScore', ...
- 'novelCandidates','trustPathCandidates','trustBridgeCandidates','trustRejectedCandidates','trustEscape','stage2StagnantRounds'};
-for j=1:numel(names), history.(names{j})=zeros(1,rounds); end
-history.lambda=zeros(K,rounds); history.lambdaNext=zeros(K,rounds); history.lowerUserBits=zeros(K,rounds);
-history.priceX=false(K,M,rounds); history.completePriceRound=false(1,rounds);
+ 'novelCandidates','trustPathCandidates','trustBridgeCandidates','trustRejectedCandidates','trustEscape','stage2StagnantRounds', ...
+ 'parallelWorkers','parallelTasks','stableWindows','lastWindowGain'};
+capacity=rounds; if unlimited, capacity=128; end
+for j=1:numel(names), history.(names{j})=zeros(1,capacity); end
+history.lambda=zeros(K,capacity); history.lambdaNext=zeros(K,capacity); history.lowerUserBits=zeros(K,capacity);
+history.priceX=false(K,M,capacity); history.completePriceRound=false(1,capacity);
 [stopping,~]=leo_search_stopping(o,phase,service,upper.value,initialSeconds,0); completed=0; status='iteration_limit';
-for k=1:rounds
+[convergence,~]=leo_v16_convergence_step(o,phase,service,0,convergence);
+k=0;
+while unlimited || k<rounds
+    k=k+1;
+    if k>capacity
+        capacity=capacity+128;
+        for name=fieldnames(history).'
+            if strcmp(name{1},'priceX'), history.(name{1})(:,:,capacity)=false;
+            else, history.(name{1})(:,capacity)=0; end
+        end
+    end
     if leo_budget_expired(budget), status='time_limit'; break; end
     roundStartTotal=service.totalBits;
     if ~isFair && c.stage2StallExpand && stagnantRounds>=c.stage2StallRounds && mod(k,c.stage2EscapeEvery)==0
@@ -180,14 +194,24 @@ for k=1:rounds
     history.savedTotalBits(k)=service.totalBits; history.upperBound(k)=upper.value; history.proxyEpoch(k)=epoch;
     history.elapsedSeconds(k)=toc(budget.timer); history.trustRadius(k)=mean(radius); history.completePriceRound(k)=all(snap.solved);
     history.stage2StagnantRounds(k)=stagnantRounds;
+    [convergence,converged]=leo_v16_convergence_step(o,phase,service,k,convergence);
+    history.stableWindows(k)=convergence.stableWindows; history.lastWindowGain(k)=convergence.lastWindowGain;
     completed=k; snap.proposed=priceX; snapshots{end+1}=snap;
     if numel(snapshots)>o.audit.snapshots, snapshots(1)=[]; end
+    leo_v16_save_progress(o,phase,bestX,service,history,convergence,k);
     if o.verbose && (k==1 || mod(k,5)==0 || k==rounds)
-        fprintf('  V14 %-10s %d/%d: s=%.9g, V=%.6g Mbit, sum(lambda)=%.8g, joint=%d, radius=%.3g, novel=%d, escape=%d\n', ...
-            phase,k,rounds,service.fairness,service.totalBits/1e6,history.lambdaSum(k),joint.accepted,mean(radius), ...
+        limit=sprintf('%d',rounds); if unlimited, limit='until-convergence'; end
+        fprintf('  Proxy %-10s %d/%s: s=%.9g, V=%.6g Mbit, sum(lambda)=%.8g, joint=%d, radius=%.3g, novel=%d, escape=%d\n', ...
+            phase,k,limit,service.fairness,service.totalBits/1e6,history.lambdaSum(k),joint.accepted,mean(radius), ...
             history.novelCandidates(k),history.trustEscape(k));
     end
-    if o.refreshEvery>0 && mod(k,o.refreshEvery)==0 && k<rounds
+    if unlimited && o.verbose && (mod(k,conv.windowRounds)==0 || converged)
+        fprintf('    convergence: stable windows %d/%d, window gain %.6g, tolerance %.6g, minimum rounds %d.\n', ...
+            convergence.stableWindows,conv.stableWindows,convergence.lastWindowGain, ...
+            convergence.lastWindowTolerance,convergence.minimumRounds);
+    end
+    if converged, status='objective_plateau'; break; end
+    if o.refreshEvery>0 && mod(k,o.refreshEvery)==0 && (unlimited || k<rounds)
         started=tic; proxy=leo_v12_build_service_surrogates(problem,'current_schedule',bestX);
         history.proxyRefreshSeconds(k)=toc(started); epoch=epoch+1;
         errors(epoch)=proxy.error.optimalFairnessGapBound; touch(epoch)=proxy.referenceTouchMaxAbsBits;
@@ -198,6 +222,7 @@ for name=fieldnames(history).'
     else, history.(name{1})=history.(name{1})(:,1:completed); end
 end
 [stopping,~]=leo_search_stopping(o,phase,service,upper.value,toc(budget.timer),completed,stopping); stopping.reason=status;
+stopping.convergence=convergence;
 value=service.fairness; if ~isFair, value=service.normalizedThroughput; end
 result=struct('x',bestX,'service',service,'fairnessFloor',s0,'rounds',completed,'status',status,'history',history, ...
  'upperBound',upper,'absoluteGap',max(0,upper.value-value),'certifiedWithinTolerance',upper.value-value<=o.gapTolerance, ...
@@ -219,6 +244,8 @@ result=struct('x',bestX,'service',service,'fairnessFloor',s0,'rounds',completed,
         history.innerTabuCandidates(k)=history.innerTabuCandidates(k)+inner.tabuCandidates;
         history.blockwiseEvaluations(k)=history.blockwiseEvaluations(k)+inner.preselectionEvaluations;
         history.sbRestarts(k)=history.sbRestarts(k)+inner.restarts;
+        history.parallelWorkers(k)=max(history.parallelWorkers(k),inner.parallelWorkers);
+        history.parallelTasks(k)=history.parallelTasks(k)+inner.parallelTasks;
         history.repairLoss(k)=history.repairLoss(k)+max(0,inner.repairLoss);
         for name={'novelCandidates','trustPathCandidates','trustBridgeCandidates','trustRejectedCandidates'}
             history.(name{1})(k)=history.(name{1})(k)+inner.(name{1});

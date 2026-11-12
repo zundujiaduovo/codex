@@ -5,6 +5,8 @@ function result = leo_solve_original_search(problem,kind,options,provided)
 if nargin<4, provided = []; end
 assert(any(strcmp(kind,{'greedy','exchange','tabu','initial'})));
 options = leo_method_options(options); previous = rng; cleanup = onCleanup(@() rng(previous)); %#ok<NASGU>
+conv=leo_v16_convergence_options(); if isfield(options,'convergence'), conv=leo_v16_convergence_options(options.convergence); end
+unlimited=conv.enabled;
 rng(options.seed,'twister'); budget.timer = tic; budget.seconds = options.maxSeconds;
 budget.iterationOnly=leo_iteration_only(options);
 if budget.iterationOnly, budget.seconds=Inf; end
@@ -29,6 +31,7 @@ for phaseIndex = 1:2
         upperV = leo_original_upper_bound(data,cache,zeros(data.shape(1),1),'throughput',s0);
     end
     phaseStart = best.service; phaseIterations = 0;
+    [convergence,~]=leo_v16_convergence_step(options,phase,best.service,0,[],'original');
     bound=upperF.value; if phaseIndex==2, bound=upperV.value; end
     [stopping,stopStatus]=leo_search_stopping(options,phase,best.service,bound,toc(budget.timer),0);
     history = leo_record_search_step([],best.service,0,toc(budget.timer),evaluations);
@@ -63,7 +66,9 @@ for phaseIndex = 1:2
     elseif ~strcmp(kind,'initial')
         current = best; tabuUntil = zeros(data.shape); stagnant = 0;
         iterationKind = [kind,'_round'];
-        for iteration = 1:phaseCap
+        iteration=0;
+        while unlimited || iteration<phaseCap
+            iteration=iteration+1;
             if leo_budget_expired(localBudget) || options.recoveryEvaluations==0, break; end
             if strict && phaseIndex==1 && best.service.fairness==1, break; end
             before = best.service;
@@ -100,9 +105,18 @@ for phaseIndex = 1:2
             phaseIterations = iteration;
             history = leo_record_search_step(history,best.service,iteration,toc(budget.timer),evaluations);
             if options.verbose && (iteration==1 || mod(iteration,100)==0 || iteration==phaseCap)
-                fprintf('  %s %-10s %d/%d: fairness=%.9g, total=%.6g Mbit\n', ...
-                    kind,phase,iteration,phaseCap,best.service.fairness,best.service.totalBits/1e6);
+                limit=sprintf('%d',phaseCap); if unlimited, limit='until-convergence'; end
+                fprintf('  %s %-10s %d/%s: fairness=%.9g, total=%.6g Mbit\n', ...
+                    kind,phase,iteration,limit,best.service.fairness,best.service.totalBits/1e6);
             end
+            [convergence,converged]=leo_v16_convergence_step(options,phase,best.service,iteration,convergence,'original');
+            leo_v16_save_progress(options,phase,best.x,best.service,history,convergence,iteration);
+            if unlimited && options.verbose && (mod(iteration,conv.windowRounds)==0 || converged)
+                fprintf('    convergence: stable windows %d/%d, gain %.6g, tolerance %.6g, minimum rounds %d.\n', ...
+                    convergence.stableWindows,conv.stableWindows,convergence.lastWindowGain, ...
+                    convergence.lastWindowTolerance,convergence.minimumRounds);
+            end
+            if converged, stopStatus='objective_plateau'; break; end
             [stopping,stopStatus]=leo_search_stopping(options,phase,best.service,bound,toc(budget.timer),iteration,stopping);
             if ~isempty(stopStatus), break; end
             if leo_service_is_better(best.service,before,phase,s0), stagnant = 0;
@@ -125,7 +139,7 @@ for phaseIndex = 1:2
     if strict && phaseIndex==1 && phaseStart.fairness==1, stage.status='full_qos_already_met'; end
     if strict && phaseIndex==2 && best.service.fairness<1, stage.status='not_started_full_qos_not_found'; end
     [stopping,~]=leo_search_stopping(options,phase,best.service,bound,toc(budget.timer),phaseIterations,stopping);
-    stopping.reason=stage.status; stage.stopping=stopping;
+    stopping.reason=stage.status; stopping.convergence=convergence; stage.stopping=stopping;
     if auditEnabled, stage.auditMoves=auditMoves; end
     if phaseIndex==1, result.stage1 = stage;
     else, result.stage2 = stage; result.fairnessFloor = s0; end

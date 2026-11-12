@@ -25,6 +25,7 @@ template.gainOverInitialPercent=NaN; template.upperGapPercent=NaN; template.know
 template.searchEngine='original_objective';
 template.terminationMode='time_budget';
 if leo_iteration_only(options.method), template.terminationMode='iteration_limits'; end
+if isfield(options.method,'convergence') && options.method.convergence.enabled, template.terminationMode='objective_convergence'; end
 template.objectiveMode='full_qos_sum';
 if leo_is_lexicographic(problem.data), template.objectiveMode='lexicographic_max_min'; end
 template.stage1Fairness=NaN; template.stage2Fairness=NaN; template.stage1FairnessGap=NaN;
@@ -36,15 +37,19 @@ records = repmat(template,0,1); solutions = {};
 for seed = options.seeds(:).'
     for j = 1:numel(options.methods)
         row = template; row.method=options.methods{j}; row.seed = seed; name=leo_method_id(row.method);
-        prebuiltProxy = any(strcmp(name,{'price_sb','price_sb_blockwise','price_sb_adaptive','price_sb_light', ...
-            'price_local','price_local_adaptive','price_local_blockwise','price_sb_joint','price_local_joint', ...
-            'price_miqp','proxy_milp','sb_minimax_fixed'}));
-        if commonFullStart && ~strcmp(name,'proxy_milp'), prebuiltProxy=false; end
-        if prebuiltProxy && isempty(model.surrogate)
-            proxyTimer=tic; model.surrogate=leo_build_service_surrogates(problem);
-            model.timings.proxySeconds=toc(proxyTimer);
+        cachePath='';
+        signature=struct('data',problem.data,'method',options.method,'seed',seed,'name',row.method,'provided',providedSchedule);
+        if ~isempty(options.checkpointDirectory)
+            if ~exist(options.checkpointDirectory,'dir'), mkdir(options.checkpointDirectory); end
+            cachePath=fullfile(options.checkpointDirectory,sprintf('seed_%.0f_%s.mat',seed,name));
+            if exist(cachePath,'file')==2
+                saved=load(cachePath,'entry'); entry=saved.entry;
+                assert(isequaln(signature,entry.signature),'Saved method protocol/model differs; use a new results folder.');
+                records(end+1,1)=entry.row; solutions{end+1,1}=entry.result;
+                fprintf('V16 retained completed %s, seed %.0f.\n',row.method,seed); continue;
+            end
         end
-        if prebuiltProxy, row.proxyPreparationSeconds = model.timings.proxySeconds; end
+        prebuiltProxy=false; % All three proxy methods construct their own current-schedule tangent.
         seconds = options.budgetSeconds-commonSeconds-row.proxyPreparationSeconds;
         result = [];
         if strcmp(name,'price_miqp') && exist('gurobi','file')==0
@@ -57,6 +62,9 @@ for seed = options.seeds(:).'
             method = options.method; method.seed = seed;
             if ~leo_iteration_only(method), method.maxSeconds=seconds; method.verbose=false;
             else, method.verbose=options.verbose; end
+            if ~isempty(options.checkpointDirectory)
+                method.progressDirectory=fullfile(options.checkpointDirectory,sprintf('seed_%.0f_%s_progress',seed,name));
+            end
             timer = tic;
             try
                 solverProxy=[]; if prebuiltProxy, solverProxy=model.surrogate; end
@@ -132,6 +140,11 @@ for seed = options.seeds(:).'
                 end
             end
         end
+        if ~isempty(cachePath) && strcmp(row.status,'completed')
+            entry=struct('signature',signature,'row',row,'result',result);
+            temporary=[tempname(options.checkpointDirectory),'.mat']; save(temporary,'entry','-v7');
+            [ok,message]=movefile(temporary,cachePath,'f'); assert(ok,message);
+        end
         records(end+1,1) = row; solutions{end+1,1} = result; %#ok<AGROW>
         if options.verbose
             fprintf('%-23s seed=%d %-12s s=%.9g V=%.6g Mbit wall=%.3f s\n', ...
@@ -157,22 +170,6 @@ for seed = options.seeds(:).'
 end
 % 精确基准有独立预算；它是证书，不参与各方法的输入或初始化。
 reference = [];
-if options.exhaustive
-    exhaustive = leo_exhaustive_options(struct('verbose',options.verbose));
-    reference = leo_exhaustive_search(problem,exhaustive);
-    if reference.optimal
-        for j = 1:numel(records)
-            if ~strcmp(records(j).status,'completed'), continue; end
-            gap = reference.fairness-records(j).fairness;
-            assert(gap>=-1e-10,'原始穷举最优值与方法结果不一致。');
-            records(j).exactFairnessGap = max(0,gap);
-            % 吞吐最优仅能在同一公平门槛下比较；不同门槛保留 NaN。
-            if abs(gap)<=1e-12 && all(solutions{j}.service.demandRatio>=reference.fairness)
-                records(j).exactThroughputGapBits = max(0,reference.totalBits-records(j).totalBits);
-            end
-        end
-    end
-end
 if isfield(model,'codebook') && isfield(model.codebook,'selectedCandidateIndex')
     report.scenario=struct('selectedCandidateIndex',model.codebook.selectedCandidateIndex, ...
         'gridIndex',model.codebook.gridIndex,'phaseIndex',model.codebook.phaseIndex, ...

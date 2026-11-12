@@ -8,6 +8,7 @@ age=zeros(1,R); last=zeros(1,R); restarts=zeros(1,R); active=true(1,R);
 spin=ones(N,R); spin(p<0)=-1; bestSpin=spin; energy=discrete(spin);
 legal=false(q.nUsers,R); legalScore=-Inf(1,R); forceTerms=0; trajectorySteps=0;
 history=struct('step',0,'minimum',min(energy),'median',median(energy),'maximum',max(energy));
+energyByTrajectory=energy(:);
 completed=0;
 for k=1:o.sbSteps
     ids=find(active); if isempty(ids) || leo_budget_expired(budget), break; end
@@ -35,10 +36,12 @@ for k=1:o.sbSteps
     end
     history.step(end+1)=k; history.minimum(end+1)=min(energy);
     history.median(end+1)=median(energy); history.maximum(end+1)=max(energy);
+    energyByTrajectory(:,end+1)=energy(:);
 end
 r=struct('bits',(bestSpin+1)/2,'legalGroups',legal,'energy',energy,'steps',completed, ...
     'energyScale',scale,'history',history,'trajectories',R,'trajectorySteps',trajectorySteps, ...
-    'denseTerms',forceTerms,'restarts',sum(restarts),'stoppedByTime',leo_budget_expired(budget));
+    'denseTerms',forceTerms,'restarts',sum(restarts),'stoppedByTime',leo_budget_expired(budget), ...
+    'energyByTrajectory',energyByTrajectory);
     function e=discrete(s)
         e=ising.constant+ising.h.'*s+sum(s.*(ising.J*s),1)/2;
     end

@@ -1,99 +1,25 @@
-function result = leo_run_benchmark_method(problem,proxy,provided,name,options)
-%LEO_RUN_BENCHMARK_METHOD 第 13.3 节实验分派；所有求解均只收到同一模型/初始化。
-% 输入：原问题、minimax 代理、提供日程、方法名、方法预算；输出方法的原始可行结果。
+function result=leo_run_benchmark_method(problem,proxy,provided,name,options)
+% V16 five-method dispatcher; all proxy methods share the current outer engine.
 name=leo_method_id(name);
-switch name
-    case {'sb_v12_lexicographic','local_v12_lexicographic','proxy_tabu'}
-        legacy=leo_v12_method_options(); fields=fieldnames(legacy);
-        for j=1:numel(fields)
-            if isfield(options,fields{j}), legacy.(fields{j})=options.(fields{j}); end
-        end
-        if isfield(options,'stopping'), legacy.stopping=options.stopping; end
-        if isfield(options,'audit'), legacy.audit=options.audit; end
-        if isfield(options,'fastPolish'), legacy.fastPolish=options.fastPolish; end
-        [~,extra]=leo_extract_iteration_options(options); names=fieldnames(extra);
-        for j=1:numel(names), legacy.(names{j})=extra.(names{j}); end
-        legacy.blockwiseOriginalAccept=true;
-        if strcmp(name,'sb_v12_lexicographic'), legacy.innerSolver='sb';
-        elseif strcmp(name,'proxy_tabu'), legacy.innerSolver='tabu';
-        else, legacy.innerSolver='local'; end
-        result=leo_v12_solve_schedule(problem,[],legacy,provided);
-        result.usesQuadraticProxy=true; result.usesProvidedSchedule=~isempty(provided);
-        result.searchEngine='V12 uncapped adaptation of V10/V8';
-        if isfield(legacy,'fastPolish') && legacy.fastPolish
-            result.searchEngine='Original-service acceptance; legacy SB dynamics with vectorized identical polish';
-        end
-        if strcmp(name,'proxy_tabu'), result.searchEngine='Quadratic surrogate + feasible add/drop/swap Tabu; same price/recovery framework'; end
-    case {'sb_v8_blockwise','local_v8_blockwise'}
-        assert(~leo_is_lexicographic(problem.data),'Use sb_v12_lexicographic/local_v12_lexicographic for the V12 objective.');
-        % 冻结V8引擎：只传V8已有参数，禁止混入V9扰动/候选池/联合搜索。
-        legacy=leo_v8_method_options(); fields=fieldnames(legacy);
-        for j=1:numel(fields)
-            if isfield(options,fields{j}), legacy.(fields{j})=options.(fields{j}); end
-        end
-        legacy.blockwiseOriginalAccept=true;
-        if strcmp(name,'sb_v8_blockwise'), legacy.innerSolver='sb'; else, legacy.innerSolver='local'; end
-        result=leo_v8_solve_schedule(problem,[],legacy,provided);
-        result.usesQuadraticProxy=true; result.usesProvidedSchedule=~isempty(provided);
-        result.searchEngine='V8 frozen cd4ba09';
-    case {'initial','original_greedy','original_exchange','original_tabu'}
-        kind = strrep(name,'original_','');
-        result = leo_solve_original_search(problem,kind,options,provided);
-    case 'original_tabu_independent'
-        result = leo_solve_original_search(problem,'tabu',options,[]);
-    case 'proxy_milp'
-        result = leo_solve_proxy_milp(problem,proxy,options,provided);
-    case 'sb_reference_portfolio'
-        % 三个独立参考点搜索平分剩余总预算，结果按原始公平/吞吐择优。
-        timer = tic; modes = {'zero','minimax','current_schedule'}; result = [];
-        totalBudget = options.maxSeconds; minimumSetup = 0;
-        members = {}; portfolioHistory = [];
-        for j = 1:numel(modes)
-            remaining = totalBudget-toc(timer);
-            if remaining<=minimumSetup, break; end
-            local = options; local.innerSolver = 'sb'; local.referenceMode = modes{j}; local.refreshEvery = 0;
-            local.throughputReferenceMode=modes{j};
-            local.seed=mod(double(options.seed)+7919*j,2^32);
-            local.maxSeconds = remaining/(numel(modes)-j+1);
-            memberOffset = toc(timer);
-            candidate = leo_solve_schedule(problem,[],local,provided);
-            minimumSetup = max(minimumSetup,candidate.initializationSeconds);
-            if isempty(result) || leo_service_is_better(candidate.service,result.service,'fairness',0), result = candidate; end
-            member.name = modes{j}; member.offsetSeconds = memberOffset;
-            member.elapsedSeconds = toc(timer)-memberOffset;
-            member.stage1 = rmfield(candidate.stage1,'proxy');
-            member.stage2 = rmfield(candidate.stage2,'proxy');
-            members{end+1} = member; %#ok<AGROW>
-            portfolioHistory = leo_record_search_step(portfolioHistory,result.service,j,toc(timer),NaN);
-        end
-        if isempty(result), result = leo_solve_schedule(problem,[],options,provided); end
-        result.elapsedSeconds = toc(timer);
-        result.memberRuns = members; result.portfolioHistory = portfolioHistory;
-    otherwise
-        options.innerSolver = 'sb';
-        if any(strcmp(name,{'price_local','price_local_adaptive','price_local_blockwise','price_local_joint'})), options.innerSolver = 'local'; end
-        if strcmp(name,'price_miqp'), options.innerSolver = 'miqp'; end
-        if any(strcmp(name,{'price_sb_blockwise','price_sb_adaptive','price_sb_light','price_local_adaptive', ...
-                'price_local_blockwise','price_sb_joint','price_local_joint'}))
-            options.blockwiseOriginalAccept = true;
-        end
-        if any(strcmp(name,{'price_sb_joint','price_local_joint'})), options.jointCandidateSearch=true; end
-        if any(strcmp(name,{'price_sb_adaptive','price_sb_light','price_local_adaptive'}))
-            options.refreshEvery = 1;
-        end
-        if strcmp(name,'price_sb_light')
-            options.sbSteps = 100; options.sbTrajectories = 8;
-        end
-        if strcmp(name,'sb_zero')
-            options.referenceMode = 'zero'; options.refreshEvery = 0; proxy = [];
-            options.throughputReferenceMode='zero';
-        elseif strcmp(name,'sb_current_fixed')
-            options.referenceMode = 'current_schedule'; options.refreshEvery = 0; proxy = [];
-            options.throughputReferenceMode='current_schedule';
-        elseif strcmp(name,'sb_minimax_fixed')
-            options.refreshEvery = 0;
-            options.throughputReferenceMode='minimax';
-        end
-        result = leo_solve_schedule(problem,proxy,options,provided);
+if any(strcmp(name,{'sb_v12_lexicographic','local_v12_lexicographic','proxy_tabu'}))
+    o=leo_v12_method_options(); fields=fieldnames(o);
+    for j=1:numel(fields), if isfield(options,fields{j}), o.(fields{j})=options.(fields{j}); end; end
+    for field={'stopping','audit','fastPolish'}
+        if isfield(options,field{1}), o.(field{1})=options.(field{1}); end
+    end
+    [~,extra]=leo_extract_iteration_options(options); fields=fieldnames(extra);
+    for j=1:numel(fields), o.(fields{j})=extra.(fields{j}); end
+    o.innerSolver='sb';
+    if strcmp(name,'local_v12_lexicographic'), o.innerSolver='local'; end
+    if strcmp(name,'proxy_tabu'), o.innerSolver='tabu'; end
+    o.blockwiseOriginalAccept=true;
+    result=leo_v12_solve_schedule(problem,[],o,provided);
+    result.usesQuadraticProxy=true; result.usesProvidedSchedule=~isempty(provided);
+    result.searchEngine=['V16 coordinated original-service acceptance / ',o.innerSolver];
+elseif any(strcmp(name,{'original_tabu','original_greedy'}))
+    kind='tabu'; if strcmp(name,'original_greedy'), kind='greedy'; end
+    result=leo_solve_original_search(problem,kind,options,provided);
+else
+    error('leo:v16Method','V16 supports Tabu, SB, Local, Proxy+Tabu and Greedy.');
 end
 end

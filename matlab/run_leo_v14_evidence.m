@@ -15,7 +15,8 @@ for j=1:numel(report.records)
         row=struct('method',leo_method_name(r.method),'seed',r.seed,'phase',phase,'round',k,'fairness',h.savedFairness(k));
         for name={'lambdaSum','trustRadius','gainPredictionErrors','rankingReversals','jointAccepted','jointFairnessGain', ...
                 'jointEvaluations','skippedExtraCalls','sbRestarts','sbTrajectorySteps','denseDynamicsTerms','repairLoss', ...
-                'novelCandidates','trustPathCandidates','trustBridgeCandidates','trustRejectedCandidates','trustEscape','stage2StagnantRounds'}
+                'novelCandidates','trustPathCandidates','trustBridgeCandidates','trustRejectedCandidates','trustEscape','stage2StagnantRounds', ...
+                'parallelWorkers','parallelTasks','stableWindows','lastWindowGain'}
             value=NaN; if isfield(h,name{1}), value=h.(name{1})(k); end
             row.(name{1})=value;
         end

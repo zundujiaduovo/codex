@@ -37,7 +37,7 @@ end
 for j=1:numel(schedules), consider(schedules{j}); add_schedule(schedules{j}); end
 if ~isempty(state.incumbentX), consider(state.incumbentX); end
 if state.sweeps==0 && state.blockCalls==0, state.initialLower=state.lower; end
-fprintf('\nV15 ORIGINAL %s certificate; floor %.12g. Target gap %.4g%%.\n',phase,floorValue,100*o.relativeGap);
+fprintf('\nORIGINAL %s certificate; floor %.12g. Target gap %.4g%%.\n',phase,floorValue,100*o.relativeGap);
 fprintf('Per block: true log(1+SINR), common active beams, at most %d users; no quadratic proxy.\n',d.maxStreams);
 if strcmp(phase,'fairness')
     fprintf('U(lambda)=max(0, S_cap*[1-sum(lambda)]_+ + sum_m H_m^UB(lambda/q) - sum_i lambda_i*c_i/q_i).\n');
@@ -90,7 +90,7 @@ while sessionSweeps<o.maxSweeps && toc(started)<o.maxSeconds
             'expanded',priced.expanded,'openPricingNodes',priced.openNodes,'status',priced.status);
         state.pricingTrace=leo_append_struct(state.pricingTrace,row);
         if o.verbose
-            fprintf('V15 %s node %d block %d/%d: H in [%.8g, %.8g], open=%d, %s.\n', ...
+            fprintf('Certificate %s node %d block %d/%d: H in [%.8g, %.8g], open=%d, %s.\n', ...
                 phase,a.node.id,m,M,priced.lower,priced.upper,priced.openNodes,priced.status);
         end
         checkpoint();
@@ -141,7 +141,7 @@ while sessionSweeps<o.maxSweeps && toc(started)<o.maxSeconds
         'pricedBlocksComplete',nnz(a.complete),'newColumns',added,'openScheduleNodes',numel(state.queue), ...
         'branchVariable',branchVariable,'outcome',outcome,'elapsedSeconds',previousSeconds+toc(started));
     state.trace=leo_append_struct(state.trace,row);
-    fprintf('V15 %s: ORIGINAL optimum in [%.10g, %.10g], gap %.5g%%; %s.\n',phase,state.lower,state.upper,100*gap(),outcome);
+    fprintf('Certificate %s: ORIGINAL optimum in [%.10g, %.10g], gap %.5g%%; %s.\n',phase,state.lower,state.upper,100*gap(),outcome);
     checkpoint();
 end
 update_upper();
@@ -151,7 +151,7 @@ elseif toc(started)>=o.maxSeconds, state.status='time_limit_unclosed'; end
 checkpoint(); certificate=leo_v15_certificate_result(state,o);
 save(fullfile(directory,'certificate.mat'),'certificate','-v7');
 leo_v15_export_certificate(state,certificate,directory);
-fprintf('V15 %s FINAL: L=%.12g U=%.12g gap=%.6g%% target_met=%d; %s.\n', ...
+fprintf('Certificate %s FINAL: L=%.12g U=%.12g gap=%.6g%% target_met=%d; %s.\n', ...
     phase,state.lower,state.upper,100*gap(),certificate.gapTargetMet,state.status);
 if ~certificate.gapTargetMet
     fprintf('认证精度尚未达到；当前 U 仍是有效上界。重跑本命令可继续未搜索分支，不代表已接近最优。\n');

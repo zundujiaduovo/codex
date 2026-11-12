@@ -1,7 +1,0 @@
-original_greedy         seed=71669974 completed    s=1.43845949 V=82.6777 Mbit wall=35.942 s
-  Stop: no_improving_addition / no_improving_addition
-  Goal: uncapped max-min first; stage-1 s=1.43845949, preserved floor=1.43845949, final s=1.43845949.
-V12 diagnostics: 522 native history points, 4 completed runs; no optimization rerun. Missing old instrumentation remains NaN.
-V12 four-method supplement saved: results/v12_120s_octave/greedy_control. Original three methods were not re-run.
-V12 diagnostics: 522 native history points, 4 completed runs; no optimization rerun. Missing old instrumentation remains NaN.
-error: ignoring const execution_exception& while preparing to exit

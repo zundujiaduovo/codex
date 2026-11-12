@@ -10,7 +10,7 @@ leo_write_struct_csv(fullfile(directory,'certificate_summary.csv'),row);
 leo_write_struct_csv(fullfile(directory,'certificate_trace.csv'),s.trace);
 leo_write_struct_csv(fullfile(directory,'pricing_trace.csv'),s.pricingTrace);
 fid=fopen(fullfile(directory,'CERTIFICATE.txt'),'w','n','UTF-8'); assert(fid>=0); cleanup=onCleanup(@()fclose(fid)); %#ok<NASGU>
-fprintf(fid,'V15 ORIGINAL %s, floor %.17g\nL=%.17g\nU=%.17g\nrelative gap=%.17g\ntarget met=%d\nstatus=%s\n', ...
+fprintf(fid,'ORIGINAL %s, floor %.17g\nL=%.17g\nU=%.17g\nrelative gap=%.17g\ntarget met=%d\nstatus=%s\n', ...
     s.phase,s.floor,c.lower,c.upper,c.relativeGap,c.gapTargetMet,c.status);
 fprintf(fid,'Actual log(1+SINR) per legal simultaneous group; original period margin subtracted once.\n');
 fprintf(fid,'Pricing uses certified include/exclude beam trees. Every unclosed branch retains an optimistic bound.\n');
@@ -23,7 +23,7 @@ p=leo_v14_panel('Original-model global interval','Certificate pricing sweep',uni
 initial=s.initialLower; if ~isfinite(initial), initial=NaN; end
 p=leo_v14_series(p,'Feasible lower',[0,[s.trace.sweep]],[initial,[s.trace.globalLower]]);
 p=leo_v14_series(p,'Certified upper',[0,[s.trace.sweep]],[s.baselineUpper,[s.trace.globalUpper]]);
-spec=struct('name','v15_original_certificate','title',sprintf('V15 ORIGINAL %s certificate | floor %.9g | target met %d',s.phase,s.floor,c.gapTargetMet), ...
+spec=struct('name','v15_original_certificate','title',sprintf('ORIGINAL %s certificate | floor %.9g | target met %d',s.phase,s.floor,c.gapTargetMet), ...
     'rows',1,'cols',1,'panels',p);
 files=leo_v14_save_specs(spec,directory,'v15_certificate_specs',render);
 end

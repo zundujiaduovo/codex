@@ -19,6 +19,7 @@ count=numel(e.methods); order=mod((0:count-1)+index-1,count)+1;
 b=struct('methods',{e.methods(order)},'seeds',seed,'budgetSeconds',o.budgetSeconds, ...
     'outputDirectory','','exhaustive',false,'makePlots',false,'verbose',true, ...
     'diagnosticSurrogates',false,'method',o.method);
+b.checkpointDirectory=fullfile(directory,'method_checkpoints');
 report=leo_benchmark_case(model,b);
 report.caseName=release.caseName; report.releaseTag=release.tag; report.pairedProtocol=o;
 report.sceneSeed=o.sceneSeed; report.validationSeed=o.validationSeed; report.validationSamples=o.validationSamples;

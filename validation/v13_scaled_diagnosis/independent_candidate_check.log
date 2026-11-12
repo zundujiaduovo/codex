@@ -1,2 +1,0 @@
-PASS: 48 real candidate witnesses independently re-evaluated by ORIGINAL and quadratic evaluators; max weighted-gain error 8.881784197e-15.
-error: ignoring const execution_exception& while preparing to exit

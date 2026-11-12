@@ -6,7 +6,7 @@ function model = run_leo_sinr(p,prepareProxy)
 % 保留原入口名称以兼容前一版，无附加 MATLAB 工具箱依赖。
 % 用法：model=run_leo_sinr(); 或修改 leo_default_parameters() 后传入。
 if nargin<1, p = leo_default_parameters(); end
-if nargin<2, prepareProxy=true; end
+if nargin<2, prepareProxy=false; end
 modelTimer = tic;
 p = leo_validate_parameters(p);
 previousRng = rng;
@@ -32,19 +32,8 @@ model.exampleService = model.problem.evaluate(model.xExample);
 % 仅演示第二阶段构造；采用预检见证日程的公平值，不是阶段 1 最优值。
 model.problem.stage2Example = model.problem.makeStage2(model.problem.precheck.witness);
 model.timings.physicalProblemSeconds = toc(modelTimer);
-proxyTimer = tic;
-model.surrogate=[]; model.exampleBounds=[];
-if prepareProxy
-if strcmp(p.surrogate.referenceMode,'current_schedule')
-    model.surrogate = leo_build_service_surrogates(model.problem,'current_schedule',model.problem.precheck.witness);
-else
-    model.surrogate = leo_build_service_surrogates(model.problem,p.surrogate.referenceMode);
-end
-model.exampleBounds = leo_evaluate_service_bounds(model.problem,model.surrogate,model.xExample);
-model.timings.proxySeconds = toc(proxyTimer);
-else
-    model.timings.proxySeconds=0;
-end
+assert(~prepareProxy,'V16 builds proxies inside each coordinated search.');
+model.surrogate=[]; model.exampleBounds=[]; model.timings.proxySeconds=0;
 model.timings.totalBuildSeconds = toc(modelTimer);
 fprintf('K=%d, T=%d, M=%d, Na=%d, NB=%d, L=%d\n',p.system.K, ...
     p.time.nSlots,model.resources.nResources,p.array.nElements, ...
@@ -75,17 +64,5 @@ if leo_requires_full_qos(model.problem.data)
 else
     fprintf('Stage-2 template fairness floor from feasibility witness: %.6g (not optimized).\n',model.problem.stage2Example.s0);
 end
-if prepareProxy
-    fprintf('Tangent/chord built (%s); uniform proxy-optimum fairness-gap bound <= %.6g.\n', ...
-        model.surrogate.referenceMode,model.surrogate.error.optimalFairnessGapBound);
-else
-    fprintf('Quadratic proxy deferred: original-objective baselines receive no proxy.\n');
-end
-if p.method.enabled
-    model.method = leo_solve_schedule(model.problem,model.surrogate,p.method,model.xExample);
-end
-if p.exhaustive.enabled
-    model.exhaustive = leo_exhaustive_search(model.problem,p.exhaustive);
-    % 问题模板的 solved 字段不冒充求解结果；结果统一保存在 model.exhaustive。
-end
+fprintf('Quadratic proxy deferred: original-objective baselines receive no proxy.\n');
 end

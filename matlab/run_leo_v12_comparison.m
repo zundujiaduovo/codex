@@ -4,7 +4,7 @@ function [report,files] = run_leo_v12_comparison(directory,overrides,render,rele
 if nargin<1, directory=fullfile('results','v12_uncapped_lexicographic'); end
 if nargin<2, overrides=struct(); end
 if nargin<3, render=true; end
-if nargin<4, releaseTag='V12'; end
+if nargin<4, releaseTag='V16'; end
 release=leo_lexicographic_release(releaseTag);
 o=leo_v12_options(overrides); protocol=rmfield(o,'prepareOnly');
 if isempty(regexp(directory,'^([A-Za-z]:[\\/]|[\\/])','once')), directory=fullfile(pwd,directory); end
@@ -30,7 +30,14 @@ fprintf('K=%d, Na=%d (%dx%d), NB=%d, L=%d; admission %.0f%%; nRF=%d, p0=%.3g W, 
     o.parameters.array.nBeams,o.parameters.system.maxStreams, ...
     100*o.parameters.system.maxStreams/o.parameters.array.nBeams,o.parameters.system.nRF, ...
     o.parameters.system.streamPowerW,o.parameters.system.maxPowerW);
-if leo_iteration_only(o.method)
+if isfield(o.method,'convergence') && o.method.convergence.enabled
+    c=o.method.convergence;
+    fprintf('%d seed(s), %d methods; UNTIL OBJECTIVE CONVERGENCE, no time or maximum outer-iteration limit.\n',numel(o.seeds),numel(experiment.methods));
+    fprintf('Convergence: %d successive windows of %d rounds, each ORIGINAL objective gain <= max(%.3g, %.3g*anchor).\n', ...
+        c.stableWindows,c.windowRounds,c.absoluteTolerance,c.relativeTolerance);
+    fprintf('Proxy phase minimum rounds: %d/%d; Tabu phase minimum rounds: %d/%d. Greedy ends when no improving addition exists.\n', ...
+        c.minProxyFairnessRounds,c.minProxyThroughputRounds,c.minOriginalFairnessRounds,c.minOriginalThroughputRounds);
+elseif leo_iteration_only(o.method)
     fprintf('%d search seed(s), %d methods; FIXED MAXIMUM ITERATIONS, no wall-clock/gap/stagnation stopping.\n',numel(o.seeds),numel(experiment.methods));
     fprintf('Tabu: %d fairness + %d throughput rounds. SB/Local/Proxy+Tabu: %d fairness + %d throughput price rounds.\n', ...
         o.method.originalFairnessRounds,o.method.originalThroughputRounds,o.method.fairnessRounds,o.method.throughputRounds);
@@ -43,7 +50,7 @@ if isfield(o.method,'stopping') && o.method.stopping.enabled
     fprintf('Auto stop: valid original-model gap <= %.3g%%; or %.3g s without %.3g%% cumulative improvement (min %.3g s and %d native iterations/phase).\n', ...
         100*s.relativeGap,s.patienceSeconds,100*s.relativeImprovement,s.minPhaseSeconds,s.minIterations);
 end
-if any(strcmp(release.tag,{'V13','V14','V15'}))
+if any(strcmp(release.tag,{'V13','V14','V15','V16'}))
     if isfield(o.method,'refinement')
         r=o.method.refinement;
         fprintf('Proxy refinement: pool=%d (max %d per call), bottleneck candidates=%d (band %.4g), candidate tangent refresh=%d (gap trigger %.4g demand ratio).\n', ...
@@ -57,9 +64,9 @@ if any(strcmp(release.tag,{'V13','V14','V15'}))
     end
     leo_print_bound_explanation(struct('problemData',experiment.problemData,'parameters',o.parameters));
 end
-if any(strcmp(release.tag,{'V14','V15'}))
-    fprintf('V14 fairness: simplex weights with smoothed ORIGINAL deficits; no bang-bang auxiliary fairness variable.\n');
-    fprintf('V14: shared 2-3 block coordination, gain-error trust region, contextual candidate pool; SB kernel=%s.\n',o.method.coordination.sbKernel);
+if any(strcmp(release.tag,{'V14','V15','V16'}))
+    fprintf('Fairness: simplex weights with smoothed ORIGINAL deficits; no bang-bang auxiliary fairness variable.\n');
+    fprintf('Coordination: shared 2-3 block coordination, gain-error trust region, contextual candidate pool; SB kernel=%s.\n',o.method.coordination.sbKernel);
 end
 fprintf('Output: %s\n',directory);
 originalModel=struct('problemData',experiment.problemData,'parameters',experiment.modelSnapshot.parameters,'protocol',protocol,'version',experiment.version);
@@ -68,6 +75,10 @@ metadata=rmfield(experiment,{'modelSnapshot','problemData'});
 if leo_iteration_only(o.method)
     metadata.terminationMode='iteration_limits'; metadata.protocol.budgetSeconds=[];
     metadata.budgetNote='No time limit; MATLAB protocol stores Inf. Fixed iteration counts are in protocol.method.';
+end
+if isfield(o.method,'convergence') && o.method.convergence.enabled
+    metadata.terminationMode='objective_convergence';
+    metadata.budgetNote='No time or maximum outer-iteration cap. Finite round fields are compatibility placeholders; convergence options govern stopping.';
 end
 fid=fopen(fullfile(directory,'experiment_protocol.json'),'w','n','UTF-8'); assert(fid>=0);
 fprintf(fid,'%s',jsonencode(metadata)); fclose(fid);

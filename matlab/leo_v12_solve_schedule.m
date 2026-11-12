@@ -36,8 +36,8 @@ if options.verbose
         initial.bestName,initial.service.fairness,initial.service.totalBits/1e6);
 end
 fairBudget = budget; fairBudget.seconds = options.maxSeconds*options.fairnessBudgetFraction;
-phaseSolver=@leo_v12_run_price_phase;
-if isfield(options,'coordination'), phaseSolver=@leo_v14_run_price_phase; end
+assert(isfield(options,'coordination'),'V16 requires the shared coordination engine.');
+phaseSolver=@leo_v14_run_price_phase;
 stage1 = phaseSolver(problem,proxy,cache,'fairness',initial,options,fairBudget);
 % 第二阶段在阶段 1 保留日程处相切；正公平时它也是代理可行点。
 % 周期模式 s0=0 时有符号代理可能更严格，仍保留原式可行日程验收。

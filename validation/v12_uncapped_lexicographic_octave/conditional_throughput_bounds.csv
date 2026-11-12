@@ -1,4 +1,0 @@
-method,seed,fairnessFloor,methodTotalBits,conditionalLowerBits,conditionalUpperBits,relativeIntervalGap,pricingComplete,status,scope
-"original_tabu",71669974,1.8111631759686624,102563907.905397,102563907.905397,109020464.82186401,0.059223347900936037,1,"time_limit","Conditional sum(G) at this EXACT attained stage-1 floor; totals at different floors are not the same secondary problem."
-"sb_v12_lexicographic",71669974,1.4384594901133267,100998133.74074943,102563907.905397,115577106.06702948,0.11259321680961118,1,"time_limit","Conditional sum(G) at this EXACT attained stage-1 floor; totals at different floors are not the same secondary problem."
-"local_v12_lexicographic",71669974,1.6012652100474849,100073343.05739723,102563907.905397,114612170.92877652,0.10512202086169954,1,"time_limit","Conditional sum(G) at this EXACT attained stage-1 floor; totals at different floors are not the same secondary problem."

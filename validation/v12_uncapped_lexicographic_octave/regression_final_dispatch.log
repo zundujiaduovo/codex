@@ -1,7 +1,0 @@
-PASS: V12 uncapped lexicographic counterexample, >1 phase search, strict stage-2 floor, MILP cap removal, original-model bounds, risk margins and zero-fairness branching.
-PASS: 7 benchmark test groups; SKIP: 0 (MILP backend present: 1).
-PASS: 9 plotting data and iteration logging test groups (no graphics backend required).
-Quality/time metrics saved in /tmp/oct-wK6GbP; no algorithm rerun.
-PASS: frozen V8 dispatch/RNG, paired controls, hand-calculated quality/time metrics, missing and late targets, held returns and off-reference proxy audit.
-PASS: V11 paired bootstrap/sign/Holm, missing pairs, RNG, duplicate seeds, V10 trace equivalence and matched engine controls.
-error: ignoring const execution_exception& while preparing to exit
