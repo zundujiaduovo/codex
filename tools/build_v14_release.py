@@ -10,7 +10,8 @@ NAME = 'LEO_QoS_Comparison_v14_from_v13_fairness_coordination'
 
 def build():
     documents = DOCS | {'V13_FROM_V12.md', 'V13_ADAPTIVE_STOPPING.md',
-        'V13_SCALING_DIAGNOSIS.md', 'V13_128ANT_ITERATIONS.md', 'V13_PROXY_REFINEMENT.md', 'V14_FROM_V13.md'}
+        'V13_SCALING_DIAGNOSIS.md', 'V13_128ANT_ITERATIONS.md', 'V13_PROXY_REFINEMENT.md',
+        'V14_FROM_V13.md', 'INSTALL_V14_UPDATE.md'}
     paths = {ROOT / name for name in documents}
     for pattern in ('*.m', 'matlab/*.m', 'tools/*.py'):
         paths.update(ROOT.glob(pattern))
@@ -35,6 +36,19 @@ def build():
                          'RUN_V14_STAGE2_REPAIR.m', 'matlab/leo_v14_trust_path.m'):
             assert NAME + '/' + relative in bundle.namelist()
     print(f'{archive.name}: {len(sources)} source/document files, {archive.stat().st_size} bytes; no results.')
+    update = ROOT / 'V14_complete_source_update.zip'
+    with zipfile.ZipFile(update, 'w', zipfile.ZIP_DEFLATED, compresslevel=7) as bundle:
+        for path in sources:
+            bundle.write(path, path.relative_to(ROOT).as_posix())
+    with zipfile.ZipFile(update) as bundle:
+        assert bundle.testzip() is None
+        for line in manifest.splitlines():
+            digest, relative = line.split('  ', 1)
+            assert hashlib.sha256(bundle.read(relative)).hexdigest() == digest
+        assert 'matlab/leo_v14_trust_path.m' in bundle.namelist()
+        assert 'matlab/run_leo_v14_stage2_repair.m' in bundle.namelist()
+        assert not any(name.startswith('results/') for name in bundle.namelist())
+    print(f'{update.name}: flat complete source update, {update.stat().st_size} bytes; no results.')
 
 
 if __name__ == '__main__':
