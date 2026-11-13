@@ -26,7 +26,7 @@ def main():
         batches=[list(range(first, min(first+8, r))) for first in range(0, r, 8)]
         assert sum(batches, [])==list(range(r))
     root=Path(__file__).resolve().parents[1]
-    settings=(root/'V16_SETTINGS.m').read_text()
+    settings=(root/'V17_SETTINGS.m').read_text()
     assert "'sbTrajectories',64" in settings and "'enabled',true" in settings
     assert 'while unlimited || k<rounds' in (root/'matlab/leo_v14_run_price_phase.m').read_text()
     assert 'while unlimited || iteration<phaseCap' in (root/'matlab/leo_solve_original_search.m').read_text()

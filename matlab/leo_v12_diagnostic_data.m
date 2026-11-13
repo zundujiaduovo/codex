@@ -26,6 +26,7 @@ for j=1:numel(report.records)
                 n=k; increment=h.recoveryEvaluations(k)+h.blockwiseEvaluations(k)+1;
                 if isfield(h,'candidateGapEvaluations'), increment=increment+h.candidateGapEvaluations(k); end
                 if isfield(h,'jointEvaluations'), increment=increment+h.jointEvaluations(k); end
+                if isfield(h,'fairnessRescueEvaluations'), increment=increment+h.fairnessRescueEvaluations(k); end
                 cumulative=cumulative+increment; candidates=cumulative;
                 complete=double(h.completePriceRound(k)); solves=h.resourcesSolved(k); steps=h.sbSteps(k);
                 terms=NaN; if isfield(h,'denseDynamicsTerms'), terms=h.denseDynamicsTerms(k); end
@@ -33,6 +34,7 @@ for j=1:numel(report.records)
                 n=h.iteration(k); cumulative=h.evaluations(k)-h.evaluations(1);
                 complete=NaN; solves=0; steps=0; terms=0;
             end
+            if isfield(h,'fairnessFloor'), floorValue=h.fairnessFloor(k); end
             service=struct('fairness',h.savedFairness(k),'totalBits',h.savedTotalBits(k));
             add(n,h.elapsedSeconds(k),service,cumulative,complete,solves,steps,terms,'iteration');
         end
@@ -58,7 +60,7 @@ for j=1:numel(report.records)
             row.completePriceRounds=sum(h.completePriceRound);
             row.innerSeconds=total(h,'innerSeconds'); row.originalSelectionSeconds=total(h,'originalSelectionSeconds');
             row.recoverySeconds=total(h,'recoverySeconds'); row.proxyRefreshSeconds=total(h,'proxyRefreshSeconds');
-            row.proxyRefreshes=max(0,numel(stage.proxyEpochFairnessErrorBounds)-1);
+            row.proxyRefreshes=nnz(h.proxyRefreshSeconds>0);
         end
         data.phases=leo_append_struct(data.phases,row);
     end

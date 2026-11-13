@@ -63,6 +63,6 @@ for j=1:numel(control.runs)
     h=run.stage.history; p=leo_v14_series(p,run.method,h.elapsedSeconds,h.savedTotalBits/1e6);
 end
 p.reference=control.upperBits/1e6; p.referenceLabel='Conditional valid upper (attainability unproved)';
-spec=struct('name','v14_common_floor_throughput','title','V14 independent stage-2 comparison | shared initialization saved in MAT','rows',1,'cols',1,'panels',p);
+spec=struct('name','v17_common_floor_throughput','title','V17 fixed-floor stage-2 control (fairness promotion disabled) | shared initialization saved in MAT','rows',1,'cols',1,'panels',p);
 files=leo_v14_save_specs(spec,directory,'common_floor_specs',render);
 end

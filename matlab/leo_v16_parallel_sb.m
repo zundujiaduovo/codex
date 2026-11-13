@@ -9,7 +9,7 @@ if useWorkers
     pool=gcp('nocreate');
     if isempty(pool), runtime=leo_v16_prepare_parallel(p); workers=runtime.workers; backend=runtime.backend;
     else, workers=pool.NumWorkers; backend=class(pool); end
-    assert(workers>=2,'V16 parallel mode needs two or more workers.');
+    assert(workers>=2,'V17 parallel mode needs two or more workers.');
 end
 count=ceil(R/p.batchSize); taskOptions=cell(1,count); taskSeeds=cell(1,count); ranges=cell(1,count);
 randomSeeds=randi(2^31-1,1,count); answers=cell(1,count);
@@ -31,12 +31,14 @@ end
 r=answers{1}; r.bits=zeros(q.nBits,R); r.energy=zeros(1,R);
 if isfield(r,'legalGroups'), r.legalGroups=false(q.nUsers,R); end
 steps=[]; r.steps=0; r.trajectorySteps=0; r.denseTerms=0; r.restarts=0;
+r.uniqueRepairs=0; r.repairCacheHits=0;
 for b=1:count
     a=answers{b}; ids=ranges{b}; r.bits(:,ids)=a.bits; r.energy(ids)=a.energy;
     if isfield(a,'legalGroups'), r.legalGroups(:,ids)=a.legalGroups; end
     steps=union(steps,a.history.step); r.steps=max(r.steps,a.steps);
     r.trajectorySteps=r.trajectorySteps+a.trajectorySteps; r.denseTerms=r.denseTerms+a.denseTerms;
     r.restarts=r.restarts+a.restarts;
+    if isfield(a,'uniqueRepairs'), r.uniqueRepairs=r.uniqueRepairs+a.uniqueRepairs; r.repairCacheHits=r.repairCacheHits+a.repairCacheHits; end
 end
 % Pool all per-trajectory energies; median-of-batch-medians would be incorrect.
 allEnergy=zeros(R,numel(steps));

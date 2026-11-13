@@ -16,7 +16,9 @@ for j=1:numel(report.records)
         for name={'lambdaSum','trustRadius','gainPredictionErrors','rankingReversals','jointAccepted','jointFairnessGain', ...
                 'jointEvaluations','skippedExtraCalls','sbRestarts','sbTrajectorySteps','denseDynamicsTerms','repairLoss', ...
                 'novelCandidates','trustPathCandidates','trustBridgeCandidates','trustRejectedCandidates','trustEscape','stage2StagnantRounds', ...
-                'parallelWorkers','parallelTasks','stableWindows','lastWindowGain'}
+                'parallelWorkers','parallelTasks','stableWindows','lastWindowGain', ...
+                'fairnessRescueEvaluations','fairnessRescueSeconds','fairnessRescueGain', ...
+                'gainAuditCandidates','calibrationBefore','calibrationAfter','uniqueRepairs','repairCacheHits'}
             value=NaN; if isfield(h,name{1}), value=h.(name{1})(k); end
             row.(name{1})=value;
         end
@@ -24,8 +26,8 @@ for j=1:numel(report.records)
     end
  end
 end
-leo_write_struct_csv(fullfile(directory,'v14_candidate_source_evidence.csv'),rows);
-leo_write_struct_csv(fullfile(directory,'v14_coordination_rounds.csv'),rounds);
+leo_write_struct_csv(fullfile(directory,'v17_candidate_source_evidence.csv'),rows);
+leo_write_struct_csv(fullfile(directory,'v17_coordination_rounds.csv'),rounds);
 boundRows=struct([]);
 c=report.fairnessCertificate;
 if isfield(c,'coupledRelaxation')
@@ -39,7 +41,7 @@ for j=1:numel(saved.cache.bounds)
         boundRows=leo_append_struct(boundRows,bound_row(t.coupledRelaxation,t.cardinalityFloorBound.upperBits,t.upperBits));
     end
 end
-leo_write_struct_csv(fullfile(directory,'v14_bound_components.csv'),boundRows);
+leo_write_struct_csv(fullfile(directory,'v17_bound_components.csv'),boundRows);
 end
 function row=bound_row(b,previous,merged)
 row=struct('phase',b.phase,'floor',b.floor,'previousValidUpper',previous,'coupledDualUpper',b.upper, ...

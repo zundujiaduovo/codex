@@ -1,5 +1,5 @@
 function c=leo_v16_initial_bounds(report,phase,s0)
-% Fast valid seed interval. Full original certification is RUN_V16_BOUNDS.
+% Fast valid seed interval. Full original certification is RUN_V17_BOUNDS.
 if nargin<3, s0=0; end
 d=report.problemData; K=d.shape(1); M=d.shape(2); lower=-Inf; bestX=[]; best=[];
 for j=1:numel(report.records)
@@ -25,7 +25,7 @@ c=struct('lower',lower,'upper',upper,'incumbentX',bestX,'incumbentService',best,
     'gapTargetMet',false,'status','initial_relaxation_only','nodesProcessed',0,'openNodeCount',1, ...
     'pricingComplete',false,'branchTrace',struct([]),'elapsedSeconds',NaN,'problemDataSnapshot',d, ...
     'options',struct('absoluteGap',1e-6,'relativeGap',.001),'boundSchemaVersion',3, ...
-    'scope','Initial ORIGINAL relaxation interval. Independent branch-and-price can tighten it with RUN_V16_BOUNDS.');
+    'scope','Initial ORIGINAL relaxation interval. Independent branch-and-price can tighten it with RUN_V17_BOUNDS.');
 if strcmp(phase,'fairness')
     c.cardinalityRelaxation=b; c.coarseUpper=leo_fairness_limit(d);
 else

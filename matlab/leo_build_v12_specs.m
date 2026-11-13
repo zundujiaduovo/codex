@@ -34,11 +34,11 @@ p(5).reference=1; p(5).referenceLabel='QoS demand reference (auxiliary, not fair
 p(1).note='Uncapped fairness: s=1 is not a stopping target. A certified global interval and attained method fairness are distinct.';
 p(2).note='Each method holds its own attained s0. Compare secondary service as the same problem only when the floors are the same.';
 p(3).note='Real saved checkpoints. No cap at 1, no fabricated plateau or extension after stopping.';
-p(4).note='During stage 1 fairness has priority over total service. Stage 2 preserves the attained stage-1 floor.';
+p(4).note='During stage 1 fairness has priority over total service. Stage 2 promotes higher fairness and returns to stage 1; final throughput is conditional on the final attained floor.';
 p(5).note='Services are accumulated over all slots before taking user ratios. Instantaneous per-slot fairness is not the objective.';
 p(6).note='Conditional original-model sum-service bounds; these are not certificates for the primary max-min objective.';
 titleText=sprintf('%s | uncapped max-min first, sum service second | seed %.0f',release.tag,seed);
-if any(strcmp(release.tag,{'V13','V14','V15','V16'}))
+if any(strcmp(release.tag,{'V13','V14','V15','V17'}))
     pModel=report.parameters;
     titleText=sprintf('%s | K=%d, Na=%d, NB=%d, L=%d | uncapped max-min first, sum second | seed %.0f', ...
         release.tag,pModel.system.K,pModel.array.nElements,pModel.array.nBeams,pModel.system.maxStreams,seed);

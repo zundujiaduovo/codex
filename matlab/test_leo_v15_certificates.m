@@ -1,7 +1,7 @@
 function test_leo_v15_certificates()
 % Exhaustive original binary groups verify interrupted/full pricing and resume.
 previous=rng; cleanup=onCleanup(@()rng(previous)); rng(712,'twister'); %#ok<NASGU>
-[problem,report]=fixture(); d=problem.data; K=d.shape(1); M=d.shape(2);
+[problem,report]=leo_test_problem(); d=problem.data; K=d.shape(1); M=d.shape(2);
 o=leo_v15_bound_options(struct('pricingNodesPerCall',1,'verbose',false));
 for trial=1:15
     w=rand(K,1); fixed=-ones(K,1,'int8');
@@ -57,20 +57,4 @@ changed=report; changed.problemData.design.signalW(1,1)=changed.problemData.desi
 rejected=false; try, leo_v15_certificate(changed,fullfile(folder,'fair'),'fairness',0,settings); catch, rejected=true; end
 assert(rejected,'A checkpoint with a different physical model must be rejected.');
 fprintf('PASS: V15 true-service interrupted/full pricing, beam conflicts, zero weights, monotone bounds, checkpoint resume, global fairness and conditional throughput vs exhaustive enumeration.\n');
-end
-function [problem,report]=fixture()
-p=leo_default_parameters(); p.problem.objectiveMode='lexicographic_max_min'; p.problem.requireFullQos=false;
-p.statistics.serviceModel='slot_union'; p.system.K=4; p.system.maxStreams=2;
-p.system.bandwidthHz=1e6; p.system.qosTargetBits=[.3;.4;.5;.6]*1e6;
-p.time.nSlots=4; p.time.blockSlots=2; p.time.slotDurationS=.5;
-p.time.baseOverheadS=0; p.time.configOverheadS=0; p=leo_validate_parameters(p);
-resources=leo_build_resources(p); b.available=true(4,2); b.index=repmat([1;1;2;3],1,2);
-design.signalW=[1,.2,3,1;4,.8,2,.4;.5,2,.6,3;1,2,3,4];
-design.noiseW=repmat([1,2,1.5,3],4,1); design.beamPowerW=zeros(4,3,4); design.serviceModel='slot_union';
-design.serviceScale=[.8;.9;.85;.95]; design.serviceMarginBits=[.01;.02;.01;.03]*1e6;
-for t=1:4, design.beamPowerW(:,:,t)=[2,5,3;2,1,4;5,1,2;3,4,5]*(.1+.01*t); end
-problem=leo_form_problem(p,resources,b,design);
-report=struct('problemData',problem.data,'parameters',p, ...
-    'records',struct('method','witness','seed',1,'status','completed'), ...
-    'solutions',{{struct('x',false(4,2))}});
 end

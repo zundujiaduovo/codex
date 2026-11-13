@@ -1,2 +1,2 @@
-% V16: parallel64 SB, no time/outer iteration cap; stop on measured convergence.
-RUN_V16_COMPARISON
+% V17: strict fairness archive, fairness rescue, calibrated proxy, parallel bSB.
+RUN_V17_COMPARISON

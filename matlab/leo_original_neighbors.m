@@ -1,10 +1,16 @@
-function neighbors = leo_original_neighbors(problem,x,service,maxEvaluations,roundIndex,budget)
+function neighbors = leo_original_neighbors(problem,x,service,maxEvaluations,roundIndex,budget,randomize)
 %LEO_ORIGINAL_NEIGHBORS 第 13.3 节：生成原目标可行增删/替换及跨块交换邻域。
 % 输入：完整可行日程及缓存服务、评价/时间预算；输出候选及其原始累计服务。
 % 只重算受影响块内至多 L 位用户，价格代理不参与计分。
+if nargin<7, randomize=false; end
 data = problem.data; M = data.shape(2); neighbors = struct('x',{},'service',{},'changed',{});
 [~,users] = sort(service.demandRatio,'ascend');
+if randomize
+    weak=users(1:min(8,numel(users))); rest=users(min(8,numel(users))+1:end);
+    users=[weak(randperm(numel(weak)));rest(randperm(numel(rest)))];
+end
 order = mod((0:M-1)+roundIndex-1,M)+1;
+if randomize, order=randperm(M); end
 localLimit = floor(.75*maxEvaluations); if M==1, localLimit = maxEvaluations; end
 for m = order
     selected = users(x(users,m)); absent = users(data.available(users,m) & ~x(users,m));

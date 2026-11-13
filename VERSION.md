@@ -1,11 +1,10 @@
-# V16 — based on V15 97afd6c
+# V17 — based on V16 4b5ea77
 
-Branch: `leo-qos-v16-parallel64-until-convergence`.
-Annotated version tag: `v16-parallel64-convergence`.
+Branch: `leo-qos-v17-fairness-first-proxy-parallel-sb`.
+Annotated tag: `v17-fairness-first-parallel64`.
 
-64 SB trajectories, actual CPU worker-pool parallel search; no time or outer-iteration cap for the four main search methods.
-Empirical convergence is measured on the original objective over full iteration windows and is separate from global certification.
-The latest normalized fairness coordination, joint blocks, trust-region candidate repair and original-service acceptance remain enabled.
-Original-service branch-and-price certificates, checkpointing and controls are retained. Historical entries, bundles and results are removed from this branch.
-
-See [V16_CHANGELOG.md](V16_CHANGELOG.md).
+Strict lexicographic incumbent retention; fairness promotions restart stage 1.
+Shared original-model fairness escapes are counted separately from QUBO solving.
+Counterfactual tangents, candidate-pool gain audits and frozen-pool tangent calibration.
+64-trajectory CPU parallel bSB, repeated-repair caching, paired serial/parallel controls and bounded-search QUBO references.
+Original-model certificates remain independent. See [V17_CHANGELOG.md](V17_CHANGELOG.md).

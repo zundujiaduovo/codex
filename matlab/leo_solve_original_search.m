@@ -14,7 +14,11 @@ initial = leo_initial_schedules(problem,provided,options,budget); best = initial
 data = problem.data; evaluations = 0; strict = leo_requires_full_qos(data);
 cache = leo_prepare_upper_bounds(data);
 upperF = leo_original_upper_bound(data,cache,ones(data.shape(1),1)/data.shape(1),'fairness');
+savedStages={[],[]}; cycle=0;
+while true
+cycle=cycle+1;
 for phaseIndex = 1:2
+    escapeEvents=struct([]); escapeAttempt=0;
     auditMoves={}; auditEnabled=isfield(options,'audit') && options.audit.enabled;
     phaseEvaluationStart=evaluations;
     localBudget = budget;
@@ -31,6 +35,9 @@ for phaseIndex = 1:2
         upperV = leo_original_upper_bound(data,cache,zeros(data.shape(1),1),'throughput',s0);
     end
     phaseStart = best.service; phaseIterations = 0;
+    escapeAnchor=phaseStart.fairness;
+    acceptPhase=leo_v17_accept_phase(phase,options);
+    promote=phaseIndex==2 && strcmp(acceptPhase,'fairness');
     [convergence,~]=leo_v16_convergence_step(options,phase,best.service,0,[],'original');
     bound=upperF.value; if phaseIndex==2, bound=upperV.value; end
     [stopping,stopStatus]=leo_search_stopping(options,phase,best.service,bound,toc(budget.timer),0);
@@ -41,10 +48,10 @@ for phaseIndex = 1:2
         % 尚未达标时禁止按降低后的门槛优化吞吐。
     elseif strcmp(kind,'greedy')
         start = best;
-        if phaseIndex==1, start.x = false(data.shape); start.service = problem.evaluate(start.x); end
+        if phaseIndex==1 && cycle==1, start.x = false(data.shape); start.service = problem.evaluate(start.x); end
         context=[];
         if stopping.options.enabled, context=struct('options',options,'upper',bound,'incumbent',phaseStart); end
-        candidate = leo_original_greedy(problem,start,phase,s0,localBudget,context);
+        candidate = leo_original_greedy(problem,start,acceptPhase,s0,localBudget,context);
         stopStatus=candidate.stopStatus;
         % 构造轨迹与共同初始化择优，记录当时已知可行日程的成绩。
         construction = candidate.history; incumbent = phaseStart;
@@ -62,7 +69,7 @@ for phaseIndex = 1:2
         end
         phaseIterations = candidate.iterations; iterationKind = candidate.iterationKind;
         evaluations = evaluations+candidate.evaluations;
-        if leo_service_is_better(candidate.service,best.service,phase,s0), best = candidate; end
+        if leo_service_is_better(candidate.service,best.service,acceptPhase,s0), best = candidate; end
     elseif ~strcmp(kind,'initial')
         current = best; tabuUntil = zeros(data.shape); stagnant = 0;
         iterationKind = [kind,'_round'];
@@ -74,18 +81,19 @@ for phaseIndex = 1:2
             before = best.service;
             if auditEnabled, currentBefore=current; end
             if strcmp(kind,'exchange')
-                candidate = leo_recover_schedule(problem,current.x,phase,s0,options,iteration,localBudget);
+                candidate = leo_recover_schedule(problem,current.x,acceptPhase,s0,options,iteration,localBudget);
                 evaluations = evaluations+candidate.evaluations;
-                if leo_service_is_better(candidate.service,current.service,phase,s0), current = candidate; end
+                if leo_service_is_better(candidate.service,current.service,acceptPhase,s0), current = candidate; end
             else
-                pool = leo_original_neighbors(problem,current.x,current.service,options.recoveryEvaluations,iteration,localBudget);
+                randomize=isfield(options,'searchPolicy') && options.searchPolicy.randomizeNeighbors && mod(iteration,5)==0;
+                pool = leo_original_neighbors(problem,current.x,current.service,options.recoveryEvaluations,iteration,localBudget,randomize);
                 evaluations = evaluations+numel(pool); selected = 0;
                 for k = 1:numel(pool)
                     s = pool(k).service;
                     if strcmp(phase,'throughput') && any(s.demandRatio<s0), continue; end
-                    aspiration = leo_service_is_better(s,best.service,phase,s0);
+                    aspiration = leo_service_is_better(s,best.service,acceptPhase,s0);
                     if any(tabuUntil(pool(k).changed)>iteration) && ~aspiration, continue; end
-                    if selected==0 || leo_service_is_better(s,pool(selected).service,phase,s0), selected = k; end
+                    if selected==0 || leo_service_is_better(s,pool(selected).service,acceptPhase,s0), selected = k; end
                 end
                 if selected>0
                     candidate = pool(selected); candidate.service = problem.evaluate(candidate.x);
@@ -95,19 +103,25 @@ for phaseIndex = 1:2
                     end
                 end
             end
-            if auditEnabled && strcmp(kind,'tabu') && leo_service_is_better(current.service,currentBefore.service,phase,s0)
+            if auditEnabled && strcmp(kind,'tabu') && leo_service_is_better(current.service,currentBefore.service,acceptPhase,s0)
                 move=struct('iteration',iteration,'phase',phase,'floor',s0,'xBefore',currentBefore.x, ...
                     'xAfter',current.x,'seconds',toc(budget.timer));
                 auditMoves{end+1}=move;
                 if numel(auditMoves)>options.audit.tabuMoves, auditMoves(1)=[]; end
             end
-            if leo_service_is_better(current.service,best.service,phase,s0), best = current; end
+            if leo_service_is_better(current.service,best.service,acceptPhase,s0), best = current; end
+            if phaseIndex==1 && best.service.fairness-escapeAnchor>max(conv.absoluteTolerance,conv.relativeTolerance*abs(escapeAnchor))
+                escapeAttempt=0; escapeAnchor=best.service.fairness;
+            end
             phaseIterations = iteration;
             history = leo_record_search_step(history,best.service,iteration,toc(budget.timer),evaluations);
             if options.verbose && (iteration==1 || mod(iteration,100)==0 || iteration==phaseCap)
                 limit=sprintf('%d',phaseCap); if unlimited, limit='until-convergence'; end
                 fprintf('  %s %-10s %d/%s: fairness=%.9g, total=%.6g Mbit\n', ...
                     kind,phase,iteration,limit,best.service.fairness,best.service.totalBits/1e6);
+            end
+            if promote && best.service.fairness>s0
+                stopStatus='fairness_promoted_return_to_stage1'; break;
             end
             [convergence,converged]=leo_v16_convergence_step(options,phase,best.service,iteration,convergence,'original');
             leo_v16_save_progress(options,phase,best.x,best.service,history,convergence,iteration);
@@ -116,15 +130,36 @@ for phaseIndex = 1:2
                     convergence.stableWindows,conv.stableWindows,convergence.lastWindowGain, ...
                     convergence.lastWindowTolerance,convergence.minimumRounds);
             end
-            if converged, stopStatus='objective_plateau'; break; end
+            if converged && phaseIndex==1 && isfield(options,'searchPolicy') && escapeAttempt<options.searchPolicy.fairnessEscapes
+                escapeAttempt=escapeAttempt+1;
+                rescue=leo_v17_fairness_escape(problem,best,options,escapeAttempt,localBudget);
+                evaluations=evaluations+rescue.evaluations; escapeEvents=leo_append_struct(escapeEvents,rescue.event);
+                if leo_service_is_better(rescue.service,best.service,'fairness',0)
+                    best=rescue;
+                    if best.service.fairness-escapeAnchor>max(conv.absoluteTolerance,conv.relativeTolerance*abs(escapeAnchor))
+                        escapeAttempt=0; escapeAnchor=best.service.fairness;
+                    end
+                end
+                current=best; tabuUntil(:)=0;
+                history=leo_record_search_step(history,best.service,iteration,toc(budget.timer),evaluations);
+                [convergence,~]=leo_v16_convergence_step(options,phase,best.service,iteration,[],'original');
+                if options.verbose, fprintf('  V17 fairness rescue: gain %.9g, %d original evaluations; continue fairness search.\n',rescue.event.gain,rescue.evaluations); end
+                continue;
+            end
+            if converged
+                stopStatus='objective_plateau'; if phaseIndex==1, stopStatus='objective_plateau_after_escapes'; end
+                break;
+            end
             [stopping,stopStatus]=leo_search_stopping(options,phase,best.service,bound,toc(budget.timer),iteration,stopping);
             if ~isempty(stopStatus), break; end
-            if leo_service_is_better(best.service,before,phase,s0), stagnant = 0;
+            if leo_service_is_better(best.service,before,acceptPhase,s0), stagnant = 0;
             else, stagnant = stagnant+1; end
             if strcmp(kind,'exchange') && stagnant>=max(2,data.shape(2)), break; end
         end
     end
     stage.x = best.x; stage.service = best.service; stage.initialService = phaseStart;
+    stage.fairnessFloor=s0; stage.escapeEvents=escapeEvents;
+    history.evaluations=history.evaluations-phaseEvaluationStart;
     stage.history = history; stage.iterations = phaseIterations; stage.iterationKind = iterationKind;
     stage.evaluations=evaluations-phaseEvaluationStart;
     stage.elapsedAtEndSeconds = toc(budget.timer);
@@ -136,13 +171,18 @@ for phaseIndex = 1:2
     elseif phaseIterations>=phaseCap, stage.status='iteration_limit'; end
     if strcmp(kind,'greedy') && phaseIterations>=phaseCap, stage.status='iteration_limit'; end
     if ~isempty(stopStatus), stage.status=stopStatus; end
+    if promote && best.service.fairness>s0, stage.status='fairness_promoted_return_to_stage1'; end
     if strict && phaseIndex==1 && phaseStart.fairness==1, stage.status='full_qos_already_met'; end
     if strict && phaseIndex==2 && best.service.fairness<1, stage.status='not_started_full_qos_not_found'; end
     [stopping,~]=leo_search_stopping(options,phase,best.service,bound,toc(budget.timer),phaseIterations,stopping);
     stopping.reason=stage.status; stopping.convergence=convergence; stage.stopping=stopping;
     if auditEnabled, stage.auditMoves=auditMoves; end
-    if phaseIndex==1, result.stage1 = stage;
-    else, result.stage2 = stage; result.fairnessFloor = s0; end
+    savedStages{phaseIndex}=leo_v17_merge_stage(savedStages{phaseIndex},stage,cycle);
+    if phaseIndex==1, result.stage1 = savedStages{1};
+    else, result.stage2 = savedStages{2}; result.fairnessFloor = s0; end
+end
+if ~strcmp(stage.status,'fairness_promoted_return_to_stage1') || leo_budget_expired(budget), break; end
+if options.verbose, fprintf('V17 %s: fairness promoted %.9g -> %.9g; return to stage 1 (cycle %d).\n',kind,s0,best.service.fairness,cycle+1); end
 end
 result.initial = initial; result.x = best.x; result.service = best.service; result.evaluations = evaluations;
 result.fairnessUpperBound = upperF.value; result.fairnessGap = max(0,upperF.value-best.service.fairness);
@@ -153,4 +193,6 @@ result.elapsedSeconds = toc(budget.timer); result.hardFeasible = true;
 result.usesExhaustiveSolution = false; result.optimal = false;
 result.usesQuadraticProxy=false;
 result.usesProvidedSchedule=~isempty(provided);
+result.options=options; result.phaseCycles=cycle;
+leo_v17_assert_archive(result);
 end

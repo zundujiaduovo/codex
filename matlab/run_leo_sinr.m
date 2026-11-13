@@ -32,7 +32,7 @@ model.exampleService = model.problem.evaluate(model.xExample);
 % 仅演示第二阶段构造；采用预检见证日程的公平值，不是阶段 1 最优值。
 model.problem.stage2Example = model.problem.makeStage2(model.problem.precheck.witness);
 model.timings.physicalProblemSeconds = toc(modelTimer);
-assert(~prepareProxy,'V16 builds proxies inside each coordinated search.');
+assert(~prepareProxy,'V17 builds proxies inside each coordinated search.');
 model.surrogate=[]; model.exampleBounds=[]; model.timings.proxySeconds=0;
 model.timings.totalBuildSeconds = toc(modelTimer);
 fprintf('K=%d, T=%d, M=%d, Na=%d, NB=%d, L=%d\n',p.system.K, ...

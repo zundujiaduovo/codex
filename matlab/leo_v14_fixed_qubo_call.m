@@ -3,9 +3,11 @@ function r=leo_v14_fixed_qubo_call(q,old,o,solver,seed)
 previous=rng; cleanup=onCleanup(@()rng(previous)); %#ok<NASGU>
 rng(seed,'twister'); budget=struct('timer',tic,'seconds',Inf,'iterationOnly',true); raw=old;
 steps=0; restarts=0; terms=0; encodedLegal=[]; extraGroups=[];
-if any(strcmp(solver,{'SB adaptive','SB fixed'}))
+if any(strcmp(solver,{'SB adaptive','SB adaptive serial','SB fixed'}))
     seeds=[leo_encode_group_bits(q,old),leo_encode_group_bits(q,false(q.nUsers,1))];
-    if isfield(o,'parallel') && o.parallel.enabled
+    if strcmp(solver,'SB adaptive serial')
+        sb=leo_v16_parallel_sb(q,o,seeds,'adaptive',false); terms=sb.denseTerms; restarts=sb.restarts;
+    elseif isfield(o,'parallel') && o.parallel.enabled
         kernel='adaptive'; if strcmp(solver,'SB fixed'), kernel='fixed'; end
         sb=leo_v16_parallel_sb(q,o,seeds,kernel); terms=sb.denseTerms; restarts=sb.restarts;
     elseif strcmp(solver,'SB adaptive')
@@ -44,6 +46,12 @@ r=struct('solver',solver,'seed',seed,'proxyScore',bestScore,'rawScore',max(rawSc
  'repairedScore',max(repaired),'polishedScore',max(polished),'repairLoss',mean(max(0,rawScore-repaired)), ...
  'polishGain',mean(polished-repaired),'rawLegalFraction',mean(legal),'rawEncodedLegalFraction',encodedFraction,'seconds',toc(budget.timer), ...
  'integrationSteps',steps,'sbRestarts',restarts,'denseTerms',terms,'selectedMask',char(double(best.')+'0'));
+r.uniqueRepairs=0; r.repairCacheHits=0; r.parallelTasks=0; r.parallelWorkers=0;
+if exist('sb','var')
+    for field={'uniqueRepairs','repairCacheHits','parallelTasks','parallelWorkers'}
+        if isfield(sb,field{1}), r.(field{1})=sb.(field{1}); end
+    end
+end
     function value=score(x)
         z=double(x); value=q.A.'*z-z.'*q.B*z/2;
     end

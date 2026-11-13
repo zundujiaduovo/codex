@@ -4,14 +4,17 @@ d=problem.data; K=d.shape(1); M=d.shape(2);
 c=leo_v14_coordination_options(o.coordination); o.coordination=c; isFair=strcmp(phase,'fairness');
 conv=leo_v16_convergence_options(); if isfield(o,'convergence'), conv=leo_v16_convergence_options(o.convergence); end
 unlimited=conv.enabled; convergence=[];
+acceptPhase=leo_v17_accept_phase(phase,o); promote=~isFair && strcmp(acceptPhase,'fairness');
+escapeAttempt=0; escapeEvents=struct([]);
 bestX=start.x; service=start.service; priceX=bestX; s0=0;
+escapeAnchor=service.fairness;
 lambda=ones(K,1)/K; rounds=o.fairnessRounds; initialStep=o.fairnessStep;
 if ~isFair, s0=service.fairness; lambda=zeros(K,1); rounds=o.throughputRounds; initialStep=o.throughputStep; end
 if ~isFair && isfinite(c.stage2Floor), s0=c.stage2Floor; assert(all(service.demandRatio>=s0)); end
 upper=leo_original_upper_bound(d,cache,lambda,phase,s0); initialUpper=upper.value; initialSeconds=toc(budget.timer);
 radius=c.trustInitial*ones(1,M); penalty=o.penaltyFactor*ones(1,M);
 fail=zeros(M,2); next=zeros(M,2); priceState=struct(); evidence=struct([]); snapshots={}; firstTrace=[];
-stagnantRounds=0;
+stagnantRounds=0; priceAge=0;
 checkpoints=point([],service,0,'initial'); epoch=1; errors=proxy.error.optimalFairnessGapBound; touch=proxy.referenceTouchMaxAbsBits;
 names={'sAux','step','priceFairness','priceTotalBits','savedFairness','savedTotalBits','upperBound','proxyEpoch', ...
  'innerImprovement','resourcesSolved','sbSteps','repairedCandidates','recoveryEvaluations','crossEvaluations','acceptedMoves', ...
@@ -22,7 +25,9 @@ names={'sAux','step','priceFairness','priceTotalBits','savedFairness','savedTota
  'jointEvaluations','jointAccepted','jointFairnessGain','gainPredictionErrors','rankingReversals','trustRadius', ...
  'skippedExtraCalls','sbRestarts','repairLoss','rawScore','repairedScore','polishedScore', ...
  'novelCandidates','trustPathCandidates','trustBridgeCandidates','trustRejectedCandidates','trustEscape','stage2StagnantRounds', ...
- 'parallelWorkers','parallelTasks','stableWindows','lastWindowGain'};
+ 'parallelWorkers','parallelTasks','stableWindows','lastWindowGain', ...
+ 'fairnessRescueEvaluations','fairnessRescueSeconds','fairnessRescueGain','gainAuditCandidates', ...
+ 'calibrationBefore','calibrationAfter','uniqueRepairs','repairCacheHits'};
 capacity=rounds; if unlimited, capacity=128; end
 for j=1:numel(names), history.(names{j})=zeros(1,capacity); end
 history.lambda=zeros(K,capacity); history.lambdaNext=zeros(K,capacity); history.lowerUserBits=zeros(K,capacity);
@@ -32,6 +37,7 @@ history.priceX=false(K,M,capacity); history.completePriceRound=false(1,capacity)
 k=0;
 while unlimited || k<rounds
     k=k+1;
+    priceAge=priceAge+1;
     if k>capacity
         capacity=capacity+128;
         for name=fieldnames(history).'
@@ -51,7 +57,7 @@ while unlimited || k<rounds
     order=mod((0:M-1)+k-1,M)+1;
     for m=order
         if leo_budget_expired(budget), break; end
-        ctx=struct('group',bestX(:,m),'service',service,'radius',radius(m),'phase',phase); local=o; local.penaltyFactor=penalty(m);
+        ctx=struct('group',bestX(:,m),'service',service,'radius',radius(m),'phase',phase,'weights',w); local=o; local.penaltyFactor=penalty(m);
         started=tic; inner=leo_v14_solve_resource(d,proxy.lower,m,w,priceX(:,m),local,budget,ctx); seconds=toc(started);
         main=inner; addwork(inner,seconds); record('main',inner,seconds,NaN,NaN);
         penalty(m)=inner.nextPenalty;
@@ -64,6 +70,11 @@ while unlimited || k<rounds
         history.candidateGapEvaluations(k)=history.candidateGapEvaluations(k)+1;
         error=abs(actual-estimate)/max([c.gainAbsoluteTolerance,abs(actual),abs(estimate)]);
         reversed=actual*estimate<0 && max(abs([actual,estimate]))>c.gainAbsoluteTolerance;
+        if isfield(inner,'gainAudit')
+            error=max(error,inner.gainAudit.maxRelativeError);
+            reversed=reversed || inner.gainAudit.signReversals>0;
+            history.gainAuditCandidates(k)=history.gainAuditCandidates(k)+inner.gainAudit.count;
+        end
         unreliable=reversed || error>c.gainRelativeTolerance;
         if any(a~=b)
             if unreliable, radius(m)=max(c.trustMin,floor(radius(m)/2));
@@ -82,7 +93,14 @@ while unlimited || k<rounds
             ctx.radius=radius(m); lower=proxy.lower; weights=w; source='extra_bottleneck';
             cutSeconds=0;
             if family==1
-                source='extra_retangent'; started=tic; lower=leo_v13_touch_resource(d,proxy,m,inner.x); cutSeconds=toc(started);
+                source='extra_retangent'; started=tic;
+                if isfield(o,'searchPolicy') && o.searchPolicy.calibrateTangents
+                    [lower,calibration]=leo_v17_calibrate_tangent(d,proxy,m,w,ctx,inner.candidateGroups);
+                    history.calibrationBefore(k)=history.calibrationBefore(k)+calibration.before;
+                    history.calibrationAfter(k)=history.calibrationAfter(k)+calibration.after;
+                    history.candidateGapEvaluations(k)=history.candidateGapEvaluations(k)+calibration.evaluations;
+                else, lower=leo_v13_touch_resource(d,proxy,m,inner.x); end
+                cutSeconds=toc(started);
                 history.candidateCutRefreshes(k)=history.candidateCutRefreshes(k)+1;
                 history.candidateCutSeconds(k)=history.candidateCutSeconds(k)+cutSeconds;
             else
@@ -91,6 +109,7 @@ while unlimited || k<rounds
                 priority=exp(-min(distance/o.refinement.bottleneckBand,700)); priority=priority/sum(priority);
                 weights=priority./d.qosTargetBits; if ~isFair, weights=weights+1/d.referenceBits; end
             end
+            ctx.weights=weights;
             started=tic; extra=leo_v14_solve_resource(d,lower,m,weights,bestX(:,m),local,budget,ctx); seconds=toc(started)+cutSeconds;
             addwork(extra,seconds); called(family)=true;
             ge=double(extra.x);
@@ -105,7 +124,7 @@ while unlimited || k<rounds
         end
         banks{m}=struct('groups',inner.candidateGroups,'sources',{inner.candidateSources});
         before=service; started=tic;
-        accepted=leo_accept_resource_candidates(problem,bestX,service,m,inner,phase,s0,budget);
+        accepted=leo_accept_resource_candidates(problem,bestX,service,m,inner,acceptPhase,s0,budget);
         history.originalSelectionSeconds(k)=history.originalSelectionSeconds(k)+toc(started);
         history.blockwiseEvaluations(k)=history.blockwiseEvaluations(k)+accepted.evaluations;
         if accepted.accepted
@@ -139,7 +158,7 @@ while unlimited || k<rounds
         history.resourcesSolved(k)=history.resourcesSolved(k)+1;
     end
     before=service; started=tic;
-    joint=leo_v14_joint_blocks(problem,struct('x',bestX,'service',service),banks,phase,s0,o,budget);
+    joint=leo_v14_joint_blocks(problem,struct('x',bestX,'service',service),banks,acceptPhase,s0,o,budget);
     jointSeconds=toc(started); history.originalSelectionSeconds(k)=history.originalSelectionSeconds(k)+jointSeconds;
     history.blockwiseEvaluations(k)=history.blockwiseEvaluations(k)+joint.resourceEvaluations;
     history.jointEvaluations(k)=joint.evaluations; history.jointAccepted(k)=joint.accepted;
@@ -162,18 +181,18 @@ while unlimited || k<rounds
         row.candidateFamilies=strjoin(joint.sources,'|'); evidence=leo_append_struct(evidence,row);
     end
     priceLower=leo_evaluate_quadratic_service(d,proxy.lower,priceX); priceService=problem.evaluate(priceX);
-    if leo_service_is_better(priceService,service,phase,s0)
+    if leo_service_is_better(priceService,service,acceptPhase,s0)
         bestX=priceX; service=priceService; history.priceScheduleAccepted(k)=1;
         checkpoints=point(checkpoints,service,k,'price_schedule');
     end
     starts={priceX,bestX}; started=tic;
     for j=1:2
         if j==2 && isequal(starts{1},starts{2}), continue; end
-        recovered=leo_recover_schedule(problem,starts{j},phase,s0,o,k,budget);
+        recovered=leo_recover_schedule(problem,starts{j},acceptPhase,s0,o,k,budget);
         history.recoveryEvaluations(k)=history.recoveryEvaluations(k)+recovered.evaluations;
         history.crossEvaluations(k)=history.crossEvaluations(k)+recovered.crossEvaluations;
         history.acceptedMoves(k)=history.acceptedMoves(k)+recovered.acceptedMoves;
-        if leo_service_is_better(recovered.service,service,phase,s0)
+        if leo_service_is_better(recovered.service,service,acceptPhase,s0)
             bestX=recovered.x; service=recovered.service; history.recoveryAccepted(k)=history.recoveryAccepted(k)+1;
             checkpoints=point(checkpoints,service,k,'recovery');
         end
@@ -184,7 +203,7 @@ while unlimited || k<rounds
         else, stagnantRounds=stagnantRounds+1; end
     end
     candidate=leo_original_upper_bound(d,cache,lambda,phase,s0); if candidate.value<upper.value, upper=candidate; end
-    step=initialStep/k^o.stepExponent;
+    step=initialStep/priceAge^o.stepExponent;
     % Stage 1 feeds ORIGINAL attained service to the smoothed relative-deficit coordinator.
     feedback=priceLower.userBits; if isFair, feedback=service.userBits; end
     [lambda,priceState]=leo_update_prices(lambda,feedback,d.qosTargetBits,sAux,step,phase,o,priceState);
@@ -194,7 +213,12 @@ while unlimited || k<rounds
     history.savedTotalBits(k)=service.totalBits; history.upperBound(k)=upper.value; history.proxyEpoch(k)=epoch;
     history.elapsedSeconds(k)=toc(budget.timer); history.trustRadius(k)=mean(radius); history.completePriceRound(k)=all(snap.solved);
     history.stage2StagnantRounds(k)=stagnantRounds;
-    [convergence,converged]=leo_v16_convergence_step(o,phase,service,k,convergence);
+    if isFair && service.fairness-escapeAnchor>max(conv.absoluteTolerance,conv.relativeTolerance*abs(escapeAnchor))
+        escapeAttempt=0; escapeAnchor=service.fairness;
+    end
+    promoted=promote && service.fairness>s0;
+    converged=false;
+    if ~promoted, [convergence,converged]=leo_v16_convergence_step(o,phase,service,k,convergence); end
     history.stableWindows(k)=convergence.stableWindows; history.lastWindowGain(k)=convergence.lastWindowGain;
     completed=k; snap.proposed=priceX; snapshots{end+1}=snap;
     if numel(snapshots)>o.audit.snapshots, snapshots(1)=[]; end
@@ -210,7 +234,31 @@ while unlimited || k<rounds
             convergence.stableWindows,conv.stableWindows,convergence.lastWindowGain, ...
             convergence.lastWindowTolerance,convergence.minimumRounds);
     end
-    if converged, status='objective_plateau'; break; end
+    if promoted, status='fairness_promoted_return_to_stage1'; break; end
+    if converged && isFair && isfield(o,'searchPolicy') && escapeAttempt<o.searchPolicy.fairnessEscapes
+        escapeAttempt=escapeAttempt+1; startRescue=struct('x',bestX,'service',service);
+        rescue=leo_v17_fairness_escape(problem,startRescue,o,escapeAttempt,budget);
+        escapeEvents=leo_append_struct(escapeEvents,rescue.event);
+        history.fairnessRescueEvaluations(k)=rescue.evaluations; history.fairnessRescueSeconds(k)=rescue.event.seconds;
+        history.fairnessRescueGain(k)=rescue.event.gain;
+        if leo_service_is_better(rescue.service,service,'fairness',0)
+            bestX=rescue.x; service=rescue.service;
+            if service.fairness-escapeAnchor>max(conv.absoluteTolerance,conv.relativeTolerance*abs(escapeAnchor))
+                escapeAttempt=0; escapeAnchor=service.fairness;
+            end
+        end
+        priceX=bestX; lambda=ones(K,1)/K; priceState=struct(); priceAge=0; radius(:)=c.trustInitial; fail(:)=0; next(:)=0;
+        checkpoints=point(checkpoints,service,k,'original_fairness_rescue');
+        history.savedFairness(k)=service.fairness; history.savedTotalBits(k)=service.totalBits;
+        history.elapsedSeconds(k)=toc(budget.timer);
+        [convergence,~]=leo_v16_convergence_step(o,phase,service,k,[]);
+        history.stableWindows(k)=0; history.lastWindowGain(k)=NaN;
+        if o.verbose, fprintf('  V17 fairness rescue: gain %.9g, %d original evaluations; rebuild proxy and continue.\n',rescue.event.gain,rescue.evaluations); end
+        converged=false;
+    elseif converged
+        status='objective_plateau'; if isFair, status='objective_plateau_after_escapes'; end
+        break;
+    end
     if o.refreshEvery>0 && mod(k,o.refreshEvery)==0 && (unlimited || k<rounds)
         started=tic; proxy=leo_v12_build_service_surrogates(problem,'current_schedule',bestX);
         history.proxyRefreshSeconds(k)=toc(started); epoch=epoch+1;
@@ -230,6 +278,7 @@ result=struct('x',bestX,'service',service,'fairnessFloor',s0,'rounds',completed,
  'proxyEpochTouchErrorsBits',touch,'elapsedAtEndSeconds',toc(budget.timer),'initialService',start.service, ...
  'initialElapsedSeconds',initialSeconds,'initialUpperBound',initialUpper,'iterationKind','price_round', ...
  'sbTrace',firstTrace,'auditSnapshots',{snapshots},'checkpoints',point(checkpoints,service,completed,'end'),'sourceEvidence',evidence);
+result.escapeEvents=escapeEvents;
     function value=polynomial(lower,g)
         value=g.*(lower.aBits(:,m)-lower.bBits(:,:,m)*g);
     end
@@ -246,6 +295,8 @@ result=struct('x',bestX,'service',service,'fairnessFloor',s0,'rounds',completed,
         history.sbRestarts(k)=history.sbRestarts(k)+inner.restarts;
         history.parallelWorkers(k)=max(history.parallelWorkers(k),inner.parallelWorkers);
         history.parallelTasks(k)=history.parallelTasks(k)+inner.parallelTasks;
+        history.uniqueRepairs(k)=history.uniqueRepairs(k)+inner.uniqueRepairs;
+        history.repairCacheHits(k)=history.repairCacheHits(k)+inner.repairCacheHits;
         history.repairLoss(k)=history.repairLoss(k)+max(0,inner.repairLoss);
         for name={'novelCandidates','trustPathCandidates','trustBridgeCandidates','trustRejectedCandidates'}
             history.(name{1})(k)=history.(name{1})(k)+inner.(name{1});

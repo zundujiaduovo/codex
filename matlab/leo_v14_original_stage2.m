@@ -12,7 +12,8 @@ else
  k=0;
  while conv.enabled || k<o.originalThroughputRounds
     k=k+1;
-    pool=leo_original_neighbors(problem,current.x,current.service,o.recoveryEvaluations,k,budget);
+    randomize=isfield(o,'searchPolicy') && o.searchPolicy.randomizeNeighbors && mod(k,5)==0;
+    pool=leo_original_neighbors(problem,current.x,current.service,o.recoveryEvaluations,k,budget,randomize);
     evaluations=evaluations+numel(pool); at=0;
     for j=1:numel(pool)
         if any(pool(j).service.demandRatio<s0), continue; end
@@ -20,7 +21,10 @@ else
         if any(tabu(pool(j).changed)>k) && ~aspiration, continue; end
         if at==0 || leo_service_is_better(pool(j).service,pool(at).service,'throughput',s0), at=j; end
     end
-    if at>0, current=pool(at); tabu(current.changed)=k+5; end
+    if at>0
+        candidate=pool(at); candidate.service=problem.evaluate(candidate.x);
+        if all(candidate.service.demandRatio>=s0), current=candidate; tabu(current.changed)=k+5; end
+    end
     if leo_service_is_better(current.service,best.service,'throughput',s0), best=current; end
     count=k; history=leo_record_search_step(history,best.service,k,toc(budget.timer),evaluations);
     [convergence,converged]=leo_v16_convergence_step(o,'throughput',best.service,k,convergence,'original');

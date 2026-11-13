@@ -1,6 +1,6 @@
 function [report,files]=run_leo_v15_bounds(source,directory,settings,render)
 % Apply independent certificates to saved searches, including existing V14 data.
-if nargin<3, settings=V16_BOUND_SETTINGS(); end
+if nargin<3, settings=V17_BOUND_SETTINGS(); end
 if nargin<4, render=true; end
 report=leo_v12_load_report(source); originalReport=report;
 if ~exist(directory,'dir'), mkdir(directory); end
@@ -33,12 +33,12 @@ end
 if settings.conditionalThroughput, report.conditionalBounds=conditional; end
 report.sourceSearchRelease='saved_original_search';
 if isfield(originalReport,'releaseTag'), report.sourceSearchRelease=originalReport.releaseTag; end
-report.releaseTag='V16'; report.options.outputDirectory=directory;
+report.releaseTag='V17'; report.options.outputDirectory=directory;
 save(fullfile(directory,'certified_benchmark.mat'),'report','-v7');
 leo_write_struct_csv(fullfile(directory,'certified_runs.csv'),report.records);
 if ~isempty(conditional), leo_write_struct_csv(fullfile(directory,'conditional_throughput_bounds.csv'),conditional); end
 specs=leo_build_v12_specs(report,leo_v12_trace_data(report));
-files=[files,leo_v14_save_specs(specs,directory,'v16_certified_comparison_specs',render)];
+files=[files,leo_v14_save_specs(specs,directory,'v17_certified_comparison_specs',render)];
 fprintf('Original certification saved to %s. Original benchmark search scores and timings were retained.\n',directory);
 
     function outputs=render_certificate(folder)

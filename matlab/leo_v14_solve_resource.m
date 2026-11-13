@@ -43,8 +43,7 @@ switch o.innerSolver
  otherwise, error('leo:v14Solver','V14 supports sb/local/tabu.');
 end
 pathCount=0; bridgeCount=0;
-throughput=isfield(context,'phase') && strcmp(context.phase,'throughput');
-if throughput && o.coordination.stage2TrustPaths
+if o.coordination.stage2TrustPaths
     center=logical(context.group(q.userIds));
     [~,path]=leo_v14_trust_path(q,center,[],context.radius,o.polishMoves);
     for j=2:size(path,2), retain(path(:,j),'trust_ascent_step'); pathCount=pathCount+1; end
@@ -98,10 +97,14 @@ end
 if strcmp(o.innerSolver,'sb')
     out.energyHistory=sb.history; out.energyScale=sb.energyScale; out.trajectories=sb.trajectories;
 end
-out.parallelWorkers=0; out.parallelTasks=0;
+out.parallelWorkers=0; out.parallelTasks=0; out.uniqueRepairs=0; out.repairCacheHits=0;
 if strcmp(o.innerSolver,'sb') && isfield(sb,'parallelWorkers')
     out.parallelWorkers=sb.parallelWorkers; out.parallelTasks=sb.parallelTasks;
 end
+if strcmp(o.innerSolver,'sb') && isfield(sb,'uniqueRepairs')
+    out.uniqueRepairs=sb.uniqueRepairs; out.repairCacheHits=sb.repairCacheHits;
+end
+if isfield(pool,'gainAudit'), out.gainAudit=pool.gainAudit; end
     function add(raw,source,diagnose)
         if nargin<3, diagnose=true; end
         fixed=leo_repair_group(q,raw); repairs=repairs+any(raw~=fixed);

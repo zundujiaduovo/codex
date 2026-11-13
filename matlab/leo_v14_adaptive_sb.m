@@ -9,6 +9,8 @@ spin=ones(N,R); spin(p<0)=-1; bestSpin=spin; energy=discrete(spin);
 legal=false(q.nUsers,R); legalScore=-Inf(1,R); forceTerms=0; trajectorySteps=0;
 history=struct('step',0,'minimum',min(energy),'median',median(energy),'maximum',max(energy));
 energyByTrajectory=energy(:);
+repairCache=containers.Map('KeyType','char','ValueType','any');
+uniqueRepairs=0; repairCacheHits=0;
 completed=0;
 for k=1:o.sbSteps
     ids=find(active); if isempty(ids) || leo_budget_expired(budget), break; end
@@ -22,7 +24,13 @@ for k=1:o.sbSteps
     s=ones(N,numel(ids)); s(p(:,ids)<0)=-1; e=discrete(s); better=e<energy(ids);
     bestSpin(:,ids(better))=s(:,better); energy(ids(better))=e(better);
     for j=1:numel(ids)
-        a=ids(j); x=leo_repair_group(q,s(1:q.nUsers,j)>0); score=proxy(x);
+        a=ids(j); raw=s(1:q.nUsers,j)>0; key=char(double(raw.')+'0');
+        if isKey(repairCache,key)
+            cached=repairCache(key); x=cached.x; score=cached.score; repairCacheHits=repairCacheHits+1;
+        else
+            x=leo_repair_group(q,raw); score=proxy(x); uniqueRepairs=uniqueRepairs+1;
+            repairCache(key)=struct('x',x,'score',score);
+        end
         if score>legalScore(a)+1e-12*max(1,abs(score))
             legal(:,a)=x; legalScore(a)=score; last(a)=age(a);
         end
@@ -41,7 +49,7 @@ end
 r=struct('bits',(bestSpin+1)/2,'legalGroups',legal,'energy',energy,'steps',completed, ...
     'energyScale',scale,'history',history,'trajectories',R,'trajectorySteps',trajectorySteps, ...
     'denseTerms',forceTerms,'restarts',sum(restarts),'stoppedByTime',leo_budget_expired(budget), ...
-    'energyByTrajectory',energyByTrajectory);
+    'energyByTrajectory',energyByTrajectory,'uniqueRepairs',uniqueRepairs,'repairCacheHits',repairCacheHits);
     function e=discrete(s)
         e=ising.constant+ising.h.'*s+sum(s.*(ising.J*s),1)/2;
     end

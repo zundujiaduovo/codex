@@ -2,11 +2,13 @@ function [remaining,extra] = leo_extract_iteration_options(overrides)
 %LEO_EXTRACT_ITERATION_OPTIONS 保持历史冻结参数校验器不变。
 remaining=overrides; extra=struct();
 names={'iterationOnly','originalFairnessRounds','originalThroughputRounds', ...
-    'proxyTabuIterations','proxyTabuRestarts','proxyTabuTenure','refinement','coordination','convergence','parallel','progressDirectory'};
+    'proxyTabuIterations','proxyTabuRestarts','proxyTabuTenure','refinement','coordination','convergence','parallel','progressDirectory','searchPolicy'};
 for j=1:numel(names)
     name=names{j}; if ~isfield(remaining,name), continue; end
     value=remaining.(name);
-    if strcmp(name,'progressDirectory')
+    if strcmp(name,'searchPolicy')
+        value=leo_v17_search_options(value);
+    elseif strcmp(name,'progressDirectory')
         assert(ischar(value));
     elseif strcmp(name,'convergence')
         value=leo_v16_convergence_options(value);

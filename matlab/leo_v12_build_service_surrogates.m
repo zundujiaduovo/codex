@@ -36,7 +36,8 @@ if strcmp(mode,'current_schedule')
         selected = logical(x0(:,m)) & proxy.limits.eventMask(:,t);
         scale = max(data.design.noiseW(:,t),proxy.limits.maxW(:,t));
         assert(all(actual(selected,t)<=proxy.limits.maxW(selected,t)+1e-12*scale(selected)));
-        proxy.referenceW(selected,t) = actual(selected,t);
+        available=proxy.limits.eventMask(:,t);
+        proxy.referenceW(available,t)=min(max(actual(available,t),0),proxy.limits.maxW(available,t));
     end
 else
     assert(isempty(x0),'只有 current_schedule 模式接受参考日程。');

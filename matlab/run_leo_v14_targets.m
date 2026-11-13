@@ -12,7 +12,7 @@ for j=1:numel(report.records)
             'reached',~isempty(at),'seconds',seconds,'scope','First observed stage-1 original-service attainment, including common setup.'));
     end
 end
-leo_write_struct_csv(fullfile(directory,'v14_fixed_fairness_targets.csv'),rows);
+leo_write_struct_csv(fullfile(directory,'v17_fixed_fairness_targets.csv'),rows);
 p=leo_v14_panel('Stage 1: time to identical original fairness targets','Method','Seconds','categorical_line',labels);
 for target=targets
     y=NaN(1,numel(methods));
@@ -22,6 +22,6 @@ for target=targets
     end
     p=leo_v14_series(p,sprintf('s >= %.2f',target),1:numel(methods),y);
 end
-spec=struct('name','v14_fixed_fairness_targets','title','V14 original fairness targets | missing attainment remains N/A','rows',1,'cols',1,'panels',p);
-files=leo_v14_save_specs(spec,directory,'v14_target_specs',render);
+spec=struct('name','v17_fixed_fairness_targets','title','V14 original fairness targets | missing attainment remains N/A','rows',1,'cols',1,'panels',p);
+files=leo_v14_save_specs(spec,directory,'v17_target_specs',render);
 end

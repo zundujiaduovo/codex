@@ -1,10 +1,10 @@
 function r=leo_lexicographic_release(tag)
-% V16 has one current protocol; archived versions remain in their Git branches.
-if nargin<1, tag='V16'; end
+% One current protocol; historical experiments remain on their original branches.
+if nargin<1, tag='V17'; end
 if isstruct(tag), tag=tag.releaseTag; end
-assert(any(strcmp(tag,{'V16','V16 parallel64; original-objective convergence; based on repaired V15'})), ...
-    'Use the original branch to read historical protocols, or point the standalone bound function at saved data.');
-r=struct('tag','V16','version','V16 parallel64; original-objective convergence; based on repaired V15', ...
-    'baseCommit','97afd6c','caseName','v16_parallel64_until_convergence', ...
-    'methods',{{'Tabu','SB','Local','Proxy+Tabu','Greedy'}},'prefix','v16');
+version='V17 fairness-first archive, calibrated proxy, parallel64 bSB; based on V16';
+assert(any(strcmp(tag,{'V17',version})), 'Use the original branch for historical protocols.');
+r=struct('tag','V17','version',version,'baseCommit','4b5ea77', ...
+    'caseName','v17_fairness_first_proxy_parallel_sb', ...
+    'methods',{{'Tabu','SB','Local','Proxy+Tabu','Greedy'}},'prefix','v17');
 end

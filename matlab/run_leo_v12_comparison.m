@@ -4,7 +4,7 @@ function [report,files] = run_leo_v12_comparison(directory,overrides,render,rele
 if nargin<1, directory=fullfile('results','v12_uncapped_lexicographic'); end
 if nargin<2, overrides=struct(); end
 if nargin<3, render=true; end
-if nargin<4, releaseTag='V16'; end
+if nargin<4, releaseTag='V17'; end
 release=leo_lexicographic_release(releaseTag);
 o=leo_v12_options(overrides); protocol=rmfield(o,'prepareOnly');
 if isempty(regexp(directory,'^([A-Za-z]:[\\/]|[\\/])','once')), directory=fullfile(pwd,directory); end
@@ -24,7 +24,7 @@ else
         'runtime',version,'platform',computer);
     save(path,'experiment','-v7');
 end
-fprintf('%s: maximize UNCAPPED s=min_i G_i/q_i; then maximize sum(G_i) with every ratio >= attained stage-1 s.\n',release.version);
+fprintf('%s: maximize UNCAPPED s=min_i G_i/q_i; then maximize sum(G_i). Higher fairness found in stage 2 is retained and restarts stage 1.\n',release.version);
 fprintf('K=%d, Na=%d (%dx%d), NB=%d, L=%d; admission %.0f%%; nRF=%d, p0=%.3g W, Pmax=%.3g W.\n', ...
     o.parameters.system.K,o.parameters.array.nElements,o.parameters.array.nX,o.parameters.array.nY, ...
     o.parameters.array.nBeams,o.parameters.system.maxStreams, ...
@@ -33,10 +33,11 @@ fprintf('K=%d, Na=%d (%dx%d), NB=%d, L=%d; admission %.0f%%; nRF=%d, p0=%.3g W, 
 if isfield(o.method,'convergence') && o.method.convergence.enabled
     c=o.method.convergence;
     fprintf('%d seed(s), %d methods; UNTIL OBJECTIVE CONVERGENCE, no time or maximum outer-iteration limit.\n',numel(o.seeds),numel(experiment.methods));
-    fprintf('Convergence: %d successive windows of %d rounds, each ORIGINAL objective gain <= max(%.3g, %.3g*anchor).\n', ...
+    fprintf('Plateau detector: %d successive windows of %d rounds, each ORIGINAL objective gain <= max(%.3g, %.3g*anchor).\n', ...
         c.stableWindows,c.windowRounds,c.absoluteTolerance,c.relativeTolerance);
     fprintf('Proxy phase minimum rounds: %d/%d; Tabu phase minimum rounds: %d/%d. Greedy ends when no improving addition exists.\n', ...
         c.minProxyFairnessRounds,c.minProxyThroughputRounds,c.minOriginalFairnessRounds,c.minOriginalThroughputRounds);
+    fprintf('V17 fairness stopping also requires exhausted original-model rescue attempts. This is heuristic stopping, not global optimality.\n');
 elseif leo_iteration_only(o.method)
     fprintf('%d search seed(s), %d methods; FIXED MAXIMUM ITERATIONS, no wall-clock/gap/stagnation stopping.\n',numel(o.seeds),numel(experiment.methods));
     fprintf('Tabu: %d fairness + %d throughput rounds. SB/Local/Proxy+Tabu: %d fairness + %d throughput price rounds.\n', ...
@@ -50,7 +51,7 @@ if isfield(o.method,'stopping') && o.method.stopping.enabled
     fprintf('Auto stop: valid original-model gap <= %.3g%%; or %.3g s without %.3g%% cumulative improvement (min %.3g s and %d native iterations/phase).\n', ...
         100*s.relativeGap,s.patienceSeconds,100*s.relativeImprovement,s.minPhaseSeconds,s.minIterations);
 end
-if any(strcmp(release.tag,{'V13','V14','V15','V16'}))
+if any(strcmp(release.tag,{'V13','V14','V15','V17'}))
     if isfield(o.method,'refinement')
         r=o.method.refinement;
         fprintf('Proxy refinement: pool=%d (max %d per call), bottleneck candidates=%d (band %.4g), candidate tangent refresh=%d (gap trigger %.4g demand ratio).\n', ...
@@ -64,7 +65,7 @@ if any(strcmp(release.tag,{'V13','V14','V15','V16'}))
     end
     leo_print_bound_explanation(struct('problemData',experiment.problemData,'parameters',o.parameters));
 end
-if any(strcmp(release.tag,{'V14','V15','V16'}))
+if any(strcmp(release.tag,{'V14','V15','V17'}))
     fprintf('Fairness: simplex weights with smoothed ORIGINAL deficits; no bang-bang auxiliary fairness variable.\n');
     fprintf('Coordination: shared 2-3 block coordination, gain-error trust region, contextual candidate pool; SB kernel=%s.\n',o.method.coordination.sbKernel);
 end

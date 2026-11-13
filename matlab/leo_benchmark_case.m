@@ -46,7 +46,7 @@ for seed = options.seeds(:).'
                 saved=load(cachePath,'entry'); entry=saved.entry;
                 assert(isequaln(signature,entry.signature),'Saved method protocol/model differs; use a new results folder.');
                 records(end+1,1)=entry.row; solutions{end+1,1}=entry.result;
-                fprintf('V16 retained completed %s, seed %.0f.\n',row.method,seed); continue;
+                fprintf('V17 retained completed %s, seed %.0f.\n',row.method,seed); continue;
             end
         end
         prebuiltProxy=false; % All three proxy methods construct their own current-schedule tangent.

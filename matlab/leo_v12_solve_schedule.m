@@ -36,23 +36,36 @@ if options.verbose
         initial.bestName,initial.service.fairness,initial.service.totalBits/1e6);
 end
 fairBudget = budget; fairBudget.seconds = options.maxSeconds*options.fairnessBudgetFraction;
-assert(isfield(options,'coordination'),'V16 requires the shared coordination engine.');
+assert(isfield(options,'coordination'),'V17 requires the shared coordination engine.');
 phaseSolver=@leo_v14_run_price_phase;
-stage1 = phaseSolver(problem,proxy,cache,'fairness',initial,options,fairBudget);
+savedStages={[],[]}; cycle=0; start=initial; stage2ProxySeconds=0;
+while true
+cycle=cycle+1;
+stage1 = phaseSolver(problem,proxy,cache,'fairness',start,options,fairBudget);
+savedStages{1}=leo_v17_merge_stage(savedStages{1},stage1,cycle);
 % 第二阶段在阶段 1 保留日程处相切；正公平时它也是代理可行点。
 % 周期模式 s0=0 时有符号代理可能更严格，仍保留原式可行日程验收。
 stage2Proxy = [];
-stage2ProxySeconds=0;
 if ~leo_budget_expired(budget)
     proxyTimer=tic;
     stage2Proxy = leo_v12_build_service_surrogates(problem,'current_schedule',stage1.x);
-    stage2ProxySeconds=toc(proxyTimer);
+    stage2ProxySeconds=stage2ProxySeconds+toc(proxyTimer);
 end
 stage2 = phaseSolver(problem,stage2Proxy,cache,'throughput',stage1,options,budget);
 assert(all(stage2.service.demandRatio>=stage1.service.fairness));
-assert(stage2.service.totalBits>=stage1.service.totalBits);
+promoted=strcmp(stage2.status,'fairness_promoted_return_to_stage1');
+assert(promoted || stage2.service.totalBits>=stage1.service.totalBits);
+savedStages{2}=leo_v17_merge_stage(savedStages{2},stage2,cycle);
+if ~promoted || leo_budget_expired(budget), break; end
+if options.verbose, fprintf('V17 %s: fairness promoted %.9g -> %.9g; return to stage 1 (cycle %d).\n',options.innerSolver,stage1.service.fairness,stage2.service.fairness,cycle+1); end
+start=stage2; proxyTimer=tic;
+proxy=leo_v12_build_service_surrogates(problem,'current_schedule',start.x);
+initialProxySeconds=initialProxySeconds+toc(proxyTimer);
+end
+stage1=savedStages{1}; stage2=savedStages{2};
 result.kind = ['V12 uncapped lexicographic: two-stage Lagrangian + ',options.innerSolver,' + original-service recovery'];
 result.options = options; result.initial = initial;
+result.phaseCycles=cycle;
 result.stage1 = stage1; result.stage2 = stage2;
 result.x = stage2.x; result.service = stage2.service;
 result.fairnessFloor = stage1.service.fairness;
@@ -73,6 +86,7 @@ result.optimal = false;             % 不用 SB 停滞/迭代次数冒充全局�
 result.certificateScope = 'Fairness: original P_F. Throughput: original P_V at achieved fixed s0 only.';
 result.usesExhaustiveSolution = false;
 result.hardFeasible = true;         % 原始评价器已验证每个保存的二元日程
+leo_v17_assert_archive(result);
 if options.verbose
     fprintf('  Final: fairness=%.9g, throughput=%.6g Mbit, time=%.3f s.\n', ...
         result.service.fairness,result.service.totalBits/1e6,result.elapsedSeconds);

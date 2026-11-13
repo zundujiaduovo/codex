@@ -1,4 +1,4 @@
-"""Conservative MATLAB dependency closure for the single V16 distribution.
+"""Conservative MATLAB dependency closure for the single V17 distribution.
 
 Tokens include function handles, dynamic installation names and script calls.
 Only actual calls/handles are checked for missing custom functions.
@@ -7,9 +7,9 @@ from pathlib import Path
 import re
 
 ROOT=Path(__file__).resolve().parents[1]
-ROOT_SCRIPTS={'RUN_COMPARISON','RUN_V16_COMPARISON','RUN_V16_ALL','RUN_V16_BOUNDS',
-              'RUN_V16_CONTROLS','SHOW_V16_RESULTS','TEST_V16','V16_SETTINGS',
-              'V16_BOUND_SETTINGS','CHECK_V16_INSTALLATION'}
+ROOT_SCRIPTS={'RUN_COMPARISON','RUN_V17_COMPARISON','RUN_V17_ALL','RUN_V17_BOUNDS',
+              'RUN_V17_CONTROLS','SHOW_V17_RESULTS','TEST_V17','V17_SETTINGS',
+              'V17_BOUND_SETTINGS','CHECK_V17_INSTALLATION'}
 
 
 def code_without_comments(source):
@@ -68,6 +68,6 @@ def check(root=ROOT):
 
 if __name__=='__main__':
     keep,unused=closure()
-    print(f'V16 dependency closure: {len(keep)} MATLAB files; {len(unused)} obsolete sources can be removed.')
+    print(f'V17 dependency closure: {len(keep)} MATLAB files; {len(unused)} obsolete sources can be removed.')
     if unused: print('\n'.join(str(p.relative_to(ROOT)) for p in sorted(unused)))
     else: print('PASS:',check(),'MATLAB sources, no missing custom calls.')
