@@ -1,11 +1,17 @@
 function rows=run_leo_v14_evidence(report,directory)
 % 每类实际接受的公平/吞吐增益与成本；不把局部代理差当全局损失。
-rows=struct([]); rounds=struct([]);
+rows=struct([]); rounds=struct([]); retention=struct([]);
 for j=1:numel(report.records)
  r=report.records(j); if ~strcmp(r.status,'completed'), continue; end
  for phase=1:2
     stage=report.solutions{j}.(sprintf('stage%d',phase));
     if ~isfield(stage,'sourceEvidence'), continue; end
+    if isfield(stage,'evidenceLimit')
+        retained=struct('method',leo_method_name(r.method),'seed',r.seed,'phase',phase, ...
+            'retainedRows',numel(stage.sourceEvidence),'droppedRows',stage.evidenceDropped,'limit',stage.evidenceLimit, ...
+            'scope','Detailed source evidence retains recent rows; scalar per-round workload and convergence histories retain all rounds.');
+        retention=leo_append_struct(retention,retained);
+    end
     for k=1:numel(stage.sourceEvidence)
         row=stage.sourceEvidence(k); row.method=leo_method_name(r.method); row.seed=r.seed;
         rows=leo_append_struct(rows,row);
@@ -18,7 +24,7 @@ for j=1:numel(report.records)
                 'novelCandidates','trustPathCandidates','trustBridgeCandidates','trustRejectedCandidates','trustEscape','stage2StagnantRounds', ...
                 'parallelWorkers','parallelTasks','stableWindows','lastWindowGain', ...
                 'fairnessRescueEvaluations','fairnessRescueSeconds','fairnessRescueGain', ...
-                'gainAuditCandidates','calibrationBefore','calibrationAfter','uniqueRepairs','repairCacheHits'}
+                'gainAuditCandidates','calibrationBefore','calibrationAfter','uniqueRepairs','repairCacheHits','gpuTrajectorySteps'}
             value=NaN; if isfield(h,name{1}), value=h.(name{1})(k); end
             row.(name{1})=value;
         end
@@ -28,6 +34,7 @@ for j=1:numel(report.records)
 end
 leo_write_struct_csv(fullfile(directory,'v17_candidate_source_evidence.csv'),rows);
 leo_write_struct_csv(fullfile(directory,'v17_coordination_rounds.csv'),rounds);
+leo_write_struct_csv(fullfile(directory,'v17_evidence_retention.csv'),retention);
 boundRows=struct([]);
 c=report.fairnessCertificate;
 if isfield(c,'coupledRelaxation')

@@ -33,10 +33,18 @@ template.stage1Certified=false; template.fairnessPreserved=false;
 template.stage1StopReason=''; template.stage2StopReason='';
 template.stage1StopRelativeGap=NaN; template.stage2StopRelativeGap=NaN;
 template.stage1NearOptimal=false; template.stage2NearOptimal=false;
+template.errorIdentifier=''; template.errorLocation='';
 records = repmat(template,0,1); solutions = {};
+memoryFailed=false;
 for seed = options.seeds(:).'
     for j = 1:numel(options.methods)
         row = template; row.method=options.methods{j}; row.seed = seed; name=leo_method_id(row.method);
+        if memoryFailed
+            row.status='not_run_memory_pressure'; row.message='Skipped after an out-of-memory failure. Restart MATLAB with fewer workers.';
+            records(end+1,1)=row; solutions{end+1,1}=[];
+            fprintf('%-23s seed=%d not_run_memory_pressure\n',leo_method_name(row.method),seed);
+            continue;
+        end
         cachePath='';
         signature=struct('data',problem.data,'method',options.method,'seed',seed,'name',row.method,'provided',providedSchedule);
         if ~isempty(options.checkpointDirectory)
@@ -50,6 +58,7 @@ for seed = options.seeds(:).'
             end
         end
         prebuiltProxy=false; % All three proxy methods construct their own current-schedule tangent.
+        clear saved entry stage
         seconds = options.budgetSeconds-commonSeconds-row.proxyPreparationSeconds;
         result = [];
         if strcmp(name,'price_miqp') && exist('gurobi','file')==0
@@ -121,8 +130,17 @@ for seed = options.seeds(:).'
                 row.throughputGapBits = result.throughputGapBits;
             catch err
                 row.status = 'failed'; row.message = err.message;
+                row.errorIdentifier=err.identifier;
+                if ~isempty(err.stack), row.errorLocation=sprintf('%s:%d',err.stack(1).file,err.stack(1).line); end
                 row.fullQosFeasible=false; row.feasibleTotalBits=NaN; row.goalStatus='not_evaluated';
                 if strcmp(err.identifier,'leo:solverUnavailable'), row.status = 'unavailable'; end
+                if leo_v17_is_memory_error(err)
+                    memoryFailed=true; result=[];
+                    fprintf('V17 memory pressure: closing the worker pool; later methods will be skipped. Completed method checkpoints are retained.\n');
+                    if exist('gcp','file')>0
+                        try, pool=gcp('nocreate'); if ~isempty(pool), delete(pool); end; catch, end
+                    end
+                end
             end
             row.searchSeconds = toc(timer);
             row.endToEndSeconds = commonSeconds+row.proxyPreparationSeconds+row.searchSeconds;
@@ -165,6 +183,7 @@ for seed = options.seeds(:).'
                 end
             end
             if ~isempty(row.message), fprintf('  %s\n',row.message); end
+            if ~isempty(row.errorLocation), fprintf('  Failure location: %s (%s)\n',row.errorLocation,row.errorIdentifier); end
         end
     end
 end

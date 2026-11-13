@@ -2,7 +2,12 @@ function test_leo_v17()
 % Deterministic convergence tests and fixed-batch serial/parallel equivalence.
 previous=rng; cleanup=onCleanup(@()rng(previous)); rng(17001,'twister'); %#ok<NASGU>
 [o,~]=V17_SETTINGS(); m=o.method;
-assert(m.sbTrajectories==64 && m.parallel.enabled && m.convergence.enabled && m.iterationOnly);
+assert(m.sbTrajectories==64 && strcmp(m.execution.backend,'gpu') && ~m.parallel.enabled && m.convergence.enabled && m.iterationOnly);
+assert(m.parallel.workers==4 && m.parallel.batchSize==8 && ~m.memory.retainStateHistory);
+assert(leo_v17_is_memory_error(MException('MATLAB:nomem','Out of memory.')));
+assert(leo_v17_is_memory_error(MException('parallel:gpu:array:OOM','CUDA_ERROR_OUT_OF_MEMORY')));
+assert(leo_v17_is_memory_error(MException('leo:test','内存不足。')));
+assert(~leo_v17_is_memory_error(MException('leo:test','Unrelated error')));
 % Regression: the user's V16 1400-round solution must survive a sum-only gain.
 incumbent=struct('fairness',2.72018229,'totalBits',229.122e6,'demandRatio',2.72018229);
 candidate=struct('fairness',2.71911328,'totalBits',229.225e6,'demandRatio',2.71911328);
@@ -35,9 +40,19 @@ short=m; short.parallel.enabled=false; short.convergence.enabled=false; short.ve
 short.originalFairnessRounds=1; short.originalThroughputRounds=3; short.fairnessRounds=2; short.throughputRounds=2;
 short.sbSteps=20; short.sbTrajectories=4; short.localRestarts=4;
 short.searchPolicy.fairnessEscapes=0; short.audit.enabled=false;
+short.memory.maxEvidenceRows=3;
 original=leo_solve_original_search(problem,'tabu',short,[]);
 assert_retained(original);
 short.innerSolver='local'; approximate=leo_v12_solve_schedule(problem,[],short,[]); assert_retained(approximate);
+for phase=1:2
+    stage=approximate.(sprintf('stage%d',phase));
+    assert(~isfield(stage.history,'priceX') && ~isfield(stage.history,'lambda'));
+    assert(numel(stage.sourceEvidence)<=short.memory.maxEvidenceRows);
+end
+stage=approximate.stage1; stage.escapeEvents=repmat(struct('gain',1),2,1);
+first=leo_v17_merge_stage([],stage,1); stage.escapeEvents=repmat(struct('gain',1),3,1);
+merged=leo_v17_merge_stage(first,stage,2);
+assert(numel(merged.escapeEvents)==5 && numel(merged.sourceEvidence)<=short.memory.maxEvidenceRows);
 % Counterfactual/current and calibrated tangents remain lower bounds on every legal group.
 x=original.stage1.x; service=problem.evaluate(x); proxy=leo_v12_build_service_surrogates(problem,'current_schedule',x);
 groups=false(d.shape(1),0);
@@ -75,6 +90,11 @@ q=struct('nUsers',4,'A',[4;3;2;1],'B',.2*(ones(4)-eye(4)), ...
     'beamIndex',(1:4).','maxStreams',2,'capacityIncluded',true,'slackWeights',[1;2]);
 q=leo_v14_encode_qubo(q,1.2); seeds=[leo_encode_group_bits(q,logical([1;1;0;0])),leo_encode_group_bits(q,false(4,1))];
 m.sbSteps=20; m.coordination.sbMinSteps=10; m.coordination.sbStagnationSteps=10;
+% Identical full-matrix CPU dynamics check the new backend's adaptive equations.
+referenceOptions=m; referenceOptions.execution.precision='double'; rng(17002,'twister'); initialRng=rng;
+cpu=leo_v14_adaptive_sb(q,referenceOptions,seeds,[]); rng(initialRng);
+vectorized=leo_v17_gpu_sb(q,referenceOptions,seeds,'adaptive',[],false);
+assert(isequal(cpu.bits,vectorized.bits) && max(abs(cpu.energy-vectorized.energy))<1e-9);
 rng(16001,'twister');
 before=rng; serial=leo_v16_parallel_sb(q,m,seeds,'adaptive',false);
 assert(size(serial.bits,2)==64 && serial.trajectories==64 && serial.parallelTasks==8);
@@ -82,7 +102,8 @@ ising=leo_qubo_to_ising(q); spin=2*serial.bits-1;
 energy=ising.constant+ising.h.'*spin+sum(spin.*(ising.J*spin),1)/2;
 assert(max(abs(energy-serial.energy))<1e-9);
 assert(max(abs(serial.history.median-median(serial.energyByTrajectory,1)))<1e-12);
-if exist('parpool','file')>0 && license('test','Distrib_Computing_Toolbox')
+if ~strcmp(m.execution.backend,'gpu') && exist('parpool','file')>0 && license('test','Distrib_Computing_Toolbox')
+    m.parallel.enabled=true;
     leo_v16_prepare_parallel(m.parallel); rng(before);
     parallel=leo_v16_parallel_sb(q,m,seeds,'adaptive',true);
     assert(isequal(serial.bits,parallel.bits) && isequal(serial.energy,parallel.energy));
@@ -90,7 +111,20 @@ if exist('parpool','file')>0 && license('test','Distrib_Computing_Toolbox')
     assert(parallel.parallelWorkers>=2);
     fprintf('PASS: real parfor results equal the same serial reference batches.\n');
 else
-    fprintf('NOT RUN: worker equivalence requires Parallel Computing Toolbox; production parallel mode reports this requirement explicitly.\n');
+    fprintf('NOT RUN: CPU-worker equivalence is optional in the GPU profile; serial batch energy aggregation was checked.\n');
+end
+available=false;
+if exist('gpuDeviceCount','file')>0
+    try, available=gpuDeviceCount('available')>0; catch, end
+end
+if available
+    leo_v17_prepare_execution(m); rng(17003,'twister'); gpu=leo_v17_gpu_sb(q,m,seeds,'adaptive',[]);
+    spin=2*gpu.bits-1; actual=ising.constant+ising.h.'*spin+sum(spin.*(ising.J*spin),1)/2;
+    assert(max(abs(actual-gpu.energy))<1e-9 && gpu.gpuTrajectorySteps>0);
+    assert(size(gpu.bits,2)==64 && all(diff(gpu.history.minimum)<=1e-9));
+    fprintf('PASS: actual GPU-array dynamics, 64 trajectories and CPU-double energy consistency.\n');
+else
+    fprintf('NOT RUN: actual GPU test needs a MATLAB-supported NVIDIA GPU; CPU reference equations were checked.\n');
 end
 fprintf('PASS: V17 fairness-retention regression, fixed-floor control, interrupted/exhaustive QUBO bounds, 64 trajectories, cumulative-window stopping and energy-history aggregation.\n');
 end

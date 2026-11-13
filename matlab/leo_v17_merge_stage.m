@@ -36,8 +36,16 @@ if isfield(stage,'sourceEvidence')
         row=stage.sourceEvidence(j); row.round=row.round+offset;
         joined.sourceEvidence=leo_append_struct(joined.sourceEvidence,row);
     end
+    if isfield(stage,'evidenceLimit')
+        excess=max(0,numel(joined.sourceEvidence)-stage.evidenceLimit);
+        joined.sourceEvidence(1:excess)=[];
+        joined.evidenceDropped=previous.evidenceDropped+stage.evidenceDropped+excess;
+    end
 end
-if isfield(stage,'escapeEvents'), joined.escapeEvents=[previous.escapeEvents,stage.escapeEvents]; end
+if isfield(stage,'escapeEvents')
+    joined.escapeEvents=previous.escapeEvents;
+    for j=1:numel(stage.escapeEvents), joined.escapeEvents=leo_append_struct(joined.escapeEvents,stage.escapeEvents(j)); end
+end
 if isfield(stage,'proxyEpochFairnessErrorBounds')
     joined.proxyEpochFairnessErrorBounds=[previous.proxyEpochFairnessErrorBounds,stage.proxyEpochFairnessErrorBounds];
     joined.proxyEpochTouchErrorsBits=[previous.proxyEpochTouchErrorsBits,stage.proxyEpochTouchErrorsBits];

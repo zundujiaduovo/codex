@@ -6,7 +6,11 @@ assert(isfield(report.options.method,'coordination'),'Use a completed V14 report
 if nargin<4, seeds=report.options.seeds(1)+(0:4)*104729; end
 if ~exist(directory,'dir'), mkdir(directory); end
 options=report.options.method; options.coordination.adaptivePenalty=false;
-protocol=struct('seeds',seeds,'method',options,'resources',[1,ceil(report.problemData.shape(2)/2),report.problemData.shape(2)]);
+solvers={'SB fixed','SB adaptive','SB adaptive serial','Local','Proxy+Tabu'};
+if isfield(options,'execution') && strcmp(options.execution.backend,'gpu')
+    solvers={'SB adaptive GPU','SB adaptive CPU vectorized','SB fixed CPU vectorized','Local','Proxy+Tabu'};
+end
+protocol=struct('seeds',seeds,'method',options,'solvers',{solvers},'resources',[1,ceil(report.problemData.shape(2)/2),report.problemData.shape(2)]);
 path=fullfile(directory,'fixed_qubo_control.mat'); files={};
 if exist(path,'file')==2
  saved=load(path,'control'); control=saved.control;
@@ -14,7 +18,7 @@ if exist(path,'file')==2
 else
  d=report.problemData; ids=cellfun(@leo_method_id,{report.records.method},'UniformOutput',false);
  at=find(strcmp(ids,'sb_v12_lexicographic') & strcmp({report.records.status},'completed'),1); assert(~isempty(at),'A completed SB run is required.');
- reference=report.solutions{at}; cases={}; runs=struct([]); caseId=0; solvers={'SB fixed','SB adaptive','SB adaptive serial','Local','Proxy+Tabu'};
+ reference=report.solutions{at}; cases={}; runs=struct([]); caseId=0;
  for phase=1:2
     stage=reference.(sprintf('stage%d',phase));
     label='fairness'; floorValue=0; if phase==2, label='throughput'; floorValue=reference.fairnessFloor; end
@@ -55,7 +59,6 @@ titles={'Legal proxy score','Configured call time','Raw output feasibility','Rep
 fields={'proxyScore','seconds','rawLegalFraction','repairLoss','polishGain','sbRestarts'};
 units={'Proxy score','Seconds','Fraction','Proxy score','Proxy score','Count'};
 labels=cellfun(@(x)sprintf('%s/b%d',x.phase,x.resource),control.cases,'UniformOutput',false);
-solvers={'SB fixed','SB adaptive','SB adaptive serial','Local','Proxy+Tabu'};
 for j=1:6
     p(j)=leo_v14_panel(titles{j},'Identical frozen QUBO case',units{j},'categorical_line',labels); %#ok<AGROW>
     for solver=solvers
@@ -67,7 +70,7 @@ for j=1:6
         p(j)=leo_v14_series(p(j),solver{1},1:numel(labels),y);
     end
 end
-spec=struct('name','v17_fixed_qubo_kernels','title','V17 fixed QUBO | paired seeds | serial/parallel use identical 64 trajectories','rows',2,'cols',3,'panels',p);
+spec=struct('name','v17_fixed_qubo_kernels','title','V17 fixed QUBO | paired seeds | GPU/CPU controls use identical initialization and precision','rows',2,'cols',3,'panels',p);
 files=leo_v14_save_specs(spec,directory,'fixed_qubo_specs',render);
 quality=leo_v14_panel('Certified proxy objective gap','Frozen QUBO case','Upper minus returned feasible score','categorical_line',labels);
 for solver=solvers

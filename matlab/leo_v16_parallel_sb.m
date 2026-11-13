@@ -7,6 +7,8 @@ workers=0; backend='serial_reference_tasks';
 if useWorkers
     if exist('gcp','file')==0, leo_v16_prepare_parallel(p); end
     pool=gcp('nocreate');
+    mismatch=~isempty(pool) && ((p.workers>0 && pool.NumWorkers~=p.workers) || (p.workers==0 && pool.NumWorkers>4));
+    if mismatch, leo_v16_prepare_parallel(p); pool=gcp('nocreate'); end
     if isempty(pool), runtime=leo_v16_prepare_parallel(p); workers=runtime.workers; backend=runtime.backend;
     else, workers=pool.NumWorkers; backend=class(pool); end
     assert(workers>=2,'V17 parallel mode needs two or more workers.');

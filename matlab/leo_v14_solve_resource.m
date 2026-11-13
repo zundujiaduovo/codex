@@ -7,7 +7,10 @@ rawScores=[]; fixedScores=[]; polishedScores=[]; rawLegal=[]; rawEnergy=[]; enco
 switch o.innerSolver
  case 'sb'
     seeds=[leo_encode_group_bits(q,old),leo_encode_group_bits(q,false(q.nUsers,1))];
-    if isfield(o,'parallel') && o.parallel.enabled
+    if isfield(o,'execution') && strcmp(o.execution.backend,'gpu')
+        sb=leo_v17_gpu_sb(q,o,seeds,o.coordination.sbKernel,budget);
+        trajectorySteps=sb.trajectorySteps; denseTerms=sb.denseTerms; restartCount=sb.restarts;
+    elseif isfield(o,'parallel') && o.parallel.enabled
         sb=leo_v16_parallel_sb(q,o,seeds,o.coordination.sbKernel);
         trajectorySteps=sb.trajectorySteps; denseTerms=sb.denseTerms; restartCount=sb.restarts;
     elseif strcmp(o.coordination.sbKernel,'adaptive')
@@ -97,13 +100,14 @@ end
 if strcmp(o.innerSolver,'sb')
     out.energyHistory=sb.history; out.energyScale=sb.energyScale; out.trajectories=sb.trajectories;
 end
-out.parallelWorkers=0; out.parallelTasks=0; out.uniqueRepairs=0; out.repairCacheHits=0;
+out.parallelWorkers=0; out.parallelTasks=0; out.uniqueRepairs=0; out.repairCacheHits=0; out.gpuTrajectorySteps=0;
 if strcmp(o.innerSolver,'sb') && isfield(sb,'parallelWorkers')
     out.parallelWorkers=sb.parallelWorkers; out.parallelTasks=sb.parallelTasks;
 end
 if strcmp(o.innerSolver,'sb') && isfield(sb,'uniqueRepairs')
     out.uniqueRepairs=sb.uniqueRepairs; out.repairCacheHits=sb.repairCacheHits;
 end
+if strcmp(o.innerSolver,'sb') && isfield(sb,'gpuTrajectorySteps'), out.gpuTrajectorySteps=sb.gpuTrajectorySteps; end
 if isfield(pool,'gainAudit'), out.gainAudit=pool.gainAudit; end
     function add(raw,source,diagnose)
         if nargin<3, diagnose=true; end

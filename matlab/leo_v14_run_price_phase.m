@@ -4,6 +4,8 @@ d=problem.data; K=d.shape(1); M=d.shape(2);
 c=leo_v14_coordination_options(o.coordination); o.coordination=c; isFair=strcmp(phase,'fairness');
 conv=leo_v16_convergence_options(); if isfield(o,'convergence'), conv=leo_v16_convergence_options(o.convergence); end
 unlimited=conv.enabled; convergence=[];
+memory=leo_v17_memory_options(); if isfield(o,'memory'), memory=leo_v17_memory_options(o.memory); end
+evidenceDropped=0;
 acceptPhase=leo_v17_accept_phase(phase,o); promote=~isFair && strcmp(acceptPhase,'fairness');
 escapeAttempt=0; escapeEvents=struct([]);
 bestX=start.x; service=start.service; priceX=bestX; s0=0;
@@ -27,11 +29,14 @@ names={'sAux','step','priceFairness','priceTotalBits','savedFairness','savedTota
  'novelCandidates','trustPathCandidates','trustBridgeCandidates','trustRejectedCandidates','trustEscape','stage2StagnantRounds', ...
  'parallelWorkers','parallelTasks','stableWindows','lastWindowGain', ...
  'fairnessRescueEvaluations','fairnessRescueSeconds','fairnessRescueGain','gainAuditCandidates', ...
- 'calibrationBefore','calibrationAfter','uniqueRepairs','repairCacheHits'};
+ 'calibrationBefore','calibrationAfter','uniqueRepairs','repairCacheHits','gpuTrajectorySteps'};
 capacity=rounds; if unlimited, capacity=128; end
 for j=1:numel(names), history.(names{j})=zeros(1,capacity); end
-history.lambda=zeros(K,capacity); history.lambdaNext=zeros(K,capacity); history.lowerUserBits=zeros(K,capacity);
-history.priceX=false(K,M,capacity); history.completePriceRound=false(1,capacity);
+if memory.retainStateHistory
+    history.lambda=zeros(K,capacity); history.lambdaNext=zeros(K,capacity); history.lowerUserBits=zeros(K,capacity);
+    history.priceX=false(K,M,capacity);
+end
+history.completePriceRound=false(1,capacity);
 [stopping,~]=leo_search_stopping(o,phase,service,upper.value,initialSeconds,0); completed=0; status='iteration_limit';
 [convergence,~]=leo_v16_convergence_step(o,phase,service,0,convergence);
 k=0;
@@ -51,7 +56,8 @@ while unlimited || k<rounds
         radius=min(c.trustMax,max(radius+2,ceil(1.5*radius))); history.trustEscape(k)=1;
     end
     [w,sAux]=leo_price_weights(d,lambda,phase,s0,o); banks=cell(1,M);
-    history.lambda(:,k)=lambda; history.sAux(k)=sAux; history.lambdaSum(k)=sum(lambda);
+    if memory.retainStateHistory, history.lambda(:,k)=lambda; end
+    history.sAux(k)=sAux; history.lambdaSum(k)=sum(lambda);
     snap=struct('iteration',k,'phase',phase,'floor',s0,'x',bestX,'priceStart',priceX, ...
         'lambda',lambda,'referenceW',proxy.referenceW,'seconds',toc(budget.timer),'solved',false(1,M));
     order=mod((0:M-1)+k-1,M)+1;
@@ -178,7 +184,7 @@ while unlimited || k<rounds
         row.penaltyFactor=NaN;
         row.originalWeightedGain=NaN; row.proxyWeightedGain=NaN;
         row.acceptedFairnessGain=service.fairness-before.fairness; row.acceptedTotalGainBits=service.totalBits-before.totalBits;
-        row.candidateFamilies=strjoin(joint.sources,'|'); evidence=leo_append_struct(evidence,row);
+        row.candidateFamilies=strjoin(joint.sources,'|'); append_evidence(row);
     end
     priceLower=leo_evaluate_quadratic_service(d,proxy.lower,priceX); priceService=problem.evaluate(priceX);
     if leo_service_is_better(priceService,service,acceptPhase,s0)
@@ -207,8 +213,10 @@ while unlimited || k<rounds
     % Stage 1 feeds ORIGINAL attained service to the smoothed relative-deficit coordinator.
     feedback=priceLower.userBits; if isFair, feedback=service.userBits; end
     [lambda,priceState]=leo_update_prices(lambda,feedback,d.qosTargetBits,sAux,step,phase,o,priceState);
-    history.lambdaNext(:,k)=lambda; history.lowerUserBits(:,k)=priceLower.userBits;
-    history.priceX(:,:,k)=priceX; history.step(k)=step; history.priceFairness(k)=priceService.fairness;
+    if memory.retainStateHistory
+        history.lambdaNext(:,k)=lambda; history.lowerUserBits(:,k)=priceLower.userBits; history.priceX(:,:,k)=priceX;
+    end
+    history.step(k)=step; history.priceFairness(k)=priceService.fairness;
     history.priceTotalBits(k)=priceService.totalBits; history.savedFairness(k)=service.fairness;
     history.savedTotalBits(k)=service.totalBits; history.upperBound(k)=upper.value; history.proxyEpoch(k)=epoch;
     history.elapsedSeconds(k)=toc(budget.timer); history.trustRadius(k)=mean(radius); history.completePriceRound(k)=all(snap.solved);
@@ -279,6 +287,7 @@ result=struct('x',bestX,'service',service,'fairnessFloor',s0,'rounds',completed,
  'initialElapsedSeconds',initialSeconds,'initialUpperBound',initialUpper,'iterationKind','price_round', ...
  'sbTrace',firstTrace,'auditSnapshots',{snapshots},'checkpoints',point(checkpoints,service,completed,'end'),'sourceEvidence',evidence);
 result.escapeEvents=escapeEvents;
+result.evidenceLimit=memory.maxEvidenceRows; result.evidenceDropped=evidenceDropped;
     function value=polynomial(lower,g)
         value=g.*(lower.aBits(:,m)-lower.bBits(:,:,m)*g);
     end
@@ -297,6 +306,7 @@ result.escapeEvents=escapeEvents;
         history.parallelTasks(k)=history.parallelTasks(k)+inner.parallelTasks;
         history.uniqueRepairs(k)=history.uniqueRepairs(k)+inner.uniqueRepairs;
         history.repairCacheHits(k)=history.repairCacheHits(k)+inner.repairCacheHits;
+        history.gpuTrajectorySteps(k)=history.gpuTrajectorySteps(k)+inner.gpuTrajectorySteps;
         history.repairLoss(k)=history.repairLoss(k)+max(0,inner.repairLoss);
         for name={'novelCandidates','trustPathCandidates','trustBridgeCandidates','trustRejectedCandidates'}
             history.(name{1})(k)=history.(name{1})(k)+inner.(name{1});
@@ -309,6 +319,13 @@ result.escapeEvents=escapeEvents;
          'rawEncodedLegalFraction',inner.rawEncodedLegalFraction,'rawEnergy',inner.rawEnergy, ...
          'originalWeightedGain',actual,'proxyWeightedGain',estimate,'acceptedFairnessGain',0,'acceptedTotalGainBits',0, ...
          'candidateFamilies',family,'penaltyFactor',local.penaltyFactor);
+        append_evidence(row);
+    end
+    function append_evidence(row)
+        if numel(evidence)>=memory.maxEvidenceRows
+            count=max(1,ceil(memory.maxEvidenceRows/4));
+            evidence(1:count)=[]; evidenceDropped=evidenceDropped+count;
+        end
         evidence=leo_append_struct(evidence,row);
     end
     function h=point(h,s,iteration,kind)

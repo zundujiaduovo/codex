@@ -12,11 +12,13 @@ m.coordination=leo_v14_coordination_options();
 m.searchPolicy=leo_v17_search_options();
 m.refinement=struct('candidatePool',true,'bottleneckCandidates',true,'candidateRefresh',true,'poolSize',12);
 m.audit=struct('enabled',true,'snapshots',4,'tabuMoves',16); m.stopping=struct('enabled',false);
-m.parallel=leo_v16_parallel_options(struct('enabled',true,'workers',0,'batchSize',8));
+m.parallel=leo_v16_parallel_options(struct('enabled',false,'workers',4,'batchSize',8));
+m.execution=leo_v17_execution_options(struct('backend','gpu','deviceIndex',1,'precision','single'));
+m.memory=leo_v17_memory_options();
 m.convergence=leo_v16_convergence_options(struct('enabled',true));
 o.method=m;
 o.fairnessCertificateOptions=struct('maxSeconds',Inf,'relativeGap',.001,'absoluteGap',1e-6);
 o.throughputCertificateOptions=struct('maxSeconds',Inf,'relativeGap',.001);
 o=leo_v12_options(o);
-folder='v17_fairness_first_proxy_parallel_sb';
+folder='v17_gpu64_memory_safe';
 end

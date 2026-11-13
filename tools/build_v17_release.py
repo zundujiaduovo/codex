@@ -4,7 +4,7 @@ import hashlib
 import zipfile
 from dependencies_v17 import check, ROOT
 
-NAME='LEO_QoS_V17_fairness_first_parallel64'
+NAME='LEO_QoS_V17_GPU64_memory_safe'
 
 
 def build():
@@ -26,7 +26,7 @@ def build():
             digest,path=line.split('  ',1)
             assert hashlib.sha256(bundle.read(NAME+'/'+path)).hexdigest()==digest
         for required in ('RUN_COMPARISON.m','RUN_V17_COMPARISON.m','RUN_V17_BOUNDS.m',
-                         'matlab/leo_v16_parallel_sb.m','matlab/leo_v14_trust_path.m','matlab/leo_v15_certificate.m'):
+                         'matlab/leo_v17_gpu_sb.m','matlab/leo_v17_prepare_execution.m','matlab/leo_v16_parallel_sb.m','matlab/leo_v14_trust_path.m','matlab/leo_v15_certificate.m'):
             assert NAME+'/'+required in bundle.namelist()
         assert not any(Path(path).name.startswith(('RUN_V12','RUN_V13','RUN_V14','RUN_V15','RUN_V16')) for path in bundle.namelist())
     print(f'PASS: {archive.name}: {count} required MATLAB sources, {len(sources)} total files, {archive.stat().st_size} bytes; hashes verified; no results or historical bundles.')

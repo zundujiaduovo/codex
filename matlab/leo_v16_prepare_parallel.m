@@ -7,13 +7,15 @@ if exist('parpool','file')==0 || ~license('test','Distrib_Computing_Toolbox')
         'Install/activate it to run the requested parallel search. ', ...
         'Explicit serial operation is available only by setting method.parallel.enabled=false in V17_SETTINGS.']);
 end
+cluster=parcluster('Processes'); workers=p.workers;
+if workers==0, workers=min(4,cluster.NumWorkers); end
+assert(workers>=2,'V17 needs at least two process workers for parallel search.');
 pool=gcp('nocreate');
-if isempty(pool)
-    cluster=parcluster('Processes'); workers=p.workers;
-    if workers==0, workers=min(8,cluster.NumWorkers); end
-    assert(workers>=2,'V17 needs at least two process workers for parallel search.');
-    pool=parpool(cluster,workers);
+if ~isempty(pool) && pool.NumWorkers~=workers
+    fprintf('V17 resizing existing pool: %d -> %d workers as configured.\n',pool.NumWorkers,workers);
+    delete(pool); pool=[];
 end
+if isempty(pool), pool=parpool(cluster,workers); end
 assert(pool.NumWorkers>=2,'Existing pool has only one worker; create a pool with at least two workers.');
 % Keep reused local workers on this V17 source path rather than an old checkout.
 setup=parfevalOnAll(pool,@addpath,0,fileparts(mfilename('fullpath')),'-begin');
